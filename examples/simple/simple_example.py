@@ -15,6 +15,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import numpy as np
+import datetime
 
 # Initialize logger
 pecos.logger.initialize()
@@ -37,8 +38,14 @@ pm.add_translation_dictionary(translation_dictionary, system_name)
 pm.check_timestamp(900)
  
 # Generate a time filter
-clock_time = pm.get_clock_time()
-time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+
+#clock_time = pm.get_clock_time()
+#time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+
+#Faster time_filter without using get_clock_time
+SetLimits = (df.index.time > datetime.time(1,00,00)) & (df.index.time < datetime.time(23,00,00))
+time_filter = pd.DataFrame(data = SetLimits, index = df.index)
+
 pm.add_time_filter(time_filter)
 
 # Check missing
