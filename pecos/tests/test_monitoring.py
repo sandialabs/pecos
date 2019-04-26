@@ -91,7 +91,7 @@ class Test_simple_example(unittest.TestCase):
 
         file_name = join(simpleexampledir,'simple.xlsx')
 
-        df = pd.read_excel(file_name)
+        df = pd.read_excel(file_name, index_col=0)
         self.pm = pecos.monitoring.PerformanceMonitoring()
         self.pm.add_dataframe(df)
         self.pm.add_translation_dictionary(trans)
@@ -247,7 +247,7 @@ class Test_simple_example(unittest.TestCase):
 
     def test_full_example(self):
         data_file = join(simpleexampledir,'simple.xlsx')
-        df = pd.read_excel(data_file)
+        df = pd.read_excel(data_file, index_col=0)
 
         (QCI, test_results_file) = simple_example_run_analysis(df)
 
@@ -267,7 +267,7 @@ class Test_simple_example(unittest.TestCase):
 
     def test_full_example_with_timezone(self):
         data_file = join(simpleexampledir,'simple.xlsx')
-        df = pd.read_excel(data_file)
+        df = pd.read_excel(data_file, index_col=0)
         df.index = df.index.tz_localize('MST')
 
         (QCI, test_results_file) = simple_example_run_analysis(df)
