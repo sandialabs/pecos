@@ -25,7 +25,7 @@ pm = pecos.monitoring.PerformanceMonitoring()
 # Populate the object with a DataFrame and translation dictionary
 system_name = 'Simple'
 data_file = 'simple.xlsx'
-df = pd.read_excel(data_file)
+df = pd.read_excel(data_file, index_col=0)
 pm.add_dataframe(df)
 pm.add_translation_dictionary({'Wave': ['C','D']}) # group C and D
 

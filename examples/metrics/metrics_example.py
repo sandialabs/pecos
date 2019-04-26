@@ -21,7 +21,7 @@ pm = pecos.monitoring.PerformanceMonitoring()
 # Populate the object with a dataframe and translation dictionary
 system_name = 'System1'
 data_file = 'System1_2015_performance_metrics.xlsx'
-df = pd.read_excel(data_file)
+df = pd.read_excel(data_file, index_col=0)
 pm.add_dataframe(df)
 
 # Check timestamp
