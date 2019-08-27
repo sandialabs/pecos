@@ -52,7 +52,8 @@ def test_qci_no_test_results():
     pm.add_dataframe(df)
     pm.add_translation_dictionary(trans)
     
-    QCI = pecos.metrics.qci(pm.mask, per_day=False)
+    mask = pm.mask
+    QCI = pecos.metrics.qci(mask, per_day=False)
     
     assert_equal(mask.any().any(), True)
     assert_equal(QCI, 1)

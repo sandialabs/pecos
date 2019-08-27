@@ -27,13 +27,14 @@ class PerformanceMonitoring(object):
     @property
     def mask(self): 
         """
-        Return a mask of data-times that failed quality control tests.
+        Return a mask of data-times that failed quality control tests
 
         Returns
         --------
-        pandas DataFrame containing boolean values for each data point, True =
-        data point pass all tests, False = data point did not pass at least 
-        one test (or data is NaN).
+        pandas DataFrame
+            Boolean values for each data point, 
+            True = data point pass all tests, 
+            False = data point did not pass at least one test (or data is NaN).
         """
         if self.df.empty:
             logger.info("Empty database")
@@ -55,12 +56,13 @@ class PerformanceMonitoring(object):
     @property
     def cleaned_data(self): 
         """
-        Return a cleaned data set, points that failed quality control tests are
-        replaced by NaN
+        Return a cleaned data set
         
         Returns
         --------
-        pandas DataFrame containing a cleaned data set
+        pandas DataFrame 
+            Cleaned data set, data that failed a quality control test are 
+            replaced by NaN
         """
         return self.df[self.mask]
     
