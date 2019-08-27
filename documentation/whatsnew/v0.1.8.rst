@@ -1,0 +1,9 @@
+.. _whatsnew_0180:
+
+v0.1.8 (master)
+------------------------
+
+* Added functions to run quality control tests.  These functions allow the user
+  to run quality control tests without creating a PerformanceMonitoring object.  
+  Each function returns cleaned data, a quality control mask, and quality control
+  test results.

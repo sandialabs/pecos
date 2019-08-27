@@ -23,11 +23,11 @@ class PerformanceMonitoring(object):
         self.test_results = pd.DataFrame(columns=['Variable Name',
                                                 'Start Time', 'End Time',
                                                 'Timesteps', 'Error Flag'])
-
+    
     @property
     def mask(self): 
         """
-        Return a mask of data-times that failed quality control tests
+        Mask of data-times that failed quality control tests
 
         Returns
         --------
@@ -56,7 +56,7 @@ class PerformanceMonitoring(object):
     @property
     def cleaned_data(self): 
         """
-        Return a cleaned data set
+        Cleaned data set
         
         Returns
         --------

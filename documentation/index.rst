@@ -42,6 +42,7 @@ Contents
 	
    overview
    installation
+   framework
    example
    timeseries
    translation

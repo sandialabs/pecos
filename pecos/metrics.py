@@ -1,5 +1,6 @@
 """
-The metrics module contains performance metrics to track system health.
+The metrics module contains metrics that describe the quality control 
+analysis or compute quantities that might be of use in the analysis
 """
 import pandas as pd
 import numpy as np
