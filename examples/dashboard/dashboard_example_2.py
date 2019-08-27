@@ -40,8 +40,7 @@ for location_name in locations:
         pm.check_range([None,1]) 
         
         # Compute metrics
-        mask = pm.get_test_results_mask()
-        QCI = pecos.metrics.qci(mask)
+        QCI = pecos.metrics.qci(pm.mask)
         
         # Define output files and subdirectories
         location_system = location_name + '_' + system_name

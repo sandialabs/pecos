@@ -63,9 +63,7 @@ for key,value in increment_bounds.items():
     pm.check_increment(value, key) 
     
 # Compute the quality control index
-mask = pm.get_test_results_mask()
-del mask['Wave Model'] # Not counted in the QCI
-QCI = pecos.metrics.qci(mask, pm.tfilter)
+QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
  # Define output files and directories
 results_directory = 'Results'

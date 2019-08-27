@@ -1,6 +1,12 @@
 /.project
 *.pyc
+*.coverage
 _build/
+pecos.egg-info/*
+logfile
+
 pecos/tests/*.html
 pecos/tests/*.csv
 pecos/tests/*.png
+
+examples/*/Results*/*

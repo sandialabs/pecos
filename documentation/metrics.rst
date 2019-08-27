@@ -33,8 +33,7 @@ To compute QCI,
 	
 .. doctest::
 
-    >>> mask = pm.get_test_results_mask()
-    >>> QCI = pecos.metrics.qci(mask)
+    >>> QCI = pecos.metrics.qci(pm.mask)
 
 Root mean square error
 -------------------------

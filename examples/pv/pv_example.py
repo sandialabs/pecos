@@ -91,7 +91,7 @@ for key,value in increment_bounds.items():
     pm.check_increment([value[0], value[1]], key, min_failures=value[2]) 
     
 # Compute QCI only using columns defined in the translation dictionary
-mask = pm.get_test_results_mask()
+mask = pm.mask
 col = [item for sublist in pm.trans.values() for item in sublist]
 QCI = pecos.metrics.qci(mask[col], pm.tfilter)
 

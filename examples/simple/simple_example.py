@@ -62,8 +62,7 @@ pm.check_increment([0.0001, None], 'B')
 pm.check_increment([0.0001, 0.6], 'Wave') 
     
 # Compute the quality control index
-mask = pm.get_test_results_mask()
-QCI = pecos.metrics.qci(mask, pm.tfilter)
+QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
 # Define output file names and directories
 results_directory = 'Results'

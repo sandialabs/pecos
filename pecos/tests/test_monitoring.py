@@ -71,8 +71,7 @@ def simple_example_run_analysis(df):
         pm.check_increment(value, key)
 
     # Compute metrics
-    mask = pm.get_test_results_mask()
-    QCI = pecos.metrics.qci(mask, pm.tfilter)
+    QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
     # Write metrics, test results, and report files
     pecos.io.write_metrics(metrics_file, QCI)

@@ -5,7 +5,6 @@ quality control tests and store results.
 import pandas as pd
 import numpy as np
 import re
-import datetime
 import logging
 
 none_list = ['','none','None','NONE', None, [], {}]
@@ -25,6 +24,46 @@ class PerformanceMonitoring(object):
                                                 'Start Time', 'End Time',
                                                 'Timesteps', 'Error Flag'])
 
+    @property
+    def mask(self): 
+        """
+        Return a mask of data-times that failed quality control tests.
+
+        Returns
+        --------
+        pandas DataFrame containing boolean values for each data point, True =
+        data point pass all tests, False = data point did not pass at least 
+        one test (or data is NaN).
+        """
+        if self.df.empty:
+            logger.info("Empty database")
+            return
+
+        mask = ~pd.isnull(self.df) # False if NaN
+        for i in self.test_results.index:
+            variable = self.test_results.loc[i, 'Variable Name']
+            start_date = self.test_results.loc[i, 'Start Time']
+            end_date = self.test_results.loc[i, 'End Time']
+            if variable in mask.columns:
+                try:
+                    mask.loc[start_date:end_date,variable] = False
+                except:
+                    pass
+                
+        return mask
+        
+    @property
+    def cleaned_data(self): 
+        """
+        Return a cleaned data set, points that failed quality control tests are
+        replaced by NaN
+        
+        Returns
+        --------
+        pandas DataFrame containing a cleaned data set
+        """
+        return self.df[self.mask]
+    
     def _setup_data(self, key, rolling_mean):
         """
         Setup DataFrame, by (optionally) extracting a column and/or smoothing
@@ -780,44 +819,3 @@ class PerformanceMonitoring(object):
         clock_time = pd.DataFrame(secofday, index=self.df.index)
 
         return clock_time
-
-    def get_test_results_mask(self, key=None):
-        """
-        Return a mask of data-times that failed a quality control test.
-
-        Parameters
-        -----------
-        key : string (optional)
-            Translation dictionary key. If not specified, all columns are used
-
-        Returns
-        --------
-        pandas DataFrame containing boolean values for each data point, True =
-        data point pass all tests, False = data point did not pass at least 
-        one test (or data is NaN).
-        """
-        if self.df.empty:
-            logger.info("Empty database")
-            return
-
-        if key is not None:
-            try:
-                df = self.df[self.trans[key]]
-            except:
-                logger.warning("Key not in DataFrame")
-                return
-        else:
-            df = self.df
-
-        test_results_mask = ~pd.isnull(df) # False if NaN
-        for i in self.test_results.index:
-            variable = self.test_results.loc[i, 'Variable Name']
-            start_date = self.test_results.loc[i, 'Start Time']
-            end_date = self.test_results.loc[i, 'End Time']
-            if variable in test_results_mask.columns:
-                try:
-                    test_results_mask.loc[start_date:end_date,variable] = False
-                except:
-                    pass
-                
-        return test_results_mask
