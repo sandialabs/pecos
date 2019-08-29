@@ -18,8 +18,9 @@ For example, data can be loaded from an excel file using the following code.
 Data can also be gathered from the web using the Python package request, http://docs.python-requests.org.
 
 The :class:`~pecos.monitoring.PerformanceMonitoring` class in Pecos is
-the base class used to define performance monitoring analysis. 
-To get started, an instance of the PerformanceMonitoring class is created.
+the base class used to define the quality control analysis. Pecos functions 
+are also individually wrapped and can be accessed as such. To get started 
+using the base class, create an instance of the PerformanceMonitoring class.
 
 .. doctest::
 
@@ -31,7 +32,9 @@ A DataFrame can then be added to the PerformanceMonitoring object.
 .. doctest::
     :hide:
 
-    >>> df = pd.DataFrame()
+    >>> index = pd.date_range('1/1/2016', periods=3, freq='s')
+    >>> data = [[1,2,3],[4,5,6],[7,8,9]]
+    >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
 
 .. doctest::
 
@@ -68,11 +71,13 @@ Missing indexes and columns are filled with NaN.  An example is shown below.
     2018-01-01  0  5
     2018-01-02  1  6
     2018-01-03  2  7
+	
     >>> print(df2)
                 B  C
     2018-01-02  0  5
     2018-01-03  1  6
     2018-01-04  2  7
+	
     >>> pm.add_dataframe(df1)
     >>> pm.add_dataframe(df2)
     >>> print(pm.df)
@@ -81,3 +86,9 @@ Missing indexes and columns are filled with NaN.  An example is shown below.
     2018-01-02  1.0  0.0  5.0
     2018-01-03  2.0  1.0  6.0
     2018-01-04  NaN  2.0  7.0
+	
+	
+To use Pecos' functions suite, start by formatting the data into a pandas dataframe.
+Function examples are shown alongside class methods in the Quality Control Tests section.
+For some functions to work properly, the dataframe index will need to be converted
+into the 'DateTime' format.
