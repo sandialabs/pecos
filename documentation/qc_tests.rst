@@ -37,6 +37,7 @@ Input includes:
 For example, using Pecos' PerformanceMonitoring object:
 
 .. doctest::
+    :hide:
 
     >>> import pandas as pd
     >>> import pecos
@@ -46,13 +47,16 @@ For example, using Pecos' PerformanceMonitoring object:
     >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
     >>> pm.add_dataframe(df)
 
+.. doctest::
+
     >>> pm.check_timestamp(60)
 
 Or using solely Pecos' functions:
 
 .. doctest::
+    :skipif: qc_data in locals()
 
-	>>> pecos.monitoring.check_timestamp_func(df, 60)
+    >>> qc_data = pecos.monitoring.check_timestamp_func(df, 60)
 
 checks for missing, duplicate, and non-monotonic indexes assuming an expected
 frequency of 60 seconds.
@@ -75,8 +79,9 @@ For example,
     >>> pm.check_missing('A', min_failures=5)
 
 .. doctest::
+	:skipif: qc_data in locals()
 
-	>>> pecos.monitoring.check_missing_func(df[['A']], min_failures=5)
+	>>> qc_data = pecos.monitoring.check_missing_func(df[['A']], min_failures=5)
 
 checks for missing data in the columns associated with the column or group 'A'.  In this example, warnings
 are only reported if there are 5 consecutive failures.
@@ -99,8 +104,9 @@ For example,
     >>> pm.check_corrupt([-999, 999])
 
 .. doctest::
+	:skipif: qc_data in locals()
 
-	>>> pecos.monitoring.check_corrupt_func(df, [-999, 999])
+	>>> qc_data = pecos.monitoring.check_corrupt_func(df, [-999, 999])
 
 checks for data with values -999 or 999 in the entire DataFrame.
 
@@ -130,83 +136,12 @@ For example,
     >>> pm.check_range([None, 1], 'A', rolling_mean=2)
 
 .. doctest::
+	:skipif: qc_data in locals()
 
-	>>> pecos.monitoring.check_range_func(df[['A']], [None, 1], rolling_mean=2)
+	>>> qc_data = pecos.monitoring.check_range_func(df[['A']], [None, 1], rolling_mean=2)
 
 checks for values greater than 1 in the columns associated with the key 'A',
 using a rolling average of 2 time steps.
-
-Outlier test
---------------------
-The :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier` method is used to check if normalized data
-falls outside expected bounds.  Data is normalized using the mean and standard deviation, using either a
-moving window or using the entire data set.  If multiple columns of data are used, each column is normalized separately.
-Like the check_range method, the user can specify if the data
-should be smoothed using a rolling mean before the test is run.
-Input includes:
-
-* Upper and lower bound (in standard deviations)
-
-* Data column (default = all columns)
-
-* Size of the moving window used to normalize the data (default = 3600 seconds)
-
-* Flag indicating if the absolute value is taken (default = True)
-
-* Rolling window used to smooth the data before test is run (default = 0)
-
-* Minimum number of consecutive failures for reporting (default = 1)
-
-For example,
-
-.. doctest::
-
-    >>> pm.check_outlier([None, 3], window=12*3600)
-
-.. doctest::
-
-	>>> pecos.monitoring.check_outlier_func(df, [None, 3], window=12*3600)
-
-checks if the normalized data changes by more than 3 standard deviations within a 12 hour moving window.
-
-Delta test
---------------------
-The :class:`~pecos.monitoring.PerformanceMonitoring.check_delta` method is used to check for stagnant data and abrupt changes in data.
-The test checks if the difference between the minimum and maximum data value within a moving window is within expected bounds.
-**Currently, this method is not efficient for large data sets (> 100000 pts).**
-Like the check_range method, the user can specify if the data
-should be smoothed using a rolling mean before the test is run.
-Input includes:
-
-* Upper and lower bound
-
-* Data column (default = all columns)
-
-* Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
-
-* Flag indicating if the absolute value is taken (default = True)
-
-* Rolling window used to smooth the data before test is run (default = 0)
-
-* Minimum number of consecutive failures for reporting (default = 1)
-
-For example,
-
-.. doctest::
-
-	>>> pm.check_delta([None, 0.000001], window=3600)
-
-	>>> pecos.monitoring.check_delta_func(df, [None, 0.000001], window=3600)
-
-checks if data changes by more than 0.000001 in 1 hour.
-
-.. doctest::
-
-	>>> pm.check_delta([-800, None], window=1800, absolute_value=False)
-
-	>>> pecos.monitoring.check_delta_func(df, [-800, None], window=1800, absolute_value=False)
-
-checks if data decrease by more than -800 in 30 minutes.
 
 Increment test
 --------------------
@@ -237,8 +172,8 @@ For example,
 .. doctest::
 
 	>>> pm.check_increment([None, 0.000001], min_failures=60)
-
-	>>> pecos.monitoring.check_increment_func(df, [None, 0.000001], min_failures=60)
+	
+	>>> qc_data = pecos.monitoring.check_increment_func(df, [None, 0.000001], min_failures=60)
 
 checks if value increments are greater than 0.000001 for 60 consecutive time steps.
 
@@ -246,6 +181,78 @@ checks if value increments are greater than 0.000001 for 60 consecutive time ste
 
 	>>> pm.check_increment([-800, None], absolute_value=False)
 
-	>>> pecos.monitoring.check_increment_func(df, [-800, None], absolute_value=False)
+	>>> qc_data = pecos.monitoring.check_increment_func(df, [-800, None], absolute_value=False)
 
 checks if value increments decrease by more than -800 in a single time step.
+
+Delta test
+--------------------
+The :class:`~pecos.monitoring.PerformanceMonitoring.check_delta` method is used to check for stagnant data and abrupt changes in data.
+The test checks if the difference between the minimum and maximum data value within a moving window is within expected bounds.
+**Currently, this method is not efficient for large data sets (> 100000 pts).**
+Like the check_range method, the user can specify if the data
+should be smoothed using a rolling mean before the test is run.
+Input includes:
+
+* Upper and lower bound
+
+* Data column (default = all columns)
+
+* Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
+
+* Flag indicating if the absolute value is taken (default = True)
+
+* Rolling window used to smooth the data before test is run (default = 0)
+
+* Minimum number of consecutive failures for reporting (default = 1)
+
+For example,
+
+.. doctest::
+
+	>>> pm.check_delta([None, 0.000001], window=3600)
+
+	>>> qc_data = pecos.monitoring.check_delta_func(df, [None, 0.000001], window=3600)
+
+checks if data changes by more than 0.000001 in 1 hour.
+
+.. doctest::
+
+	>>> pm.check_delta([-800, None], window=1800, absolute_value=False)
+
+	>>> qc_data = pecos.monitoring.check_delta_func(df, [-800, None], window=1800, absolute_value=False)
+
+checks if data decrease by more than -800 in 30 minutes.
+
+Outlier test
+--------------------
+The :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier` method is used to check if normalized data
+falls outside expected bounds.  Data is normalized using the mean and standard deviation, using either a
+moving window or using the entire data set.  If multiple columns of data are used, each column is normalized separately.
+Like the check_range method, the user can specify if the data
+should be smoothed using a rolling mean before the test is run.
+Input includes:
+
+* Upper and lower bound (in standard deviations)
+
+* Data column (default = all columns)
+
+* Size of the moving window used to normalize the data (default = 3600 seconds)
+
+* Flag indicating if the absolute value is taken (default = True)
+
+* Rolling window used to smooth the data before test is run (default = 0)
+
+* Minimum number of consecutive failures for reporting (default = 1)
+
+For example,
+
+.. doctest::
+
+    >>> pm.check_outlier([None, 3], window=12*3600)
+
+.. doctest::
+
+	>>> qc_data = pecos.monitoring.check_outlier_func(df, [None, 3], window=12*3600)
+
+checks if the normalized data changes by more than 3 standard deviations within a 12 hour moving window.
