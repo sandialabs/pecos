@@ -12,6 +12,10 @@ matrix:
       env: CONDA_ENV=py27
       services:
       - xvfb
+    - python: 3.5
+      env: CONDA_ENV=py35
+      services:
+      - xvfb
     - python: 3.6
       env: CONDA_ENV=py36
       services:
