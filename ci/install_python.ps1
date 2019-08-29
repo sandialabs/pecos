@@ -1,3 +1,29 @@
+
+Skip to content
+Pull requests
+Issues
+Marketplace
+Explore
+@jmcvey3
+Learn Git and GitHub without any code!
+
+Using the Hello World guide, you’ll start a branch, write comments, and open a pull request.
+
+2
+0
+
+    28
+
+kaklise/pecos forked from sandialabs/pecos
+Code
+Pull requests 0
+Projects 0
+Wiki
+Security
+Insights
+pecos/ci/install_python.ps1
+@kaklise kaklise minor updates a564924 on Jun 1, 2018
+92 lines (81 sloc) 2.91 KB
 # Sample script to install Python and pip under Windows
 # Authors: Olivier Grisel, Jonathan Helmus and Kyle Kastner
 # License: CC0 1.0 Universal: http://creativecommons.org/publicdomain/zero/1.0/
@@ -90,3 +116,17 @@ function main () {
 }
 
 main
+
+    © 2019 GitHub, Inc.
+    Terms
+    Privacy
+    Security
+    Status
+    Help
+
+    Contact GitHub
+    Pricing
+    API
+    Training
+    Blog
+    About

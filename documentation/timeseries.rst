@@ -20,7 +20,7 @@ Data can also be gathered from the web using the Python package request, http://
 The :class:`~pecos.monitoring.PerformanceMonitoring` class in Pecos is
 the base class used to define the quality control analysis. Pecos functions 
 are also individually wrapped and can be accessed as such. To get started 
-using classes, create an instance of the PerformanceMonitoring class.
+using the base class, create an instance of the PerformanceMonitoring class.
 
 .. doctest::
 
@@ -88,6 +88,7 @@ Missing indexes and columns are filled with NaN.  An example is shown below.
     2018-01-04  NaN  2.0  7.0
 	
 	
-To use Pecos' functions suite, simply create or edit the data into a pandas dataframe. 
+To use Pecos' functions suite, start by formatting the data into a pandas dataframe.
+Function examples are shown alongside class methods in the Quality Control Tests section.
 For some functions to work properly, the dataframe index will need to be converted
 into the 'DateTime' format.
