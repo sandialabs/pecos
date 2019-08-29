@@ -821,3 +821,346 @@ class PerformanceMonitoring(object):
         clock_time = pd.DataFrame(secofday, index=self.df.index)
 
         return clock_time
+
+def check_timestamp_func(data, frequency, expected_start_time=None,
+                    expected_end_time=None, min_failures=1, exact_times=True):
+    '''
+    Check time series for missing, non-monotonic and duplicate timestamps
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in time/timesteps, data in columns
+
+    frequency : int
+        Expected time series frequency, in seconds
+
+    expected_start_time : Timestamp (optional)
+        Expected start time. If not specified, the minimum timestamp
+        is used
+
+    expected_end_time : Timestamp (optional)
+        Expected end time. If not specified, the maximum timestamp
+        is used
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for
+        reporting, default = 1
+
+    exact_times : bool (optional)
+        Controls how missing times are checked.
+        If True, times are expected to occur at regular intervals
+        (specified in frequency) and the DataFrame is reindexed to match
+        the expected frequency.
+        If False, times only need to occur once or more within each
+        interval (specified in frequency) and the DataFrame is not
+        reindexed.
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_timestamp(frequency, expected_start_time, expected_end_time,
+                       min_failures, exact_times)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': pm.df, 'mask': mask, 'test results': pm.test_results}
+
+
+def check_range_func(data, bound, rolling_mean=0, min_failures=1):
+    '''
+    Check upper and lower bounds on data
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in datetime format, data in columns
+
+    bound : list of floats
+        [lower bound, upper bound], None can be used in place of a lower
+        or upper bound
+
+    rolling_mean : int (optional)
+        Size of window (in seconds) used to smooth data using a
+        mean filter before the test is run, default = 0 (i.e., not used)
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for reporting,
+        default = 1
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_range(bound, rolling_mean, min_failures)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': data[mask], 'mask': mask, 'test results': pm.test_results}
+
+
+def check_increment_func(data, bound, increment=1, absolute_value=True,
+                    rolling_mean=0, min_failures=1):
+    '''
+    Check upper/lower bounds on the difference between data values separated
+    by a set increment.
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in datetime format, data in columns
+
+    bound : list of floats
+        [lower bound, upper bound], None can be used in place of a lower
+        or upper bound
+
+    increment : int (optional)
+        Time step shift used to compute difference, default = 1
+
+    absolute_value : boolean (optional)
+        Take the absolute value of the increment, default = True
+
+    rolling_mean : int (optional)
+        Size of window (in seconds) used to smooth data using a
+        mean filter before the test is run, default = 0 (i.e., not used)
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for reporting,
+        default = 1
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_increment(bound, increment, absolute_value, rolling_mean,
+                       min_failures)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': data[mask], 'mask': mask, 'test results': pm.test_results}
+
+
+def check_delta_func(data, bound, window=3600, absolute_value=True,
+                rolling_mean=0, min_failures=1):
+    '''
+    Check bounds on the difference between max and min data values within
+		  a rolling window (Note, this method is currently NOT efficient for large
+    data sets (> 100000 pts) because it uses df.rolling().apply() to find
+    the position of the min and max). This method requires pandas 0.23 or greater.
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in datetime format, data in columns
+
+    bound : list of floats
+        [lower bound, upper bound], None can be used in place of a lower
+        or upper bound
+
+    window : int (optional)
+        Size of the moving window (in seconds) used to compute delta,
+        default = 3600
+
+    absolute_value : boolean (optional)
+        Take the absolute value of delta, default = True
+
+    rolling_mean : int (optional)
+        Size of window (in seconds) used to smooth data using a
+        mean filter before the test is run, default = 0 (i.e., not used)
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for reporting,
+        default = 1
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    assert type(data.index) == pd.core.indexes.datetimes.DatetimeIndex
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_delta(bound, window, absolute_value, rolling_mean, min_failures)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': data[mask], 'mask': mask, 'test results': pm.test_results}
+
+
+def check_outlier_func(data, bound, window=3600, absolute_value=True,
+                  rolling_mean=0, min_failures=1):
+    '''
+    Check bounds on normalized data within a moving window to find outliers.
+    The bound is specified in standard deviations.
+    Data normalized using (data-mean)/std.
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in datetime format, data in columns
+
+    bound : list of floats
+        [lower bound, upper bound], None can be used in place of a lower
+        or upper bound
+        Lower bound is usually none; upper bound usually set to an absolute value
+
+    window : int (optional)
+        Size of the moving window (in seconds) used to compute delta,
+        default = 3600
+
+    absolute_value : boolean (optional)
+        Take the absolute value of delta, default = True
+
+    rolling_mean : int (optional)
+        Size of window (in seconds) used to smooth data using a
+        mean filter before the test is run, default = 0 (i.e., not used)
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for reporting,
+        default = 1
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    assert type(data.index) == pd.core.indexes.datetimes.DatetimeIndex
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_outlier(bound, window, absolute_value, rolling_mean, min_failures)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': data[mask], 'mask': mask, 'test results': pm.test_results}
+
+
+def check_missing_func(data, min_failures=1):
+    '''
+    Check for missing data
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in datetime format, data in columns
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for reporting,
+        default = 1
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_missing(min_failures)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': data[mask], 'mask': mask, 'test results': pm.test_results}
+
+
+def check_corrupt_func(data, corrupt_values, min_failures=1):
+    '''
+    Check for corrupt data
+
+    Parameters
+    ----------
+    data : pandas dataframe
+        Index in datetime format, data in columns
+
+    corrupt_values : list of floats
+        List of corrupt data values
+
+    min_failures : int (optional)
+        Minimum number of consecutive failures required for reporting,
+        default = 1
+
+    Returns
+    ----------
+    1: Corrected data (dataframe)
+    2: Mask (boolean dataframe) used to correct data
+    3: Full pecos object that contains all test parameters and data
+    '''
+    try:
+        assert type(data) == pd.core.frame.DataFrame
+    except:
+        assert type(data) == pd.core.frame.Series
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+
+    # run pecos method
+    pm.check_corrupt(corrupt_values, min_failures)
+
+    mask = pm.get_test_results_mask()
+
+    # return corrected data, mask used to correct data, full pecos object
+    return {'data': data[mask], 'mask': mask, 'test results': pm.test_results}
