@@ -19,7 +19,9 @@ group columns 'C' and 'D' to 'Wave'.
     >>> import pandas as pd
     >>> import pecos
     >>> pm = pecos.monitoring.PerformanceMonitoring()
-    >>> df = pd.DataFrame()
+    >>> index = pd.date_range('1/1/2016', periods=3, freq='s')
+    >>> data = [[1,2,3],[4,5,6],[7,8,9]]
+    >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
     >>> pm.add_dataframe(df)
 	
 .. doctest::
