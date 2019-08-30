@@ -56,10 +56,11 @@ called using that object.
 .. doctest::
     :hide:
 
+    >>> import pecos
+    >>> import pandas as pd
     >>> index = pd.date_range('1/1/2016', periods=3, freq='s')
     >>> data = [[1,2,3],[4,5,6],[7,8,9]]
     >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
-    >>> import pecos
     
 .. doctest::
 

@@ -131,8 +131,8 @@ The method can be called multiple times to appended metrics based on the timesta
     >>> print(metrics_day2)
                   QCI   RMSE
     2018-01-02  0.755  0.845
-    >>> pecos.io.write_metrics('metrics_file.csv', metrics_day1)
-    >>> pecos.io.write_metrics('metrics_file.csv', metrics_day2)
+    >>> pecos.io.write_metrics(metrics_day1, 'metrics_file.csv') # doctest: +SKIP
+    >>> pecos.io.write_metrics(metrics_day2, 'metrics_file.csv') # doctest: +SKIP
 
 The metrics_file.csv file will contain::
 
