@@ -205,6 +205,9 @@ class PerformanceMonitoring(object):
         df : pandas DataFrame
             DataFrame to add to the PerformanceMonitoring object
         """
+        assert isinstance(df, pd.DataFrame)
+        assert isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
+        
         temp = df.copy()
 
         if self.df is not None:
@@ -513,7 +516,7 @@ class PerformanceMonitoring(object):
             default = 1
         """
         logger.info("Check delta (max-min) range")
-
+        
         df = self._setup_data(key, rolling_mean)
         if df is None:
             return
@@ -862,21 +865,14 @@ def check_timestamp(data, frequency, expected_start_time=None,
     2: Mask (boolean dataframe) used to correct data
     3: Full pecos object that contains all test parameters and data
     '''
-    try:
-        assert type(data) == pd.core.frame.DataFrame
-    except:
-        assert type(data) == pd.core.frame.Series
-
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
 
-    # run pecos method
     pm.check_timestamp(frequency, expected_start_time, expected_end_time,
                        min_failures, exact_times)
 
     mask = pm.mask
 
-    # return corrected data, mask used to correct data, full pecos object
     return {'cleaned_data': pm.df, 'mask': mask, 'test_results': pm.test_results}
 
 
@@ -948,21 +944,14 @@ def check_increment(data, bound, increment=1, absolute_value=True,
     ----------
     Dictionary with cleaned data, mask, and test results summary
     '''
-    try:
-        assert type(data) == pd.core.frame.DataFrame
-    except:
-        assert type(data) == pd.core.frame.Series
-
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
 
-    # run pecos method
     pm.check_increment(bound, None, {}, increment, absolute_value,
                        rolling_mean, min_failures)
 
     mask = pm.mask
 
-    # return corrected data, mask used to correct data, full pecos object
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
@@ -1002,22 +991,13 @@ def check_delta(data, bound, window=3600, absolute_value=True,
     ----------
     Dictionary with cleaned data, mask, and test results summary
     '''
-    try:
-        assert type(data) == pd.core.frame.DataFrame
-    except:
-        assert type(data) == pd.core.frame.Series
-
-    assert type(data.index) == pd.core.indexes.datetimes.DatetimeIndex
-
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
 
-    # run pecos method
     pm.check_delta(bound, None, {}, window, absolute_value, rolling_mean, min_failures)
 
     mask = pm.mask
 
-    # return corrected data, mask used to correct data, full pecos object
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
@@ -1057,22 +1037,13 @@ def check_outlier(data, bound, window=3600, absolute_value=True,
     ----------
     Dictionary with cleaned data, mask, and test results summary
     '''
-    try:
-        assert type(data) == pd.core.frame.DataFrame
-    except:
-        assert type(data) == pd.core.frame.Series
-
-    assert type(data.index) == pd.core.indexes.datetimes.DatetimeIndex
-
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
 
-    # run pecos method
     pm.check_outlier(bound, None, {}, window, absolute_value, rolling_mean, min_failures)
 
     mask = pm.mask
 
-    # return corrected data, mask used to correct data, full pecos object
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
@@ -1093,20 +1064,13 @@ def check_missing(data, min_failures=1):
     ----------
     Dictionary with cleaned data, mask, and test results summary
     '''
-    try:
-        assert type(data) == pd.core.frame.DataFrame
-    except:
-        assert type(data) == pd.core.frame.Series
-
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
 
-    # run pecos method
     pm.check_missing(None, min_failures)
 
     mask = pm.mask
 
-    # return corrected data, mask used to correct data, full pecos object
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
@@ -1130,18 +1094,11 @@ def check_corrupt(data, corrupt_values, min_failures=1):
     ----------
     Dictionary with cleaned data, mask, and test results summary
     '''
-    try:
-        assert type(data) == pd.core.frame.DataFrame
-    except:
-        assert type(data) == pd.core.frame.Series
-
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
 
-    # run pecos method
     pm.check_corrupt(corrupt_values, None, min_failures)
 
     mask = pm.mask
 
-    # return corrected data, mask used to correct data, full pecos object
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
