@@ -14,15 +14,13 @@ between pecos and pvlib.
 * PV performance metrics are computed
 * The results are printed to csv and html reports
 """
-import pecos
 import datetime
 import yaml
-import os
 import pandas as pd
+import matplotlib.pyplot as plt
 import pvlib
 import pv_model
-import pv_graphics
-
+import pecos
 
 # Initialize logger
 pecos.logger.initialize()
@@ -105,23 +103,16 @@ temp = pm.df[pm.trans['Ambient Temperature']][mask[pm.trans['Ambient Temperature
 pv_metrics = pv_model.sapm(pm, poa, wind, temp, sapm_parameters, location)
 metrics = pd.concat([QCI, pv_metrics], axis=1)
 
-# Define output files and directories
-results_directory = 'Results'
-if not os.path.exists(results_directory):
-    os.makedirs(results_directory)
-graphics_file_rootname = os.path.join(results_directory, 'test_results')
-custom_graphics_file_rootname = os.path.join(results_directory, 'custom')
-metrics_file = os.path.join(results_directory, system_name + '_metrics.csv')
-test_results_file = os.path.join(results_directory, system_name + '_test_results.csv')
-report_file =  os.path.join(results_directory, system_name + '.html')
-
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(graphics_file_rootname, pm)
-custom_graphics = pv_graphics.graphics(custom_graphics_file_rootname, pm)
+test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results, pm.tfilter)
+pm.df[pm.trans['DC Power']].plot(figsize=(7,3.5))
+plt.savefig('custom1.png', format='png', dpi=500)
+pm.df[['Diffuse_Wm2_Avg', 'Direct_Wm2_Avg', 'Global_Wm2_Avg']].plot(figsize=(7,3.5))
+plt.savefig('custom2.png', format='png', dpi=500)
 
 # Write metrics, test results, and report files
-pecos.io.write_metrics(metrics_file, metrics)
-pecos.io.write_test_results(test_results_file, pm.test_results)
-pecos.io.write_monitoring_report(report_file, pm, test_results_graphics, 
-                                 custom_graphics, metrics.transpose(), 
+pecos.io.write_metrics(metrics)
+pecos.io.write_test_results(pm.test_results)
+pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+                                 ['custom1.png', 'custom2.png'], metrics.transpose(), 
                                  'Baseline System, Performance Monitoring Report', config)

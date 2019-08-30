@@ -12,6 +12,7 @@ When a quality control test fails, information is stored in::
 
 	pm.test_results
 
+This DataFrame is updated each time a new quality control test is run.
 Test results includes the following information:
 
 * Variable Name: Column name in the DataFrame
@@ -71,6 +72,38 @@ Note that variable names are not recorded for timestamp test failures (Test resu
 	
 The :class:`~pecos.io.write_test_results` method is used to write quality control test results to a CSV file.
 This method can be customized to write quality control test results to a database or to other file formats.
+
+Quality control mask
+------------------------
+
+Boolean mask indicating data that failed a quality control test is stored in::
+
+	pm.mask
+    
+This DataFrame is updated each time a new quality control test is run. True indicates that data pass all tests, False indicates data did not pass at least one test (or data is NaN).
+
+Cleaned data
+--------------
+
+Cleaned data set is stored in::
+
+	pm.cleaned_data
+
+This DataFrame is updated each time a new quality control test is run.  Data that failed a quality control test are replaced by NaN.
+
+Note that Pandas includes several methods to replace NaN using different 
+replacement strategies. 
+Generally, the best data replacement strategy must be defined on a case by case basis.  
+Possible strategies include:
+
+* Replacing missing data using linear interpolation or other polynomial approximations
+* Replacing missing data using a rolling mean of the data
+* Replacing missing data with a data from a previous period (previous day, hour, etc.)
+* Replacing missing data with data from a redundant sensor
+* Replacing missing data with values from a model
+
+These strategies can be accomplished using the Pandas methods ``interpolate``, ``replace``, and ``fillna``.  
+See Pandas documentation for more details.
 
 Performance metrics
 -----------------------------

@@ -5,8 +5,13 @@ _build/
 pecos.egg-info/*
 logfile
 
-pecos/tests/*.html
+*.html
+*.csv
+*.png
+
 pecos/tests/*.csv
 pecos/tests/*.png
 
-examples/*/Results*/*
+examples/**/*.html
+examples/**/*.csv
+examples/**/*.png

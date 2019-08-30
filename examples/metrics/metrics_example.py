@@ -7,10 +7,9 @@ long term system health
   object and a series of quality control tests are run
 * The results are printed to csv and html reports
 """
-import pecos
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
+import pecos
 
 # Initialize logger
 pecos.logger.initialize()
@@ -41,23 +40,12 @@ for key in pm.trans.keys():
 for key in pm.trans.keys():
     pm.check_increment([-0.5, None], key, absolute_value=False) 
 
-# Define output file names and directories
-results_directory = 'Results'
-if not os.path.exists(results_directory):
-    os.makedirs(results_directory)
-graphics_file_rootname = os.path.join(results_directory, 'test_results')
-custom_graphics_file = os.path.abspath(os.path.join(results_directory, 'custom.png'))
-test_results_file = os.path.join(results_directory, system_name + '_test_results.csv')
-report_file =  os.path.join(results_directory, system_name + '.html')
-
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(graphics_file_rootname, pm)
-plt.figure(figsize = (10.0,4.0))
-ax = plt.gca()
-df.plot(ax=ax, ylim=[-0.2,1.2])
-plt.savefig(custom_graphics_file, format='png', dpi=500)
+test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
+df.plot(ylim=[-0.2,1.2], figsize=(10.0,4.0))
+plt.savefig('custom.png', format='png', dpi=500)
 
 # Write test results and report files
-pecos.io.write_test_results(test_results_file, pm.test_results)
-pecos.io.write_monitoring_report(report_file, pm, test_results_graphics, [custom_graphics_file], 
-                                 title='System1 2015 Performance Metrics')
+pecos.io.write_test_results(pm.test_results)
+pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+                                 ['custom.png'], title='System1 2015 Performance Metrics')

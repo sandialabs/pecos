@@ -1,0 +1,17 @@
+name: test_env
+channels:
+    - defaults
+    - http://conda.anaconda.org/pvlib
+dependencies:
+    - python=3.7
+    - numpy
+    - pandas
+    - nose
+    - pvlib
+    - matplotlib
+    - plotly
+    - ephem
+    - jinja2
+    - xlrd
+    - pip:
+        - coveralls

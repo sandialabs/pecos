@@ -280,7 +280,8 @@ def plot_interactive_timeseries(data, xaxis_min=None, xaxis_max=None, yaxis_min=
                   yaxis=dict(range=[yaxis_min,yaxis_max]))
     plotly_data = []
     for col in data.columns:
-        trace = plotly.graph_objs.Scatter(x=data.index.tz_localize(None), y=data.loc[:,col], name = col)
+        trace = plotly.graph_objs.Scatter(x=data.index.tz_localize(None), 
+                                          y=data.loc[:,col], name = col)
         plotly_data.append(trace)
     fig = dict(data=plotly_data, layout=layout)
     if filename:
@@ -405,23 +406,22 @@ def plot_doy_heatmap(data, cmap='nipy_spectral', vmin=None, vmax=None,
     plt.tight_layout()
     
 @_nottest
-def plot_test_results(filename_root, pm, image_format='png', dpi=500, 
-                      figsize=(7.0, 3.0)):
+def plot_test_results(data, test_results, tfilter=None, image_format='png', 
+                      dpi=500, figsize=(7.0,3.0), filename_root='test_results'):
     """
     Create test results graphics which highlight data points that
     failed a quality control test.
 
     Parameters
     ----------
-    filename_root : string
-        Filename root, with full path.  
-        Each grpahics filename is appended with an integer.
-        For example, filename_root = 'C:\\\\pecos\\\\results\\\\test' will 
-        generate a file named 'C:\\\\pecos\\\\results\\\\test0.png'.
-        The directory ''C:\\\\pecos\\\\results' must exist.
-
-    pm : PerformanceMonitoring object
-        Contains data (pm.df) and test results (pm.test_results)
+    data : pandas DataFrame
+        Data, indexed by time (pm.df)
+        
+    test_results : pandas DataFrame
+        Summary of the quality control test results (pm.test_results)
+    
+    tfilter : pandas Series (optional)
+        Boolean values used to include time filter in the plot, default = None 
         
     image_format : string  (optional)
         Image format, default = 'png'
@@ -430,21 +430,33 @@ def plot_test_results(filename_root, pm, image_format='png', dpi=500,
         DPI resolution, default = 500
         
     figsize : tuple (optional)
-        Figure size, default = (7.0, 3.0)
-    """
+        Figure size, default = (7.0,3.0)
     
-    filename_root = os.path.abspath(filename_root)
+    filename_root : string (optional)
+        File name root. If the full path is not provided, files are saved into the 
+        current working directory. Each graphic filename is appended with an integer.
+        For example, filename_root = 'test' will generate a files named 'test0.png', 
+        'test1.png', etc. By default, the filename root is 'test_results'
+    
+    Returns
+    ----------
+    A list of file names
+    """
+    if os.path.dirname(filename_root) == '':
+        full_filename_root = os.path.join(os.getcwd(), filename_root)
+    else:
+        full_filename_root = os.path.abspath(filename_root)
     
     # Colect file names
     test_results_graphics = []
     
-    if pm.test_results.empty:
+    if test_results.empty:
         return test_results_graphics
 
     graphic = 0
     
-    pm.test_results.sort_values(list(pm.test_results.columns), inplace=True)
-    pm.test_results.index = np.arange(1, pm.test_results.shape[0]+1)
+    test_results.sort_values(list(test_results.columns), inplace=True)
+    test_results.index = np.arange(1, test_results.shape[0]+1)
     
     # Remove specific error flags
     remove_error_flags = ['Duplicate timestamp', 
@@ -452,14 +464,14 @@ def plot_test_results(filename_root, pm, image_format='png', dpi=500,
                           'Corrupt data', 
                           'Missing timestamp', 
                           'Nonmonotonic timestamp']
-    test_results = pm.test_results[-pm.test_results['Error Flag'].isin(remove_error_flags)]
+    test_results = test_results[-test_results['Error Flag'].isin(remove_error_flags)]
     grouped = test_results.groupby(['Variable Name'])
 
     for col_name, test_results_group in grouped:
         logger.info("Creating graphic for " + col_name)
         
-        plot_timeseries(pm.df[col_name], pm.tfilter, 
-                        test_results_group=test_results_group, figsize = figsize)
+        plot_timeseries(data[col_name], tfilter, 
+                        test_results_group=test_results_group, figsize=figsize)
 
         ax = plt.gca()
         box = ax.get_position()
@@ -467,7 +479,7 @@ def plot_test_results(filename_root, pm, image_format='png', dpi=500,
         plt.legend(loc='center left', bbox_to_anchor=(1, 0.5), fontsize=8)
         plt.title(col_name, fontsize=8)
         
-        filename = filename_root + str(graphic) + '.' + image_format
+        filename = full_filename_root + str(graphic) + '.' + image_format
         test_results_graphics.append(filename)
         plt.savefig(filename, format=image_format, dpi=dpi)
             

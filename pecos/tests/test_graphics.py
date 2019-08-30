@@ -178,7 +178,8 @@ def test_plot_test_results1():
     filename_root = abspath(join(testdir, 'plot_test_results1'))
     pm = pecos.monitoring.PerformanceMonitoring()
     
-    graphics = pecos.graphics.plot_test_results(filename_root, pm)
+    graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results, pm.tfilter, 
+                                                filename_root=filename_root)
     
     assert_equals(graphics,[])
 
@@ -196,7 +197,8 @@ def test_plot_test_results2():
     
     pm.check_range([0,7]) # 2 test failures
     
-    graphics = pecos.graphics.plot_test_results(filename_root, pm)
+    graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results, pm.tfilter, 
+                                                filename_root=filename_root)
     
     assert_equals(len(graphics),2)
 

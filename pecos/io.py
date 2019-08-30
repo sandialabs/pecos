@@ -32,14 +32,14 @@ logger = logging.getLogger(__name__)
 
 env = Environment(loader=PackageLoader('pecos', 'templates'))
 
-def read_campbell_scientific(file_name, index_col='TIMESTAMP', encoding=None):
+def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
     """
     Read Campbell Scientific CSV file.
 
     Parameters
     ----------
-    file_name : string
-        File name, with full path
+    filename : string
+        File name
 
     index_col : string (optional)
         Index column name, default = 'TIMESTAMP'
@@ -51,17 +51,17 @@ def read_campbell_scientific(file_name, index_col='TIMESTAMP', encoding=None):
     ---------
     pandas DataFrame with data
     """
-    logger.info("Reading Campbell Scientific CSV file " + file_name)
+    logger.info("Reading Campbell Scientific CSV file " + filename)
 
     try:
-        df = pd.read_csv(file_name, skiprows=1, encoding=encoding, index_col=index_col, parse_dates=True, dtype ='unicode', error_bad_lines=False) #, low_memory=False)
+        df = pd.read_csv(filename, skiprows=1, encoding=encoding, index_col=index_col, parse_dates=True, dtype ='unicode', error_bad_lines=False) #, low_memory=False)
         df = df[2:]
         index = pd.to_datetime(df.index)
         Unnamed = df.filter(regex='Unnamed')
         df = df.drop(Unnamed.columns, 1)
         df = pd.DataFrame(data = df.values, index = index, columns = df.columns, dtype='float64')
     except:
-        logger.warning("Cannot extract database, CSV file reader failed " + file_name)
+        logger.warning("Cannot extract database, CSV file reader failed " + filename)
         df = pd.DataFrame()
         return
 
@@ -143,17 +143,22 @@ def _create_email_message(subject, body, recipient, sender):
     
     return msg
         
-def write_metrics(filename, metrics):
+def write_metrics(metrics, filename='metrics.csv'):
     """
     Write metrics file.
     
     Parameters
     -----------
-    filename : string
-        File name, with full path
-    
     metrics : pandas DataFrame
         Data to add to the metrics file
+    
+    filename : string (optional)
+        File name.  If the full path is not provided, the file is saved into the 
+        current working directory. By default, the file is named 'metrics.csv'
+    
+    Returns
+    ------------
+    filename : string
     """
     logger.info("Write metrics file")
 
@@ -165,36 +170,55 @@ def write_metrics(filename, metrics):
     metrics.index = metrics.index.to_native_types() # this is necessary when using time zones
     metrics = metrics.combine_first(previous_metrics) 
     
-    fout = open(filename, 'w')
+    if os.path.dirname(filename) == '':
+        full_filename = os.path.join(os.getcwd(), filename)
+    else:
+        full_filename = filename
+    fout = open(full_filename, 'w')
     metrics.to_csv(fout, index_label='TIMESTEP', na_rep = 'NaN')
     fout.close()
+    
+    return full_filename
 
 @_nottest
-def write_test_results(filename, test_results):
+def write_test_results(test_results, filename='test_results.csv'):
     """
     Write test results file.
 
     Parameters
     -----------
-    filename : string
-        File name, with full path
-
     test_results : pandas DataFrame
-        Test results stored in pm.test_results
+        Summary of the quality control test results (pm.test_results)
+    
+    filename : string (optional)
+        File name.  If the full path is not provided, the file is saved into the 
+        current working directory. By default, the file is named 'test_results.csv'
+    
+    Returns
+    ------------
+    filename : string
     """
 
     test_results.sort_values(list(test_results.columns), inplace=True)
     test_results.index = np.arange(1, test_results.shape[0]+1)
 
     logger.info("Writing test results csv file " + filename)
-
-    fout = open(filename, 'w')
+    
+    if os.path.dirname(filename) == '':
+        full_filename = os.path.join(os.getcwd(), filename)
+    else:
+        full_filename = filename
+    fout = open(full_filename, 'w')
     test_results.to_csv(fout, na_rep = 'NaN')
     fout.close()
+    
+    return full_filename
 
-def write_monitoring_report(filename, pm, test_results_graphics=[], custom_graphics=[], metrics=None, 
+def write_monitoring_report(data, test_results, test_results_graphics=[], 
+                            custom_graphics=[], metrics=None, 
                             title='Pecos Monitoring Report', config={}, logo=False, 
-                            im_width_test_results=700, im_width_custom=700, encode=False):
+                            im_width_test_results=700, im_width_custom=700, encode=False,
+                            filename='monitoring_report.html'):
     """
     Generate a monitoring report.  
     The monitoring report is used to report quality control test results for a single system.
@@ -202,12 +226,12 @@ def write_monitoring_report(filename, pm, test_results_graphics=[], custom_graph
     
     Parameters
     ----------
-    filename : string
-        File name, with full path
-
-    pm : pecos PerformanceMonitoring object
-        Contains data (pm.df) and test results (pm.test_results)
-    
+    data : pandas DataFrame
+        Data, indexed by time (pm.df)
+        
+    test_results : pandas DataFrame
+        Summary of the quality control test results (pm.test_results)
+        
     test_results_graphics : list of strings (optional)
         Graphics files, with full path.  These graphics highlight data points 
         that failed a quality control test, created using pecos.graphics.plot_test_results()
@@ -235,17 +259,24 @@ def write_monitoring_report(filename, pm, test_results_graphics=[], custom_graph
         
     encode : boolean (optional)
         Encode graphics in the html, default = False
-    """
     
+    filename : string (optional)
+        File name.  If the full path is not provided, the file is saved into the 
+        current working directory. By default, the file is named 'monitoring_report.html'
+        
+    Returns
+    ------------
+    filename : string
+    """
     logger.info("Writing HTML report")
     
-    if pm.df.empty:
+    if data.empty:
         logger.warning("Empty database")
         start_time = 'NaN'
         end_time = 'NaN'
     else:
-        start_time = pm.df.index[0]
-        end_time = pm.df.index[-1]
+        start_time = data.index[0]
+        end_time = data.index[-1]
     
     # Set pandas display option     
     pd.set_option('display.max_colwidth', -1)
@@ -262,14 +293,13 @@ def write_monitoring_report(filename, pm, test_results_graphics=[], custom_graph
     except:
         notes_df = pd.DataFrame()
     
-    pm.test_results.sort_values(list(pm.test_results.columns), inplace=True)
-    pm.test_results.index = np.arange(1, pm.test_results.shape[0]+1)
-    #pm.test_results.reset_index(inplace=True)
+    test_results.sort_values(list(test_results.columns), inplace=True)
+    test_results.index = np.arange(1, test_results.shape[0]+1)
     
     # Convert to html format
     if metrics is None:
         metrics = pd.DataFrame()
-    test_results_html = pm.test_results.to_html(justify='left')
+    test_results_html = test_results.to_html(justify='left')
     metrics_html = metrics.to_html(justify='left')
     notes_html = notes_df.to_html(justify='left', header=False)
     
@@ -277,7 +307,7 @@ def write_monitoring_report(filename, pm, test_results_graphics=[], custom_graph
                 'end_time': str(end_time), 
                 'num_notes': str(notes_df.shape[0]),
                 'notes': notes_html, 
-                'num_test_results': str(pm.test_results.shape[0]),
+                'num_test_results': str(test_results.shape[0]),
                 'test_results': test_results_html,
                 'test_results_graphics': test_results_graphics,
                 'custom_graphics': custom_graphics,
@@ -290,14 +320,21 @@ def write_monitoring_report(filename, pm, test_results_graphics=[], custom_graph
     html_string = _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, encode)
     
     # Write html file
-    html_file = open(filename,"w")
+    if os.path.dirname(filename) == '':
+        full_filename = os.path.join(os.getcwd(), filename)
+    else:
+        full_filename = filename
+    html_file = open(full_filename,"w")
     html_file.write(html_string)
     html_file.close()
     
     logger.info("")
     
-def write_dashboard(filename, column_names, row_names, content, 
-                    title='Pecos Dashboard', footnote='', logo=False, im_width=250, datatables=False, encode=False):
+    return full_filename
+    
+def write_dashboard(column_names, row_names, content, title='Pecos Dashboard', 
+                    footnote='', logo=False, im_width=250, datatables=False, 
+                    encode=False, filename='dashboard.html'):
     """
     Generate a dashboard.  
     The dashboard is used to compare results across multiple systems.
@@ -305,9 +342,6 @@ def write_dashboard(filename, column_names, row_names, content,
     
     Parameters
     ----------
-    filename : string
-        File name, with full path
-    
     column_names : list of strings
         Column names listed in the order they should appear in the dashboard, i.e. ['location1', 'location2']
         
@@ -352,6 +386,14 @@ def write_dashboard(filename, column_names, row_names, content,
     
     encode : boolean (optional)
         Encode graphics in the html, default = False
+    
+    filename : string (optional)
+        File name.  If the full path is not provided, the file is saved into the 
+        current working directory. By default, the file is named 'dashboard.html'
+    
+    Returns
+    ------------
+    filename : string
     """
     
     logger.info("Writing dashboard")
@@ -363,11 +405,17 @@ def write_dashboard(filename, column_names, row_names, content,
     html_string = _html_template_dashboard(column_names, row_names, content, title, footnote, logo, im_width, datatables, encode)
     
     # Write html file
-    html_file = open(filename,"w")
+    if os.path.dirname(filename) == '':
+        full_filename = os.path.join(os.getcwd(), filename)
+    else:
+        full_filename = filename
+    html_file = open(full_filename,"w")
     html_file.write(html_string)
     html_file.close()
     
     logger.info("")
+
+    return full_filename
 
 def _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, encode):
     

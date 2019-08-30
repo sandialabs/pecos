@@ -51,13 +51,13 @@ The script performs the following steps:
 
 .. literalinclude:: ../examples/simple/simple_example.py
 
-Results are saved in examples/simple/Results.  Results include:
+Results include:
 
-* HTML monitoring report, **Simple.html** (:numref:`fig-monitor-1`), includes summary tables and graphics
+* HTML monitoring report, **monitoring_report.html** (:numref:`fig-monitor-1`), includes summary tables and graphics
 
-* Test results CSV file, **Simple_test_results.csv**, includes information from the summary tables
+* Test results CSV file, **test_results.csv**, includes information from the summary tables
 
-* Performance metric CSV file, **Simple_metrics.csv**, includes a quality control index based on the analysis.  
+* Performance metric CSV file, **metrics.csv**, includes a quality control index based on the analysis.  
 
 .. _fig-monitor-1:
 .. figure:: figures/monitoring_report.png
