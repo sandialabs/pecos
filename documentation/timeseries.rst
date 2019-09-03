@@ -34,7 +34,7 @@ Data, in the form of a Pandas Dataframe, can then be added to the PerformanceMon
 
     >>> index = pd.date_range('1/1/2016', periods=3, freq='s')
     >>> data = [[1,2,3],[4,5,6],[7,8,9]]
-    >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
+    >>> data = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
 
 .. doctest::
 
