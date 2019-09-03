@@ -1,6 +1,7 @@
 """
 The monitoring module contains the PerformanceMonitoring class used to run
-quality control tests and store results.
+quality control tests and store results.  The module also contains individual 
+functions that can be used to run quality control tests.
 """
 import pandas as pd
 import numpy as np
@@ -11,6 +12,32 @@ none_list = ['','none','None','NONE', None, [], {}]
 
 logger = logging.getLogger(__name__)
 
+def _documented_by(original):
+    def wrapper(target):
+        docstring = original.__doc__
+        old = """
+        Parameters
+        ----------
+        """
+        new = """
+        Parameters
+        ----------
+        data : pandas DataFrame
+            Data used in the quality control test, indexed by datetime
+            
+        """
+        new_docstring = docstring.replace(old, new) + \
+        """   
+                Returns    
+                ----------
+                Dictionary
+                    Results include cleaned data, mask, and test results summary
+        """
+        target.__doc__ = new_docstring
+        return target
+    return wrapper
+
+### Object-oriented approach
 class PerformanceMonitoring(object):
 
     def __init__(self):
@@ -196,19 +223,19 @@ class PerformanceMonitoring(object):
                 frame_t = frame.transpose()
                 self.test_results = self.test_results.append(frame_t, ignore_index=True)
 
-    def add_dataframe(self, df):
+    def add_dataframe(self, data):
         """
-        Add DataFrame to the PerformanceMonitoring object.
+        Add data to the PerformanceMonitoring object
 
         Parameters
         -----------
-        df : pandas DataFrame
-            DataFrame to add to the PerformanceMonitoring object
+        data : pandas DataFrame
+            Data to add to the PerformanceMonitoring object, indexed by datetime
         """
-        assert isinstance(df, pd.DataFrame)
-        assert isinstance(df.index, pd.core.indexes.datetimes.DatetimeIndex)
+        assert isinstance(data, pd.DataFrame)
+        assert isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex)
         
-        temp = df.copy()
+        temp = data.copy()
 
         if self.df is not None:
             self.df = temp.combine_first(self.df)
@@ -217,14 +244,14 @@ class PerformanceMonitoring(object):
 
         # Add identity 1:1 translation dictionary
         trans = {}
-        for col in df.columns:
+        for col in temp.columns:
             trans[col] = [col]
 
         self.add_translation_dictionary(trans)
 
     def add_translation_dictionary(self, trans):
         """
-        Add translation dictionary to the PerformanceMonitoring object.
+        Add translation dictionary to the PerformanceMonitoring object
 
         Parameters
         -----------
@@ -238,7 +265,7 @@ class PerformanceMonitoring(object):
 
     def add_time_filter(self, time_filter):
         """
-        Add a time filter to the PerformanceMonitoring object.
+        Add a time filter to the PerformanceMonitoring object
 
         Parameters
         ----------
@@ -289,7 +316,7 @@ class PerformanceMonitoring(object):
                         exact_times=True):
         """
         Check time series for missing, non-monotonic and duplicate
-        timestamps.
+        timestamps
 
         Parameters
         ----------
@@ -390,7 +417,7 @@ class PerformanceMonitoring(object):
 
     def check_range(self, bound, key=None, specs={}, rolling_mean=0, min_failures=1):
         """
-        Check bounds on data.
+        Check upper and lower bounds on data
 
         Parameters
         ----------
@@ -426,8 +453,8 @@ class PerformanceMonitoring(object):
     def check_increment(self, bound, key=None, specs={}, increment=1,
                         absolute_value=True, rolling_mean=0, min_failures=1):
         """
-        Check bounds on the difference between data values separated by a set
-        increment.
+        Check upper and lower bounds on the difference between data values, 
+        separated by a set increment
 
         Parameters
         ----------
@@ -482,8 +509,10 @@ class PerformanceMonitoring(object):
     def check_delta(self, bound, key=None, specs={}, window=3600,
                     absolute_value=True, rolling_mean=0, min_failures=1):
         """
-        Check bounds on the difference between max and min data values within
-		  a rolling window (Note, this method is currently NOT efficient for large
+        Check upper and lower bounds on the difference between max and min data 
+        values within a rolling window
+          
+        Note, this method is currently NOT efficient for large
         data sets (> 100000 pts) because it uses df.rolling().apply() to find
         the position of the min and max). This method requires pandas 0.23 or greater.
 
@@ -606,8 +635,10 @@ class PerformanceMonitoring(object):
     def check_outlier(self, bound, key=None, specs={}, window=3600,
                         absolute_value=True, rolling_mean=0, min_failures=1):
         """
-        Check bounds on normalized data within a moving window to find outliers.
-        The bound is specified in standard deviations.
+        Check upper and lower bounds on normalized data within a moving window
+        to find outliers
+        
+        The upper and lower bounds are specified in standard deviations.
         Data normalized using (data-mean)/std.
 
         Parameters
@@ -696,7 +727,7 @@ class PerformanceMonitoring(object):
 
     def check_corrupt(self, corrupt_values, key=None, min_failures=1):
         """
-        Check for corrupt data.
+        Check for corrupt data
 
         Parameters
         ----------
@@ -727,7 +758,8 @@ class PerformanceMonitoring(object):
 
     def evaluate_string(self, col_name, string_to_eval, specs={}):
         """
-        Returns the evaluated Python equation written as a string (BETA).
+        Returns the evaluated Python equation written as a string (BETA)
+        
         For each {keyword} in string_to_eval,
         {keyword} is first expanded to self.df[self.trans[keyword]],
         if that fails, then {keyword} is expanded to specs[keyword].
@@ -825,280 +857,84 @@ class PerformanceMonitoring(object):
 
         return clock_time
 
+### Functional approach
+@_documented_by(PerformanceMonitoring.check_timestamp)
 def check_timestamp(data, frequency, expected_start_time=None,
                     expected_end_time=None, min_failures=1, exact_times=True):
-    '''
-    Check time series for missing, non-monotonic and duplicate timestamps
 
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in time/timesteps, data in columns
-
-    frequency : int
-        Expected time series frequency, in seconds
-
-    expected_start_time : Timestamp (optional)
-        Expected start time. If not specified, the minimum timestamp
-        is used
-
-    expected_end_time : Timestamp (optional)
-        Expected end time. If not specified, the maximum timestamp
-        is used
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for
-        reporting, default = 1
-
-    exact_times : bool (optional)
-        Controls how missing times are checked.
-        If True, times are expected to occur at regular intervals
-        (specified in frequency) and the DataFrame is reindexed to match
-        the expected frequency.
-        If False, times only need to occur once or more within each
-        interval (specified in frequency) and the DataFrame is not
-        reindexed.
-
-    Returns
-    ----------
-    1: Corrected data (dataframe)
-    2: Mask (boolean dataframe) used to correct data
-    3: Full pecos object that contains all test parameters and data
-    '''
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
     pm.check_timestamp(frequency, expected_start_time, expected_end_time,
                        min_failures, exact_times)
-
     mask = pm.mask
 
     return {'cleaned_data': pm.df, 'mask': mask, 'test_results': pm.test_results}
 
 
-def check_range(data, bound, rolling_mean=0, min_failures=1):
-    '''
-    Check upper and lower bounds on data
+@_documented_by(PerformanceMonitoring.check_range)
+def check_range(data, bound, key=None, specs={}, rolling_mean=0, min_failures=1):
 
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in datetime format, data in columns
-
-    bound : list of floats
-        [lower bound, upper bound], None can be used in place of a lower
-        or upper bound
-
-    rolling_mean : int (optional)
-        Size of window (in seconds) used to smooth data using a
-        mean filter before the test is run, default = 0 (i.e., not used)
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for reporting,
-        default = 1
-
-    Returns
-    ----------
-    Dictionary with cleaned data, mask, and test results summary
-    '''
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
-    pm.check_range(bound, None, {}, rolling_mean, min_failures)
-
+    pm.check_range(bound, key, specs, rolling_mean, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
-def check_increment(data, bound, increment=1, absolute_value=True,
+@_documented_by(PerformanceMonitoring.check_increment)
+def check_increment(data, bound, key=None, specs={}, increment=1, absolute_value=True,
                     rolling_mean=0, min_failures=1):
-    '''
-    Check upper/lower bounds on the difference between data values separated
-    by a set increment.
 
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in datetime format, data in columns
-
-    bound : list of floats
-        [lower bound, upper bound], None can be used in place of a lower
-        or upper bound
-
-    increment : int (optional)
-        Time step shift used to compute difference, default = 1
-
-    absolute_value : boolean (optional)
-        Take the absolute value of the increment, default = True
-
-    rolling_mean : int (optional)
-        Size of window (in seconds) used to smooth data using a
-        mean filter before the test is run, default = 0 (i.e., not used)
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for reporting,
-        default = 1
-
-    Returns
-    ----------
-    Dictionary with cleaned data, mask, and test results summary
-    '''
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
-    pm.check_increment(bound, None, {}, increment, absolute_value,
-                       rolling_mean, min_failures)
-
+    pm.check_increment(bound, key, specs, increment, absolute_value, rolling_mean, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
-def check_delta(data, bound, window=3600, absolute_value=True,
+@_documented_by(PerformanceMonitoring.check_delta)
+def check_delta(data, bound, key=None, specs={}, window=3600, absolute_value=True,
                 rolling_mean=0, min_failures=1):
-    '''
-    Check bounds on the difference between max and min data values within
-    a rolling window (Note, this method is currently NOT efficient for large
-    data sets (> 100000 pts) because it uses df.rolling().apply() to find
-    the position of the min and max). This method requires pandas 0.23 or greater.
 
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in datetime format, data in columns
-
-    bound : list of floats
-        [lower bound, upper bound], None can be used in place of a lower
-        or upper bound
-
-    window : int (optional)
-        Size of the moving window (in seconds) used to compute delta,
-        default = 3600
-
-    absolute_value : boolean (optional)
-        Take the absolute value of delta, default = True
-
-    rolling_mean : int (optional)
-        Size of window (in seconds) used to smooth data using a
-        mean filter before the test is run, default = 0 (i.e., not used)
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for reporting,
-        default = 1
-
-    Returns
-    ----------
-    Dictionary with cleaned data, mask, and test results summary
-    '''
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
-    pm.check_delta(bound, None, {}, window, absolute_value, rolling_mean, min_failures)
-
+    pm.check_delta(bound, key, specs, window, absolute_value, rolling_mean, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
-def check_outlier(data, bound, window=3600, absolute_value=True,
+@_documented_by(PerformanceMonitoring.check_outlier)
+def check_outlier(data, bound, key=None, specs={}, window=3600, absolute_value=True,
                   rolling_mean=0, min_failures=1):
-    '''
-    Check bounds on normalized data within a moving window to find outliers.
-    The bound is specified in standard deviations.
-    Data normalized using (data-mean)/std.
 
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in datetime format, data in columns
-
-    bound : list of floats
-        [lower bound, upper bound], None can be used in place of a lower
-        or upper bound
-        Lower bound is usually none; upper bound usually set to an absolute value
-
-    window : int (optional)
-        Size of the moving window (in seconds) used to compute delta,
-        default = 3600
-
-    absolute_value : boolean (optional)
-        Take the absolute value of delta, default = True
-
-    rolling_mean : int (optional)
-        Size of window (in seconds) used to smooth data using a
-        mean filter before the test is run, default = 0 (i.e., not used)
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for reporting,
-        default = 1
-
-    Returns
-    ----------
-    Dictionary with cleaned data, mask, and test results summary
-    '''
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
     pm.check_outlier(bound, None, {}, window, absolute_value, rolling_mean, min_failures)
-
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
-def check_missing(data, min_failures=1):
-    '''
-    Check for missing data
-
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in datetime format, data in columns
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for reporting,
-        default = 1
-
-    Returns
-    ----------
-    Dictionary with cleaned data, mask, and test results summary
-    '''
+@_documented_by(PerformanceMonitoring.check_missing)
+def check_missing(data, key=None, min_failures=1):
+    
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
-    pm.check_missing(None, min_failures)
-
+    pm.check_missing(key, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
-def check_corrupt(data, corrupt_values, min_failures=1):
-    '''
-    Check for corrupt data
+@_documented_by(PerformanceMonitoring.check_corrupt)
+def check_corrupt(data, corrupt_values, key=None, min_failures=1):
 
-    Parameters
-    ----------
-    data : pandas dataframe
-        Index in datetime format, data in columns
-
-    corrupt_values : list of floats
-        List of corrupt data values
-
-    min_failures : int (optional)
-        Minimum number of consecutive failures required for reporting,
-        default = 1
-
-    Returns
-    ----------
-    Dictionary with cleaned data, mask, and test results summary
-    '''
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-
-    pm.check_corrupt(corrupt_values, None, min_failures)
-
+    pm.check_corrupt(corrupt_values, key, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
