@@ -180,7 +180,7 @@ used in the analysis.
 
 .. _fig-monitor-2:
 .. figure:: figures/monitoring_report.png
-   :scale: 75 %
+   :width: 100 %
    :alt: Monitoring report
    
    Example monitoring report.
@@ -213,21 +213,21 @@ Pecos includes dashboard examples (**dashboard_example_1.py**, **dashboard_examp
 
 .. _fig-dashboard1:
 .. figure:: figures/dashboard1.png
-   :scale: 75 %
+   :width: 85 %
    :alt: Dashboard1
    
    Example dashboard 1.
    
 .. _fig-dashboard2:
 .. figure:: figures/dashboard2.png
-   :scale: 75 %
+   :width: 85 %
    :alt: Dashboard
    
    Example dashboard 2.
  
 .. _fig-dashboard3:
 .. figure:: figures/dashboard3.png
-   :scale: 85 %
+   :width: 65 %
    :alt: Dashboard
    
    Example dashboard 3.
@@ -250,7 +250,7 @@ These graphics can be included in :ref:`monitoring_reports`.
  
 .. _fig-test-results:
 .. figure:: figures/test_results_IE.png
-   :scale: 50 %
+   :width: 85 %
    :alt: test-results
    
    Example test results graphic.
@@ -264,7 +264,7 @@ These plots can be included as custom graphics in :ref:`monitoring_reports` and 
 
 .. _fig-doy-heatmap:
 .. figure:: figures/heatmap.png
-   :scale: 25 %
+   :width: 85 %
    :alt: DOY heatmap
    
    Example day-of-year vs. time of day heatmap.
@@ -277,7 +277,7 @@ Interactive graphics can be linked to :ref:`dashboards`.
 
 .. _fig-plotly:
 .. figure:: figures/plotly.png
-   :scale: 50%
+   :width: 100%
    :alt: Plotly
    
    Example interactive graphic using plotly.

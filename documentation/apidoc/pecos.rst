@@ -11,11 +11,12 @@ Submodules
 
 .. toctree::
 
-   pecos.graphics
-   pecos.io
-   pecos.logger
-   pecos.metrics
    pecos.monitoring
-   pecos.pv
+   pecos.metrics
+   pecos.io
+   pecos.graphics
    pecos.utils
+   pecos.logger
+   pecos.pv
+
 

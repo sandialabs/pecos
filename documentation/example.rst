@@ -61,7 +61,7 @@ Results include:
 
 .. _fig-monitor-1:
 .. figure:: figures/monitoring_report.png
-   :scale: 100 %
+   :width: 100 %
    :alt: Monitoring report
    
    Example monitoring report.

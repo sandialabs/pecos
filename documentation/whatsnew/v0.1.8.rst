@@ -20,7 +20,8 @@ v0.1.8 (master)
   ``write_dashboard``, and
   ``plot_test_results``. 
 * Filenames are now an optional parameter in io and graphics functions, this changes the API for 
-  ``write_metrics``, and 
-  ``write_test_results``.
+  ``write_metrics``, 
+  ``write_test_results``, and
+  ``plot_test_results``. 
 * Added Python 3.7 tests
 * Updated examples, tests, and documentation
