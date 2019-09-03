@@ -5,17 +5,17 @@ Framework
 
 Pecos contains the following modules
 
-.. _table-subpackage:
+.. _table-modules:
    
-   =======================================  =============================================================================================================================================================================================================================================================================
-   Subpackage                               Description
-   =======================================  =============================================================================================================================================================================================================================================================================
+   =======================================  =============================================================================================================================================
+   Module                                   Description
+   =======================================  =============================================================================================================================================
    :class:`~pecos.monitoring`	            Contains the PerformanceMonitoring class and individual quality control test functions that are used to run analysis
    :class:`~pecos.metrics`                  Contains metrics that describe the quality control analysis or compute quantities that might be of use in the analysis
    :class:`~pecos.io`		                Contains functions to load data, send email alerts, write results to files, and generate html reports
    :class:`~pecos.graphics`	                Contains functions to generate scatter, time series, and heatmap plots for reports
    :class:`~pecos.utils`	                Contains helper functions, including functions to convert timeseries indices from seconds to datetime
-   =======================================  =============================================================================================================================================================================================================================================================================
+   =======================================  =============================================================================================================================================
    
 In addition to the modules listed above, Pecos also includes a :class:`~pecos.pv`
 module that contains metrics specific to photovoltaic analysis.
