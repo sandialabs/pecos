@@ -2,21 +2,72 @@
 The utils module contains helper functions.
 """
 import pandas as pd
-import numpy as np
-from pandas.tseries.frequencies import to_offset
 import logging
-import os
 
 logger = logging.getLogger(__name__)
-        
-def round_index(dt, frequency, how='nearest'):
+
+def convert_index_to_datetime(data, unit='s', origin='unix'):
     """
-    Round datetime index.
+    Convert DataFrame index from int/float to datetime,
+    rounds datetime to the nearest millisecond
+    
+    Parameters
+    --------------
+    data : pandas DataFrame
+        Data with int/float index
+    
+    unit : str (optional)
+        Units of the original index
+    
+    origin : str
+        Reference date used to define the starting time.
+        If origin = 'unix', the start time is '1970-01-01 00:00:00'
+        The origin can also be defined using a datetime string in a similar 
+        format (i.e. '2019-05-17 16:05:45')
+        
+    Returns
+    ----------
+    pandas DataFrame
+        Data with DatetimeIndex
+    """
+    
+    df = data.copy()
+    
+    df.index = pd.to_datetime(df.index, unit=unit, origin=origin)
+    df.index = df.index.round('ms') # round to nearest milliseconds
+        
+    return df
+
+def convert_index_to_elapsed_time(data):
+    """
+    Convert DataFrame index from datetime to elapsed time in seconds
+    
+    Parameters
+    --------------
+    data : pandas DataFrame
+        Data with DatetimeIndex
+    
+    Returns
+    ----------
+    pandas DataFrame
+        Data with index in elapsed seconds
+    """
+    
+    df = data.copy()
+    
+    index = df.index - df.index[0]
+    df.index = index.total_seconds()
+    
+    return df
+        
+def round_index(data, frequency, how='nearest'):
+    """
+    Round DataFrame index
     
     Parameters
     ----------
-    dt : DatetimeIndex
-        Time series index
+    data : pandas DataFrame
+        Data with DatetimeIndex
     
     frequency : int
         Expected time series frequency, in seconds
@@ -24,52 +75,31 @@ def round_index(dt, frequency, how='nearest'):
     how : string (optional)
         Method for rounding, default = 'nearest'.  Options include:
         
-        - nearest = round the index to the nearest expected integer
-        - floor= round the index to the largest expected integer such that the integer <= index
-        - ceiling = round the index to the smallest expected integer such that the integer >= index
+        * nearest = round the index to the nearest frequency
+        
+        * floor = round the index to the smallest expected frequency
+        
+        * ceiling = round the index to the largest expected frequency 
         
     Returns
     -------
-    Rounded time series index, DatetimeIndex
+    pandas Datarame
+        Data with rounded datetime index
     """
-    freq=str(frequency) + 's'
-    freq = to_offset(freq).nanos
+    df = data.copy()
+
+    window_str=str(int(frequency*1e3)) + 'ms' # milliseconds
     
     if how=='nearest':
-        rounded_dt = pd.DatetimeIndex(((np.round(dt.asi8/(float(freq)))*freq).astype(np.int64)))
+        rounded_index = df.index.round(window_str)
     elif how=='floor':
-        rounded_dt = pd.DatetimeIndex(((np.floor(dt.asi8/(float(freq)))*freq).astype(np.int64)))
+        rounded_index = df.index.floor(window_str)
     elif how=='ceiling':
-        rounded_dt = pd.DatetimeIndex(((np.ceil(dt.asi8/(float(freq)))*freq).astype(np.int64)))
+        rounded_index = df.index.ceil(window_str)
     else:
         logger.info("Invalid input, index not rounded")
-        rounded_dt = dt
-
-    return rounded_dt
-
-def convert_html_to_image(html_filename, image_filename, image_format='png', quality=100, zoom=1):
-    """
-    Convert html file to image file using wkhtmltoimage.
-    See http://wkhtmltopdf.org/ for more information.
+        rounded_index = df.index
+        
+    df.index = rounded_index
     
-    Parameters
-    ----------
-    html_filename : string
-        HTML file name, with full path
-    
-    image_filename : string
-        Image file name, with full path
-    
-    image_format : string  (optional)
-        Image format, default = 'png'
-    
-    quality : int (optional)
-        Image quality, default = 100
-    
-    zoom : int (optional)
-        Zoom factor, default = 1
-    """
-    os.system('wkhtmltoimage --format ' + image_format + 
-                           ' --quality ' + str(quality) + 
-                           ' --zoom ' + str(zoom) + ' ' + 
-                            html_filename + ' ' + image_filename)
+    return df
