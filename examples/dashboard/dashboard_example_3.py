@@ -2,12 +2,11 @@
 This example illustrates the use of Pandas Styling options to color code tables.  
 The example contains no quality control analysis.
 """
-import pecos
 import numpy as np
 import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import rgb2hex
-import os
+import pecos
 
 # Color value used in Pandas Styling
 def color_value(val):
@@ -63,10 +62,6 @@ for location_name in locations:
         dashboard_content[(location_name, system_name)] = content
 
 # Create dashboard  
-results_directory = 'Results_3'
-if not os.path.exists(results_directory):
-    os.makedirs(results_directory)
-dashboard_filename = os.path.join(results_directory, 'Dashboard_example.html')  
 footnote = 'DA = Data availability <br>QCI = Quality control index <br>EPI = Energy performance index'
-pecos.io.write_dashboard(dashboard_filename, systems, locations, 
-                         dashboard_content, footnote=footnote)
+pecos.io.write_dashboard(systems, locations, dashboard_content, 
+                         footnote=footnote, filename='dashboard_example_3.html')

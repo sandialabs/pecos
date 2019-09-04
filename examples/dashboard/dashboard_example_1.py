@@ -5,13 +5,13 @@ location links to a detailed report which includes test failures.
 For illustrative purposes, the data used in this example is generated within 
 the script, using a sine wave function.
 """
-import pecos
 import yaml
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
 import os
 import datetime
+import pecos
 
 # Initialize logger
 pecos.logger.initialize()
@@ -62,40 +62,37 @@ for location_name in locations:
             pm.check_range(value, key) 
         
         # Compute metrics
-        mask = pm.get_test_results_mask()
-        QCI = pecos.metrics.qci(mask, pm.tfilter)
+        QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
         
         # Define output files and subdirectories
-        location_system = location_name + '_' + system_name
-        location_system_date = location_system + '_' + analysis_date.strftime('%Y_%m_%d')
-        results_directory = 'Results_1'
-        results_subdirectory = os.path.join(results_directory, location_system_date)
+        results_directory = 'example_1'
+        results_subdirectory = os.path.join(results_directory, location_name+'_'+system_name)
         if not os.path.exists(results_subdirectory):
             os.makedirs(results_subdirectory)
         graphics_file_rootname = os.path.join(results_subdirectory, 'test_results')
         custom_graphics_file = os.path.abspath(os.path.join(results_subdirectory, 'custom.png'))
-        metrics_file = os.path.join(results_directory, location_system + '_metrics.csv')
-        test_results_file = os.path.join(results_subdirectory, location_system_date + '_test_results.csv')
-        report_file =  os.path.join(results_subdirectory, location_system_date + '.html')
+        test_results_file = os.path.join(results_subdirectory, 'test_results.csv')
+        report_file =  os.path.join(results_subdirectory, 'monitoring_report.html')
         
         # Generate graphics
-        test_results_graphics = pecos.graphics.plot_test_results(graphics_file_rootname, pm)
+        test_results_graphics = pecos.graphics.plot_test_results(pm.df, 
+                                        pm.test_results, filename_root=graphics_file_rootname)
         df.plot()
         plt.savefig(custom_graphics_file, format='png', dpi=500)
 
-        # Write metrics, test results, and report files
-        pecos.io.write_metrics(metrics_file, QCI)
-        pecos.io.write_test_results(test_results_file, pm.test_results)
-        pecos.io.write_monitoring_report(report_file, pm, test_results_graphics, [custom_graphics_file], QCI)
+        # Write test results and report files
+        pecos.io.write_test_results(pm.test_results, test_results_file)
+        pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+                                         [custom_graphics_file], QCI, filename=report_file)
         
         # Store content to be displayed in the dashboard
         metrics_table = QCI.transpose().to_html(bold_rows=False, header=False)
-        content = {'text': "Example text for " + location_system, 
+        content = {'text': "Example text for " + location_name+'_'+system_name, 
                    'graphics': [custom_graphics_file], 
                    'table':  metrics_table, 
                    'link': {'Link to Report': os.path.abspath(report_file)}}
         dashboard_content[(system_name, location_name)] = content
 
-# Create dashboard  
-dashboard_filename = os.path.join(results_directory, 'Dashboard_example.html')  
-pecos.io.write_dashboard(dashboard_filename, locations, systems, dashboard_content)
+# Create dashboard   
+pecos.io.write_dashboard(locations, systems, dashboard_content, 
+                         filename='dashboard_example_1.html')

@@ -1,6 +1,6 @@
 name: pecos
 dependencies:
-    - python=2.7
+    - python=3.6
     - numpy
     - pandas
     - pytz

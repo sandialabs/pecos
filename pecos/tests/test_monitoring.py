@@ -29,10 +29,6 @@ def simple_example_run_analysis(df):
         'B': [0.0001, None],
         'Wave': [0.0001, 0.6]}
 
-     # Define output files
-    metrics_file = join(testdir, system_name + '_metrics.csv')
-    test_results_file = join(testdir, system_name + '_test_results.csv')
-
     # Create an PerformanceMonitoring instance
     pm = pecos.monitoring.PerformanceMonitoring()
 
@@ -71,14 +67,13 @@ def simple_example_run_analysis(df):
         pm.check_increment(value, key)
 
     # Compute metrics
-    mask = pm.get_test_results_mask()
-    QCI = pecos.metrics.qci(mask, pm.tfilter)
+    QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
     # Write metrics, test results, and report files
-    pecos.io.write_metrics(metrics_file, QCI)
-    pecos.io.write_test_results(test_results_file, pm.test_results)
+    pecos.io.write_metrics(QCI)
+    pecos.io.write_test_results(pm.test_results)
 
-    return QCI, test_results_file
+    return QCI
 
 class Test_simple_example(unittest.TestCase):
 
@@ -91,15 +86,15 @@ class Test_simple_example(unittest.TestCase):
 
         file_name = join(simpleexampledir,'simple.xlsx')
 
-        df = pd.read_excel(file_name, index_col=0)
+        self.raw_data = pd.read_excel(file_name, index_col=0)
         self.pm = pecos.monitoring.PerformanceMonitoring()
-        self.pm.add_dataframe(df)
+        self.pm.add_dataframe(self.raw_data)
         self.pm.add_translation_dictionary(trans)
         self.pm.check_timestamp(900)
         clock_time = self.pm.get_clock_time()
-        time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
-        self.pm.add_time_filter(time_filter)
-
+        self.time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+        self.pm.add_time_filter(self.time_filter)
+        
     @classmethod
     def tearDown(self):
         pass
@@ -116,61 +111,59 @@ class Test_simple_example(unittest.TestCase):
         assert_frame_equal(time_filter, expected, check_dtype=False)
         
     def test_check_timestamp(self):
-        test_results = self.pm.test_results
-
-        """
-        Missing timestamp at 5:00
-        Duplicate timestamp 17:00
-        Non-monotonic timestamp 19:30
-        """
+        #Missing timestamp at 5:00
+        #Duplicate timestamp 17:00
+        #Non-monotonic timestamp 19:30
         expected = pd.DataFrame(
             [('', pd.Timestamp('2015-01-01 19:30:00'), pd.Timestamp('2015-01-01 19:30:00'), 1.0, 'Nonmonotonic timestamp'),
              ('', pd.Timestamp('2015-01-01 17:00:00'), pd.Timestamp('2015-01-01 17:00:00'), 1.0, 'Duplicate timestamp'),
              ('', pd.Timestamp('2015-01-01 05:00:00'), pd.Timestamp('2015-01-01 05:00:00'), 1.0, 'Missing timestamp')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
-
+        
+        # Object-oriented test
+        test_results = self.pm.test_results
+        assert_frame_equal(test_results, expected, check_dtype=False)
+        
+        # Functional test
+        results = pecos.monitoring.check_timestamp(self.raw_data, 900)
+        test_results = results['test_results']
         assert_frame_equal(test_results, expected, check_dtype=False)
 
     def test_check_missing(self):
-        self.pm.check_missing()
-        temp = self.pm.test_results[self.pm.test_results['Error Flag'] == 'Missing data']
-        temp.index = np.arange(temp.shape[0])
-
-        """
-        Column D is missing data from 17:45 until 18:15
-        """
+        #Column D is missing data from 17:45 until 18:15
         expected = pd.DataFrame(
             [('D', pd.Timestamp('2015-01-01 17:45:00'), pd.Timestamp('2015-01-01 18:15:00'), 3.0, 'Missing data')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
-
-        assert_frame_equal(temp, expected, check_dtype=False)
-
+        
+        # Object-oriented test
+        self.pm.check_missing()
+        test_results = self.pm.test_results[self.pm.test_results['Error Flag'] == 'Missing data']
+        assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
+        
+        # Functional test
+        results = pecos.monitoring.check_missing(self.raw_data)
+        test_results = results['test_results']
+        assert_frame_equal(test_results, expected, check_dtype=False)
+        
     def test_check_corrupt(self):
-        self.pm.check_corrupt([-999])
-        temp = self.pm.test_results[self.pm.test_results['Error Flag'] == 'Corrupt data']
-        temp.index = np.arange(temp.shape[0])
-
-        """
-        Column C has corrupt data (-999) between 7:30 and 9:30
-        """
+        #Column C has corrupt data (-999) between 7:30 and 9:30
         expected = pd.DataFrame(
             [('C', pd.Timestamp('2015-01-01 07:30:00'), pd.Timestamp('2015-01-01 09:30:00'), 9.0, 'Corrupt data')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
-
-        assert_frame_equal(temp, expected, check_dtype=False)
+        
+        # Object-oriented test
+        self.pm.check_corrupt([-999])
+        test_results = self.pm.test_results[self.pm.test_results['Error Flag'] == 'Corrupt data']
+        assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
+        
+        # Functional test
+        results = pecos.monitoring.check_corrupt(self.raw_data, [-999])
+        test_results = results['test_results']
+        assert_frame_equal(test_results, expected, check_dtype=False)
 
     def test_check_range(self):
-        self.pm.check_corrupt([-999])
-        self.pm.check_range([0, 1], 'Random')
-        self.pm.check_range([-1, 1], 'Wave')
-
-        temp = self.pm.test_results[['Data' in ef for ef in self.pm.test_results['Error Flag']]]
-        temp.index = np.arange(temp.shape[0])
-
-        """
-        Column B is below the expected lower bound of 0 at 6:30 and above the expected upper bound of 1 at 15:30
-        Column D is occasionally below the expected lower bound of -1 around midday (2 time steps) and above the expected upper bound of 1 in the early morning and late evening (10 time steps).
-        """
+        #Column B is below the expected lower bound of 0 at 6:30 and above the expected upper bound of 1 at 15:30
+        #Column D is occasionally below the expected lower bound of -1 around midday (2 time steps) and above the expected upper bound of 1 in the early morning and late evening (10 time steps).
         expected = pd.DataFrame(
             [('B', pd.Timestamp('2015-01-01 06:30:00'), pd.Timestamp('2015-01-01 06:30:00'), 1.0, 'Data < lower bound, 0'),
              ('B', pd.Timestamp('2015-01-01 15:30:00'), pd.Timestamp('2015-01-01 15:30:00'), 1.0, 'Data > upper bound, 1'),
@@ -183,46 +176,84 @@ class Test_simple_example(unittest.TestCase):
              ('D', pd.Timestamp('2015-01-01 19:15:00'), pd.Timestamp('2015-01-01 19:45:00'), 3.0, 'Data > upper bound, 1')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
 
-        assert_frame_equal(temp, expected, check_dtype=False)
-
-    def test_check_increment(self):
+        # Object-oriented test
         self.pm.check_corrupt([-999])
-        self.pm.check_increment([0.0001, None], 'Linear')
-        self.pm.check_increment([0.0001, None], 'Random')
-        self.pm.check_increment([0.0001, 0.6], 'Wave')
-
-        temp = self.pm.test_results[['Increment' in ef for ef in self.pm.test_results['Error Flag']]]
-        temp.index = np.arange(temp.shape[0])
-
-        """
-        Column A has the same value (0.5) from 12:00 until 14:30
-        Column C does not follow the expected sine function from 13:00 until 16:15. The change is abrupt and gradually corrected.
-        """
+        self.pm.check_range([0, 1], 'Random')
+        self.pm.check_range([-1, 1], 'Wave')
+        test_results = self.pm.test_results[['Data' in ef for ef in self.pm.test_results['Error Flag']]]
+        assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
+        
+        # Functional tests
+        results = pecos.monitoring.check_timestamp(self.raw_data, 900)
+        results = pecos.monitoring.check_corrupt(results['cleaned_data'], [-999])
+        raw_data = results['cleaned_data'].loc[self.time_filter[0],:]
+        
+        results = pecos.monitoring.check_range(raw_data[['B']],[0, 1])
+        test_results = results['test_results']
+        assert_frame_equal(test_results,
+                           expected.loc[expected['Variable Name'] == 'B',:].reset_index(drop=True), 
+                           check_dtype=False)
+        
+        results = pecos.monitoring.check_range(raw_data[['C','D']],[-1, 1])
+        test_results = results['test_results']
+        assert_frame_equal(test_results,
+                           expected.loc[expected['Variable Name'] == 'D',:].reset_index(drop=True), 
+                           check_dtype=False)
+        
+    def test_check_increment(self):
+        #Column A has the same value (0.5) from 12:00 until 14:30
+        #Column C does not follow the expected sine function from 13:00 until 16:15. The change is abrupt and gradually corrected.
         expected = pd.DataFrame(
             [('A', pd.Timestamp('2015-01-01 12:15:00'), pd.Timestamp('2015-01-01 14:30:00'), 10.0, '|Increment| < lower bound, 0.0001'),
              ('C', pd.Timestamp('2015-01-01 13:00:00'), pd.Timestamp('2015-01-01 13:00:00'), 1.0, '|Increment| > upper bound, 0.6')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
-
-        assert_frame_equal(temp, expected, check_dtype=False)
+        
+        # Object-oriented test
+        self.pm.check_corrupt([-999])
+        self.pm.check_increment([0.0001, None], 'Linear')
+        self.pm.check_increment([0.0001, None], 'Random')
+        self.pm.check_increment([0.0001, 0.6], 'Wave')
+        test_results = self.pm.test_results[['Increment' in ef for ef in self.pm.test_results['Error Flag']]]
+        assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
+        
+        # Functional tests
+        results = pecos.monitoring.check_timestamp(self.raw_data, 900)
+        results = pecos.monitoring.check_corrupt(results['cleaned_data'], [-999])
+        raw_data = results['cleaned_data'].loc[self.time_filter[0],:]
+        
+        results = pecos.monitoring.check_increment(raw_data[['A']],[0.0001, None])
+        test_results = results['test_results']
+        assert_frame_equal(test_results,
+                           expected.loc[expected['Variable Name'] == 'A',:].reset_index(drop=True), 
+                           check_dtype=False)
     
     def test_check_delta(self):
-        self.pm.check_corrupt([-999])
-        self.pm.check_delta([0.0001, None], window=2*3600)
-        self.pm.check_delta([None, 0.6], 'Wave', window=1800)
-
-        temp = self.pm.test_results[['Delta' in ef for ef in self.pm.test_results['Error Flag']]]
-        temp.index = np.arange(temp.shape[0])
-
-        """
-        Column A has the same value (0.5) from 12:00 until 14:30
-        Column C does not follow the expected sine function from 13:00 until 16:15. The change is abrupt and gradually corrected.
-        """
+        #Column A has the same value (0.5) from 12:00 until 14:30
+        #Column C does not follow the expected sine function from 13:00 until 16:15. 
+        #The change is abrupt and gradually corrected.
         expected = pd.DataFrame(
             [('A', pd.Timestamp('2015-01-01 12:15:00'), pd.Timestamp('2015-01-01 14:15:00'), 9.0, '|Delta| < lower bound, 0.0001'),
              ('C', pd.Timestamp('2015-01-01 12:45:00'), pd.Timestamp('2015-01-01 13:00:00'), 2.0, '|Delta| > upper bound, 0.6')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
         
-        assert_frame_equal(temp, expected, check_dtype=False)
+        # Object-oriented test
+        self.pm.check_corrupt([-999])
+        self.pm.check_delta([0.0001, None], window=2*3600)
+        self.pm.check_delta([None, 0.6], 'Wave', window=1800)
+        test_results = self.pm.test_results[['Delta' in ef for ef in self.pm.test_results['Error Flag']]]
+        assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
+
+        # Functional tests
+        results = pecos.monitoring.check_timestamp(self.raw_data, 900)
+        results = pecos.monitoring.check_corrupt(results['cleaned_data'], [-999])
+        raw_data = results['cleaned_data'].loc[self.time_filter[0],:]
+        
+        results = pecos.monitoring.check_delta(raw_data[['A']],[0.0001, None], window=2*3600)
+        test_results = results['test_results']
+        print(test_results)
+        assert_frame_equal(test_results,
+                           expected.loc[expected['Variable Name'] == 'A',:].reset_index(drop=True), 
+                           check_dtype=False)
 
     def test_composite_signal(self):
         self.pm.check_corrupt([-999])
@@ -249,11 +280,11 @@ class Test_simple_example(unittest.TestCase):
         data_file = join(simpleexampledir,'simple.xlsx')
         df = pd.read_excel(data_file, index_col=0)
 
-        (QCI, test_results_file) = simple_example_run_analysis(df)
+        QCI = simple_example_run_analysis(df)
 
         assert_almost_equal(QCI.iloc[0,0],0.852113,6)
 
-        actual = pd.read_csv(test_results_file, index_col=0)
+        actual = pd.read_csv('test_results.csv', index_col=0)
         # Convert back to datetime just so that they are in the same format
         actual['Start Time'] = pd.to_datetime(actual['Start Time'])
         actual['End Time'] = pd.to_datetime(actual['End Time'])
@@ -270,11 +301,11 @@ class Test_simple_example(unittest.TestCase):
         df = pd.read_excel(data_file, index_col=0)
         df.index = df.index.tz_localize('MST')
 
-        (QCI, test_results_file) = simple_example_run_analysis(df)
+        QCI = simple_example_run_analysis(df)
 
         assert_almost_equal(QCI.iloc[0,0],0.852113,6)
 
-        actual = pd.read_csv(test_results_file, index_col=0)
+        actual = pd.read_csv('test_results.csv', index_col=0)
         expected = pd.read_csv(join(datadir,'Simple_test_results_with_timezone.csv'), index_col=0)
         assert_frame_equal(actual, expected, check_dtype=False)
 
@@ -457,4 +488,6 @@ class Test_check_outlier(unittest.TestCase):
             index=RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
-        
+
+if __name__ == '__main__':
+    unittest.main()

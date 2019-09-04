@@ -19,12 +19,12 @@ def test_read_campbell_scientific():
     assert_equals((48,11), df.shape)
 
 def test_write_metrics1():
-    filename = abspath(join(testdir, 'test_write_metrics1.csv'))
+    filename = abspath(join(testdir, 'metrics.csv'))
     if isfile(filename):
         os.remove(filename)
         
     metrics = pd.DataFrame({'metric1' : pd.Series([1.], index=[pd.datetime(2016,1,1)])})
-    pecos.io.write_metrics(filename, metrics)
+    filename = pecos.io.write_metrics(metrics, filename)
     assert_true(isfile(filename))
     
     from_file1 = pd.read_csv(filename)
@@ -32,20 +32,20 @@ def test_write_metrics1():
     
     # append another date
     metrics = pd.DataFrame({'metric1' : pd.Series([2.], index=[pd.datetime(2016,1,2)])})
-    pecos.io.write_metrics(filename, metrics)
+    filename = pecos.io.write_metrics(metrics, filename)
     
     from_file2 = pd.read_csv(filename)
     assert_equals(from_file2.shape, (2,2))
     
     # append another metric
     metrics = pd.DataFrame({'metric2' : pd.Series([3.], index=[pd.datetime(2016,1,2)])})
-    pecos.io.write_metrics(filename, metrics)
+    filename = pecos.io.write_metrics(metrics, filename)
     
-    from_file3= pd.read_csv(filename)
+    from_file3 = pd.read_csv(filename)
     assert_equals(from_file3.shape, (2,3))
 
 def test_write_test_results1():
-    filename = abspath(join(testdir, 'test_write_test_results1.csv'))
+    filename = abspath(join(testdir, 'test_results.csv'))
     if isfile(filename):
         os.remove(filename)
         
@@ -59,20 +59,20 @@ def test_write_test_results1():
     pm.add_time_filter(tfilter)    
     pm.check_range([0,7]) # 2 test failures
     
-    pecos.io.write_test_results(filename, pm.test_results)
+    filename = pecos.io.write_test_results(pm.test_results)
     from_file = pd.read_csv(filename)
     
     assert_true(isfile(filename))
     assert_equals(from_file.shape, (2,6))
 
 def test_write_monitoring_report1(): # empty database
-    filename = abspath(join(testdir, 'test_write_monitoring_report1.html'))
+    filename = abspath(join(testdir, 'monitoring_report.html'))
     if isfile(filename):
         os.remove(filename)
         
     pm = pecos.monitoring.PerformanceMonitoring()
 
-    pecos.io.write_monitoring_report(filename, pm)
+    filename = pecos.io.write_monitoring_report(pm.df, pm.test_results) 
     
     assert_true(isfile(filename))
     
@@ -101,7 +101,8 @@ def test_write_monitoring_report2():# with test results and graphics (encoded an
     pm.check_range([0,7]) # 2 test failures
     
     filename_root = abspath(join(testdir, 'monitoring_report_graphic'))
-    test_results_graphics = pecos.graphics.plot_test_results(filename_root, pm)
+    test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results, 
+                                                             filename_root=filename_root)
     
     plt.figure()
     plt.plot([1, 2, 3],[1, 2, 3])
@@ -111,17 +112,21 @@ def test_write_monitoring_report2():# with test results and graphics (encoded an
     
     logger.warning('Add a note')
     
-    pecos.io.write_monitoring_report(filename1, pm, test_results_graphics, custom_graphics, encode=False)
+    filename1 = pecos.io.write_monitoring_report(pm.df, pm.test_results, 
+                                     test_results_graphics, custom_graphics, encode=False,
+                                     filename='test_write_monitoring_report2_linked_graphics.html')
     
     assert_true(isfile(filename1))
     
-    pecos.io.write_monitoring_report(filename2, pm, test_results_graphics, custom_graphics, encode=True)
+    filename2 = pecos.io.write_monitoring_report(pm.df, pm.test_results, 
+                                     test_results_graphics, custom_graphics, encode=True,
+                                     filename=filename2)
     
     assert_true(isfile(filename2))
 
     
 def test_write_dashboard1(): # empty content
-    filename = abspath(join(testdir, 'test_write_dashboard1_empty.html'))
+    filename = abspath(join(testdir, 'dashboard.html'))
     if isfile(filename):
         os.remove(filename)
         
@@ -133,7 +138,7 @@ def test_write_dashboard1(): # empty content
     content[('sys2', 'loc1')] = {}
     content[('sys2', 'loc2')] = {}
     
-    pecos.io.write_dashboard(filename, column_names, row_names, content)
+    filename = pecos.io.write_dashboard(column_names, row_names, content)
     
     assert_true(isfile(filename))
 
@@ -168,11 +173,11 @@ def test_write_dashboard2(): # with text, graphics (encoded and linked), tables,
     content[('sys2', 'loc2')] = {'text': 'sys2-loc2 text',
                                  'table': pd.DataFrame({'sys2': [2,4,6]}).to_html()}
     
-    pecos.io.write_dashboard(filename1, column_names, row_names, content, encode=False)
+    filename1 = pecos.io.write_dashboard(column_names, row_names, content, filename1, encode=False)
     
     assert_true(isfile(filename1))
     
-    pecos.io.write_dashboard(filename2, column_names, row_names, content, encode=True)
+    filename2 = pecos.io.write_dashboard(column_names, row_names, content, filename2, encode=True)
     
     assert_true(isfile(filename2))
     
@@ -188,3 +193,6 @@ def test_email_message():
     assert_true(body in msg.as_string())
     assert_true(recipient[0] in msg.as_string())
     assert_true(sender in msg.as_string())
+
+if __name__ == '__main__':
+    test_write_metrics1()

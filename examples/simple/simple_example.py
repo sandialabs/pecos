@@ -10,11 +10,10 @@ in pecos.
   quality control tests are run, including range tests and increment tests 
 * The results are printed to csv and html reports
 """
-import pecos
 import pandas as pd
 import matplotlib.pyplot as plt
-import os
 import numpy as np
+import pecos
 
 # Initialize logger
 pecos.logger.initialize()
@@ -62,28 +61,16 @@ pm.check_increment([0.0001, None], 'B')
 pm.check_increment([0.0001, 0.6], 'Wave') 
     
 # Compute the quality control index
-mask = pm.get_test_results_mask()
-QCI = pecos.metrics.qci(mask, pm.tfilter)
-
-# Define output file names and directories
-results_directory = 'Results'
-if not os.path.exists(results_directory):
-    os.makedirs(results_directory)
-graphics_file_rootname = os.path.join(results_directory, 'test_results')
-custom_graphics_file = os.path.abspath(os.path.join(results_directory, 'custom.png'))
-metrics_file = os.path.join(results_directory, system_name + '_metrics.csv')
-test_results_file = os.path.join(results_directory, system_name + '_test_results.csv')
-report_file =  os.path.join(results_directory, system_name + '.html')
+QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(graphics_file_rootname, pm)
-plt.figure(figsize = (7.0,3.5))
-ax = plt.gca()
-df.plot(ax=ax, ylim=[-1.5,1.5])
-plt.savefig(custom_graphics_file, format='png', dpi=500)
+test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
+df.plot(ylim=[-1.5,1.5], figsize=(7.0,3.5))
+plt.savefig('custom.png', format='png', dpi=500)
 
 # Write metrics, test results, and report files
-pecos.io.write_metrics(metrics_file, QCI)
-pecos.io.write_test_results(test_results_file, pm.test_results)
-pecos.io.write_monitoring_report(report_file, pm, test_results_graphics, [custom_graphics_file], QCI)
+pecos.io.write_metrics(QCI)
+pecos.io.write_test_results(pm.test_results)
+pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+                                 ['custom.png'], QCI)
                                  

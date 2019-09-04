@@ -52,7 +52,7 @@ def test_qci_no_test_results():
     pm.add_dataframe(df)
     pm.add_translation_dictionary(trans)
     
-    mask = pm.get_test_results_mask()
+    mask = pm.mask
     QCI = pecos.metrics.qci(mask, per_day=False)
     
     assert_equal(mask.any().any(), True)
@@ -85,8 +85,7 @@ def test_qci_with_test_results():
     'Timesteps': 1, 
     'Error Flag': 'Error Flag'}
     pm.test_results = pm.test_results.append(pd.DataFrame(test_result, index=[2]))
-    
-    mask = pm.get_test_results_mask()
+    mask = pm.mask
     QCI = pecos.metrics.qci(mask, per_day = False)
     
     expected_mask = pd.DataFrame(data=[[False, False, True],[False, True, True],[False, True, True],[False, True, True],[False, True, True]], 
@@ -129,7 +128,7 @@ def test_qci_perday():
     'Error Flag': 'Error Flag'}
     pm.test_results = pm.test_results.append(pd.DataFrame(test_result, index=[2]))
     
-    mask = pm.get_test_results_mask()
+    mask = pm.mask
     QCI = pecos.metrics.qci(mask, per_day = False)
     assert_equal(QCI, (144-5)/144.0)
     

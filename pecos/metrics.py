@@ -1,5 +1,6 @@
 """
-The metrics module contains performance metrics to track system health.
+The metrics module contains metrics that describe the quality control 
+analysis or compute quantities that might be of use in the analysis
 """
 import pandas as pd
 import numpy as np
@@ -23,7 +24,7 @@ def qci(mask, tfilter=None, per_day=True):
     Parameters
     ----------
     mask : pandas DataFrame
-        Test results mask, returned from pm.get_test_results_mask()
+        Test results mask, returned from pm.mask
     
     tfilter : pandas Series (optional)
         Time filter containing boolean values for each time index
@@ -189,7 +190,7 @@ def probability_of_detection(observed, actual, tfilter=None):
     ----------
     observed : pandas DataFrame
         Estimated conditions (True = background, False = anomolous), 
-        returned from pm.get_test_results_mask()
+        returned from pm.mask
     
     actual : pandas DataFrame
         Actual conditions, (True = background, False = anomolous)
@@ -232,7 +233,7 @@ def false_alarm_rate(observed, actual, tfilter=None):
     ----------
     estimated : pandas DataFrame
         Estimated conditions (True = background, False = anomolous), 
-        returned from pm.get_test_results_mask()
+        returned from pm.mask
     
     actual : pandas DataFrame
         Actual conditions, (True = background, False = anomolous)

@@ -1,0 +1,27 @@
+.. _whatsnew_0180:
+
+v0.1.8 (master)
+------------------------
+
+* Added properties to the PerformanceMonitoring object to return the following:
+
+  * Boolean mask, ``pm.mask``.  Indicates data that failed a quality control test. This
+    replaces the method ``get_test_results_mask``, API change.
+  * Cleaned data, ``pm.cleaned_data``. Data that failed a quality control test are replaced by NaN.
+
+* Added the ability to run quality control tests as individual functions.  
+  These functions allow the user to use Pecos without creating a PerformanceMonitoring object.  
+  Each function returns cleaned data, a boolean mask, and a summary of quality control
+  test results.
+* io and graphics functions were updated to use specific components of the 
+  PerformanceMonitoring class (instead of requiring an instance of the class).
+  This changes the API for
+  ``write_monitoring_report``,
+  ``write_dashboard``, and
+  ``plot_test_results``. 
+* Filenames are now an optional parameter in io and graphics functions, this changes the API for 
+  ``write_metrics``, 
+  ``write_test_results``, and
+  ``plot_test_results``. 
+* Added Python 3.7 tests
+* Updated examples, tests, and documentation

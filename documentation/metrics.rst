@@ -1,10 +1,9 @@
 Performance metrics
 ==========================
 
-Pecos can be used to track a wide range of performance metrics.
-In general, a performance metric is any calculation that aggregates over time.
-Performance metrics can be saved to track long term system health using the 
-:class:`~pecos.io.write_metrics` method, as shown in :ref:`results`.
+Pecos includes several metrics that describe the quality control analysis or compute quantities 
+that might be of use in the analysis. Many of these metrics aggregates over time and can be saved
+to track long term performance and system health.
 
 Quality control index
 -------------------------
@@ -33,8 +32,7 @@ To compute QCI,
 	
 .. doctest::
 
-    >>> mask = pm.get_test_results_mask()
-    >>> QCI = pecos.metrics.qci(mask)
+    >>> QCI = pecos.metrics.qci(pm.mask)
 
 Root mean square error
 -------------------------
@@ -67,14 +65,14 @@ PD and FAR are computed using the :class:`~pecos.metrics.probability_of_detectio
 
 .. _fig-FAR-PD:
 .. figure:: figures/PD-FAR.png
-   :scale: 55 %
+   :width: 100 %
    :alt: FAR and PD
    
    Relationship between FAR and PD.
  
 .. _fig-ROC:
 .. figure:: figures/ROC.png
-   :scale: 50 %
+   :width: 60 %
    :alt: ROC
    
    Example ROC curve.

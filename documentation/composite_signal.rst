@@ -1,7 +1,7 @@
 Composite signals
 ==================
 
-Composite signals are new data signals generated from existing data or from models.  
+Composite signals are defined as data generated from existing data or from models.  
 Composite signals can be used to add modeled data values or relationships between 
 data columns to quality control tests.  
 

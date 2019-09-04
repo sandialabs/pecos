@@ -12,6 +12,7 @@ When a quality control test fails, information is stored in::
 
 	pm.test_results
 
+This DataFrame is updated each time a new quality control test is run.
 Test results includes the following information:
 
 * Variable Name: Column name in the DataFrame
@@ -72,6 +73,38 @@ Note that variable names are not recorded for timestamp test failures (Test resu
 The :class:`~pecos.io.write_test_results` method is used to write quality control test results to a CSV file.
 This method can be customized to write quality control test results to a database or to other file formats.
 
+Quality control mask
+------------------------
+
+Boolean mask indicating data that failed a quality control test is stored in::
+
+	pm.mask
+    
+This DataFrame is updated each time a new quality control test is run. True indicates that data pass all tests, False indicates data did not pass at least one test (or data is NaN).
+
+Cleaned data
+--------------
+
+Cleaned data set is stored in::
+
+	pm.cleaned_data
+
+This DataFrame is updated each time a new quality control test is run.  Data that failed a quality control test are replaced by NaN.
+
+Note that Pandas includes several methods to replace NaN using different 
+replacement strategies. 
+Generally, the best data replacement strategy must be defined on a case by case basis.  
+Possible strategies include:
+
+* Replacing missing data using linear interpolation or other polynomial approximations
+* Replacing missing data using a rolling mean of the data
+* Replacing missing data with a data from a previous period (previous day, hour, etc.)
+* Replacing missing data with data from a redundant sensor
+* Replacing missing data with values from a model
+
+These strategies can be accomplished using the Pandas methods ``interpolate``, ``replace``, and ``fillna``.  
+See Pandas documentation for more details.
+
 Performance metrics
 -----------------------------
 
@@ -98,8 +131,8 @@ The method can be called multiple times to appended metrics based on the timesta
     >>> print(metrics_day2)
                   QCI   RMSE
     2018-01-02  0.755  0.845
-    >>> pecos.io.write_metrics('metrics_file.csv', metrics_day1)
-    >>> pecos.io.write_metrics('metrics_file.csv', metrics_day2)
+    >>> pecos.io.write_metrics(metrics_day1, 'metrics_file.csv') # doctest: +SKIP
+    >>> pecos.io.write_metrics(metrics_day2, 'metrics_file.csv') # doctest: +SKIP
 
 The metrics_file.csv file will contain::
 
@@ -147,7 +180,7 @@ used in the analysis.
 
 .. _fig-monitor-2:
 .. figure:: figures/monitoring_report.png
-   :scale: 75 %
+   :width: 100 %
    :alt: Monitoring report
    
    Example monitoring report.
@@ -180,21 +213,21 @@ Pecos includes dashboard examples (**dashboard_example_1.py**, **dashboard_examp
 
 .. _fig-dashboard1:
 .. figure:: figures/dashboard1.png
-   :scale: 75 %
+   :width: 85 %
    :alt: Dashboard1
    
    Example dashboard 1.
    
 .. _fig-dashboard2:
 .. figure:: figures/dashboard2.png
-   :scale: 75 %
+   :width: 85 %
    :alt: Dashboard
    
    Example dashboard 2.
  
 .. _fig-dashboard3:
 .. figure:: figures/dashboard3.png
-   :scale: 85 %
+   :width: 65 %
    :alt: Dashboard
    
    Example dashboard 3.
@@ -217,7 +250,7 @@ These graphics can be included in :ref:`monitoring_reports`.
  
 .. _fig-test-results:
 .. figure:: figures/test_results_IE.png
-   :scale: 50 %
+   :width: 85 %
    :alt: test-results
    
    Example test results graphic.
@@ -231,7 +264,7 @@ These plots can be included as custom graphics in :ref:`monitoring_reports` and 
 
 .. _fig-doy-heatmap:
 .. figure:: figures/heatmap.png
-   :scale: 25 %
+   :width: 85 %
    :alt: DOY heatmap
    
    Example day-of-year vs. time of day heatmap.
@@ -244,7 +277,7 @@ Interactive graphics can be linked to :ref:`dashboards`.
 
 .. _fig-plotly:
 .. figure:: figures/plotly.png
-   :scale: 50%
+   :width: 100%
    :alt: Plotly
    
    Example interactive graphic using plotly.
