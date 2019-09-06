@@ -7,13 +7,13 @@ therefore there are no specific formatting requirements.**
 Configuration files can be useful when using the same Python script 
 to analyze several systems that have slightly different input requirements.
 
-The examples/simple directory includes a configuration file, **simple_config.yml**, that defines 
+The `examples/simple <https://github.com/sandialabs/pecos/tree/master/examples/simple>`_ directory includes a configuration file, **simple_config.yml**, that defines 
 system specifications, 
 translation dictionary,
 composite signals,
 corrupt values,
 and bounds for range and increment tests.
-The script, **simple_example_using_config.py**, in the examples/simple directory uses this
+The script, **simple_example_using_config.py** uses this
 configuration file to run the simple example.
 
 .. literalinclude:: ../examples/simple/simple_config.yml
