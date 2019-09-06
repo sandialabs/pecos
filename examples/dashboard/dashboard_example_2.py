@@ -68,7 +68,6 @@ for location_name in locations:
                                          [custom_graphics_file], QCI, filename=report_file)
         
         # Store content to be displayed in the dashboard
-        metrics_table = QCI.transpose().to_html(bold_rows=False, header=False)
         content = {'graphics': [colorblock_graphics_file],
                    'link': {'Link to Report': os.path.abspath(report_file)}}
         dashboard_content[(location_name, system_name)] = content

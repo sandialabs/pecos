@@ -22,7 +22,6 @@ pecos.logger.initialize()
 pm = pecos.monitoring.PerformanceMonitoring()
 
 # Populate the object with a DataFrame and translation dictionary
-system_name = 'Simple'
 data_file = 'simple.xlsx'
 df = pd.read_excel(data_file, index_col=0)
 pm.add_dataframe(df)
@@ -60,16 +59,16 @@ pm.check_increment([0.0001, None], 'A')
 pm.check_increment([0.0001, None], 'B') 
 pm.check_increment([0.0001, 0.6], 'Wave') 
     
-# Compute the quality control index
-QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
+# Compute the quality control index for A, B, C, and D
+mask = pm.mask[['A','B','C','D']]
+QCI = pecos.metrics.qci(mask, pm.tfilter)
 
 # Generate graphics
 test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
 df.plot(ylim=[-1.5,1.5], figsize=(7.0,3.5))
 plt.savefig('custom.png', format='png', dpi=500)
 
-# Write metrics, test results, and report files
-pecos.io.write_metrics(QCI)
+# Write test results and report files
 pecos.io.write_test_results(pm.test_results)
 pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
                                  ['custom.png'], QCI)

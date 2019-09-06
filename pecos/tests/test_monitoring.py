@@ -69,8 +69,7 @@ def simple_example_run_analysis(df):
     # Compute metrics
     QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
-    # Write metrics, test results, and report files
-    pecos.io.write_metrics(QCI)
+    # Write test results
     pecos.io.write_test_results(pm.test_results)
 
     return QCI
@@ -282,7 +281,7 @@ class Test_simple_example(unittest.TestCase):
 
         QCI = simple_example_run_analysis(df)
 
-        assert_almost_equal(QCI.iloc[0,0],0.852113,6)
+        assert_almost_equal(QCI.mean(),0.852113,6)
 
         actual = pd.read_csv('test_results.csv', index_col=0)
         # Convert back to datetime just so that they are in the same format
@@ -303,7 +302,7 @@ class Test_simple_example(unittest.TestCase):
 
         QCI = simple_example_run_analysis(df)
 
-        assert_almost_equal(QCI.iloc[0,0],0.852113,6)
+        assert_almost_equal(QCI.mean(),0.852113,6)
 
         actual = pd.read_csv('test_results.csv', index_col=0)
         expected = pd.read_csv(join(datadir,'Simple_test_results_with_timezone.csv'), index_col=0)
