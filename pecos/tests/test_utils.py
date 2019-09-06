@@ -42,7 +42,7 @@ class TestConvertIndex(unittest.TestCase):
     
     def test_convert_index_to_epoch_time(self):
         df = pecos.utils.convert_index_to_epoch_time(self.df_dt)
-        assert_frame_equal(df, self.df_epoch)
+        assert_frame_equal(df, self.df_epoch, check_dtype=False)
     
 class TestRoundIndex(unittest.TestCase):
 

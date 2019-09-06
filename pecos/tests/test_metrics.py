@@ -26,13 +26,13 @@ def test_pd_far():
     prob_detection = pecos.metrics.probability_of_detection(obser, actual)
     false_alarm = pecos.metrics.false_alarm_rate(obser, actual)
     
-    assert_almost_equal(prob_detection['A'], 0/1, 5)
-    assert_almost_equal(prob_detection['B'], 2/3, 5)
-    assert_almost_equal(prob_detection['C'], 1/2, 5)
+    assert_almost_equal(prob_detection['A'], 0/1.0, 5)
+    assert_almost_equal(prob_detection['B'], 2/3.0, 5)
+    assert_almost_equal(prob_detection['C'], 1/2.0, 5)
     
-    assert_almost_equal(false_alarm['A'], 1-3/3, 5)
-    assert_almost_equal(false_alarm['B'], 1-0/1, 5)
-    assert_almost_equal(false_alarm['C'], 1-1/2, 5)
+    assert_almost_equal(false_alarm['A'], 1-3/3.0, 5)
+    assert_almost_equal(false_alarm['B'], 1-0/1.0, 5)
+    assert_almost_equal(false_alarm['C'], 1-1/2.0, 5)
     
 def test_integral():
     periods = 5
@@ -65,11 +65,11 @@ def test_derivative():
 
     derivative = pecos.metrics.time_derivative(df)
 
-    expected = np.array([[3/3600, 2/3600, 0], 
-                         [3/3600, 2/3600, np.nan], 
-                         [0, 2/3600, 1/7200], 
-                         [-3/3600, 1.25/3600, np.nan],
-                         [-3/3600, 0.5/3600, 2/3600]])
+    expected = np.array([[3.0/3600, 2.0/3600, 0], 
+                         [3.0/3600, 2.0/3600, np.nan], 
+                         [0, 2.0/3600, 1.0/7200], 
+                         [-3.0/3600, 1.25/3600, np.nan],
+                         [-3.0/3600, 0.5/3600, 2.0/3600]])
     expected = pd.DataFrame(data=expected, index=index, columns=['A', 'B', 'C'])
 
     assert_frame_equal(expected, derivative)
@@ -81,10 +81,10 @@ def test_derivative():
 
     derivative = pecos.metrics.time_derivative(df)
 
-    expected = np.array([[3/3600, 2/3600, 0], 
-                         [3/3600, 2/3600, np.nan], 
-                         [1/3600, 1.75/3600, np.nan],
-                         [-3/3600, 1.25/3600, np.nan]])
+    expected = np.array([[3.0/3600, 2.0/3600, 0], 
+                         [3.0/3600, 2.0/3600, np.nan], 
+                         [1.0/3600, 1.75/3600, np.nan],
+                         [-3.0/3600, 1.25/3600, np.nan]])
     expected = pd.DataFrame(data=expected, index=index, columns=['A', 'B', 'C'])
 
     assert_frame_equal(expected, derivative)
@@ -163,4 +163,4 @@ def test_rmse():
     assert_almost_equal(RMSE['Power'], 2.8667, 4)
 
 if __name__ == '__main__':
-    test_integral()
+    test_derivative()
