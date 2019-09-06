@@ -4,6 +4,7 @@
 [![TravisCI](https://travis-ci.org/sandialabs/pecos.svg?branch=master)](https://travis-ci.org/sandialabs/pecos)
 [![Coverage Status](https://coveralls.io/repos/github/sandialabs/pecos/badge.svg?branch=master)](https://coveralls.io/github/sandialabs/pecos?branch=master)
 [![Documentation Status](https://readthedocs.org/projects/pecos/badge/?version=latest)](http://pecos.readthedocs.org/en/latest/)
+[![Downloads](https://pepy.tech/badge/pecos)](https://pepy.tech/project/pecos)
 
 Advances in sensor technology have rapidly increased our ability to monitor 
 natural and human-made physical systems. In many cases, it is critical to 
