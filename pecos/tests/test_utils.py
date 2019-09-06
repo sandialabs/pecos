@@ -1,4 +1,6 @@
 import unittest
+import sys
+from nose import SkipTest
 from nose.tools import *
 from pandas.util.testing import assert_frame_equal
 import pandas as pd
@@ -41,6 +43,8 @@ class TestConvertIndex(unittest.TestCase):
         assert_frame_equal(df, self.df_int)
     
     def test_convert_index_to_epoch_time(self):
+        if sys.version_info.major < 3:
+            raise SkipTest # skip if python version < 3
         df = pecos.utils.convert_index_to_epoch_time(self.df_dt)
         assert_frame_equal(df, self.df_epoch, check_dtype=False)
     

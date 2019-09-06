@@ -93,7 +93,7 @@ class PerformanceMonitoring(object):
         """
         return self.df[self.mask]
 
-    def _setup_data(self, key, rolling_mean):
+    def _setup_data(self, key, window):
         """
         Setup DataFrame, by (optionally) extracting a column and/or smoothing
         data using rolling window mean.
@@ -113,9 +113,9 @@ class PerformanceMonitoring(object):
             df = self.df
 
         # Compute moving average
-        if rolling_mean > 0:
-            rolling_mean_str = str(rolling_mean) + 's'
-            df = df.rolling(rolling_mean_str).mean()
+        if window > 0:
+            window_str = str(int(window*1e3)) + 'ms' # milliseconds
+            df = df.rolling(window_str).mean()
 
         return df
 
@@ -240,7 +240,7 @@ class PerformanceMonitoring(object):
         if self.df is not None:
             self.df = temp.combine_first(self.df)
         else:
-            self.df = temp.copy()
+            self.df = temp
 
         # Add identity 1:1 translation dictionary
         trans = {}
@@ -355,7 +355,7 @@ class PerformanceMonitoring(object):
             expected_end_time = max(self.df.index)
 
         rng = pd.date_range(start=expected_start_time, end=expected_end_time,
-                            freq=str(int(frequency*1e6)) + 'us') # microseconds
+                            freq=str(int(frequency*1e3)) + 'ms') # milliseconds
 
         # Check to see if timestamp is monotonic
 #        mask = pd.TimeSeries(self.df.index).diff() < 0
@@ -410,7 +410,7 @@ class PerformanceMonitoring(object):
             # uses pandas >= 0.18 resample syntax
             df_index = pd.DataFrame(index=self.df.index)
             df_index[0]=1 # populate with placeholder values
-            mask = df_index.resample('{}s'.format(frequency)).count() == 0
+            mask = df_index.resample(str(int(frequency*1e3))+'ms').count() == 0 # milliseconds
             self._append_test_results(mask, 'Missing timestamp',
                                  use_mask_only=True,
                                  min_failures=min_failures)
@@ -550,7 +550,7 @@ class PerformanceMonitoring(object):
         if df is None:
             return
 
-        window_str = str(int(window*1e6)) + 'us'
+        window_str = str(int(window*1e3)) + 'ms' # milliseconds
 
         def f(data=None, method=None):
             if data.notnull().sum() < 2: # there has to be at least two numbers
@@ -678,7 +678,7 @@ class PerformanceMonitoring(object):
 
         # Compute normalized data
         if window is not None:
-            window_str = str(int(window*1e6)) + 'us'
+            window_str = str(int(window*1e3)) + 'ms' # milliseconds
             df = (df - df.rolling(window_str).mean())/df.rolling(window_str).std()
         else:
             df = (df - df.mean())/df.std()
@@ -834,7 +834,7 @@ class PerformanceMonitoring(object):
         --------
         pandas DataFrame with elapsed time of the DataFrame index
         """
-        elapsed_time = ((self.df.index - self.df.index[0]).values)/1000000000 # convert ns to s
+        elapsed_time = (self.df.index - self.df.index[0]).total_seconds()
         elapsed_time = pd.DataFrame(data=elapsed_time, index=self.df.index, dtype=int)
 
         return elapsed_time
@@ -852,7 +852,7 @@ class PerformanceMonitoring(object):
         secofday = self.df.index.hour*3600 + \
                    self.df.index.minute*60 + \
                    self.df.index.second + \
-                   self.df.index.microsecond/1000000.0
+                   self.df.index.microsecond/1e6
         clock_time = pd.DataFrame(secofday, index=self.df.index)
 
         return clock_time

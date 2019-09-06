@@ -16,7 +16,6 @@ simpleexampledir = join(testdir,'..', '..', 'examples','simple')
 
 def simple_example_run_analysis(df):
     # Input
-    system_name = 'Simple'
     translation_dictionary = {'Wave': ['C','D']}
     expected_frequency = 900 # s
     corrupt_values = [-999]
@@ -249,7 +248,7 @@ class Test_simple_example(unittest.TestCase):
         
         results = pecos.monitoring.check_delta(raw_data[['A']],[0.0001, None], window=2*3600)
         test_results = results['test_results']
-        print(test_results)
+
         assert_frame_equal(test_results,
                            expected.loc[expected['Variable Name'] == 'A',:].reset_index(drop=True), 
                            check_dtype=False)
@@ -294,6 +293,30 @@ class Test_simple_example(unittest.TestCase):
         expected['End Time'] = pd.to_datetime(expected['End Time'])
         
         assert_frame_equal(actual, expected, check_dtype=False)
+    
+    def test_millisecond_timestamp(self):
+        data_file = join(simpleexampledir,'simple.xlsx')
+        df = pd.read_excel(data_file, index_col=0)
+        
+        df2 = pecos.utils.convert_index_to_elapsed_time(df)
+        df2.index = df2.index/1e5 # millisecond resolution
+        
+        df3 = pecos.utils.convert_index_to_datetime(df2)
+        pm = pecos.monitoring.PerformanceMonitoring()
+
+        # Populate the PerformanceMonitoring instance
+        pm.add_dataframe(df3)
+    
+        # Check timestamp
+        pm.check_timestamp(900/1e5)
+    
+        expected = pd.DataFrame(
+            [('', pd.Timestamp('1970-01-01 00:00:00.702'), pd.Timestamp('1970-01-01 00:00:00.702'), 1.0, 'Nonmonotonic timestamp'),
+             ('', pd.Timestamp('1970-01-01 00:00:00.612'), pd.Timestamp('1970-01-01 00:00:00.612'), 1.0, 'Duplicate timestamp'),
+             ('', pd.Timestamp('1970-01-01 00:00:00.180'), pd.Timestamp('1970-01-01 00:00:00.180'), 1.0, 'Missing timestamp')],
+            columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
+        
+        assert_frame_equal(pm.test_results, expected, check_dtype=False)
 
     def test_full_example_with_timezone(self):
         data_file = join(simpleexampledir,'simple.xlsx')
