@@ -38,7 +38,7 @@ def convert_index_to_datetime(data, unit='s', origin='unix'):
         
     return df
 
-def convert_index_to_elapsed_time(data):
+def convert_index_to_elapsed_time(data, origin=0.0):
     """
     Convert DataFrame index from datetime to elapsed time in seconds
     
@@ -46,6 +46,9 @@ def convert_index_to_elapsed_time(data):
     --------------
     data : pandas DataFrame
         Data with DatetimeIndex
+    
+    origin : float
+        Reference for elapsed time
     
     Returns
     ----------
@@ -56,10 +59,31 @@ def convert_index_to_elapsed_time(data):
     df = data.copy()
     
     index = df.index - df.index[0]
-    df.index = index.total_seconds()
+    df.index = index.total_seconds() + origin
     
     return df
-        
+
+def convert_index_to_epoch_time(data):
+    """
+    Convert DataFrame index from datetime to epoch time
+    
+    Parameters
+    --------------
+    data : pandas DataFrame
+        Data with DatetimeIndex
+    
+    Returns
+    ----------
+    pandas DataFrame
+        Data with index in epoch time
+    """
+    
+    df = data.copy()
+    
+    df.index = df.index.astype('int64')/10**9
+    
+    return df
+
 def round_index(data, frequency, how='nearest'):
     """
     Round DataFrame index
