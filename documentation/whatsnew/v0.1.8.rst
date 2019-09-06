@@ -6,7 +6,7 @@ v0.1.8 (master)
 * Added properties to the PerformanceMonitoring object to return the following:
 
   * Boolean mask, ``pm.mask``.  Indicates data that failed a quality control test. This
-    replaces the method ``get_test_results_mask``, API change.
+    replaces the method ``get_test_results_mask``(API change).
   * Cleaned data, ``pm.cleaned_data``. Data that failed a quality control test are replaced by NaN.
 
 * Added the ability to run quality control tests as individual functions.  
@@ -23,5 +23,14 @@ v0.1.8 (master)
   ``write_metrics``, 
   ``write_test_results``, and
   ``plot_test_results``. 
+* Updated metrics:
+
+  * Added time_derivative which returns a derivative timeseries for each column of data
+  * ``qci``, ``rmse``, ``time_integral``, ``probability_of_detection``, and 
+    ``false_alarm_rate`` now return 1 value per column of data (API change)
+  * pv metrics were also updated to return 1 value per column (API change)
+  * Deprecated per_day option. Data can be grouped by custom time intervals before 
+    computing metrics (API change)
+* Timestamp indexes down to millisecond resolution are supported
 * Added Python 3.7 tests
 * Updated examples, tests, and documentation
