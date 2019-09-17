@@ -23,8 +23,9 @@ The following example defines a time filter between 3 AM and 9 PM,
 	
 .. doctest::
 
-    >>> clock_time = pm.get_clock_time()
-    >>> time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+    >>> clocktime = pecos.utils.datetime_to_clocktime(pm.df.index)
+    >>> time_filter = pd.Series((clocktime > 3*3600) & (clocktime < 21*3600), 
+    ...                         index=pm.df.index)
 
 The time filter can also be defined based on properties of the DataFrame, for example,
 

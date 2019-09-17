@@ -32,5 +32,7 @@ v0.1.8 (master)
   * Deprecated per_day option. Data can be grouped by custom time intervals before 
     computing metrics (API change)
 * Timestamp indexes down to millisecond resolution are supported
+* Added additional helper functions in pecos.utils to convert to/from datetime indexes.
+  Methods ``get_elapsed_time`` and ``get_clock_time`` were removed from the PerformanceMonitoring class (API change).
 * Added Python 3.7 tests
 * Updated examples, tests, and documentation

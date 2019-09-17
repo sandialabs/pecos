@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import re
 import logging
+from pecos.utils import datetime_to_clocktime, datetime_to_elapsedtime
 
 none_list = ['','none','None','NONE', None, [], {}]
 
@@ -778,7 +779,8 @@ class PerformanceMonitoring(object):
 
         Returns
         --------
-        pandas DataFrame or pandas Series with the evaluated string
+        pandas DataFrame or pandas Series
+            Evaluated string
         """
 
         match = re.findall(r"\{(.*?)\}", string_to_eval)
@@ -786,10 +788,12 @@ class PerformanceMonitoring(object):
             m = m.replace('[','') # check for list
 
             if m == 'ELAPSED_TIME':
-                ELAPSED_TIME = self.get_elapsed_time()
+                ELAPSED_TIME = datetime_to_elapsedtime(self.df.index)
+                ELAPSED_TIME = pd.Series(ELAPSED_TIME, index=self.df.index)
                 string_to_eval = string_to_eval.replace("{"+m+"}",m)
             elif m == 'CLOCK_TIME':
-                CLOCK_TIME = self.get_clock_time()
+                CLOCK_TIME = datetime_to_clocktime(self.df.index)
+                CLOCK_TIME = pd.Series(CLOCK_TIME, index=self.df.index)
                 string_to_eval = string_to_eval.replace("{"+m+"}",m)
             else:
                 try:
@@ -826,37 +830,6 @@ class PerformanceMonitoring(object):
 
         return signal
 
-    def get_elapsed_time(self):
-        """
-        Returns the elapsed time in seconds for each Timestamp in the
-        DataFrame index.
-
-        Returns
-        --------
-        pandas DataFrame with elapsed time of the DataFrame index
-        """
-        elapsed_time = (self.df.index - self.df.index[0]).total_seconds()
-        elapsed_time = pd.DataFrame(data=elapsed_time, index=self.df.index, dtype=int)
-
-        return elapsed_time
-
-    def get_clock_time(self):
-        """
-        Returns the time of day in seconds past midnight for each Timestamp
-        in the DataFrame index.
-
-        Returns
-        --------
-        pandas DataFrame with clock time of the DataFrame index
-        """
-
-        secofday = self.df.index.hour*3600 + \
-                   self.df.index.minute*60 + \
-                   self.df.index.second + \
-                   self.df.index.microsecond/1e6
-        clock_time = pd.DataFrame(secofday, index=self.df.index)
-
-        return clock_time
 
 ### Functional approach
 @_documented_by(PerformanceMonitoring.check_timestamp)

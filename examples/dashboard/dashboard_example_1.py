@@ -50,8 +50,10 @@ for location_name in locations:
         pm.check_timestamp(specs['Frequency']) 
         
         # Generate a time filter
-        clock_time = pm.get_clock_time()
-        time_filter = (clock_time > specs['Time Filter Min']*3600) & (clock_time < specs['Time Filter Max']*3600)
+        clock_time = pecos.utils.datetime_to_clocktime(pm.df.index)
+        time_filter = pd.Series((clock_time > specs['Time Filter Min']*3600) & \
+                                (clock_time < specs['Time Filter Max']*3600),
+                                index=pm.df.index)
         pm.add_time_filter(time_filter)
         
         # Check missing

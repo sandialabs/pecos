@@ -6,15 +6,15 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-def convert_index_to_datetime(data, unit='s', origin='unix'):
+def index_to_datetime(index, unit='s', origin='unix'):
     """
     Convert DataFrame index from int/float to datetime,
     rounds datetime to the nearest millisecond
     
     Parameters
     --------------
-    data : pandas DataFrame
-        Data with int/float index
+    index : pandas Index
+        DataFrame index in int or float 
     
     unit : str (optional)
         Units of the original index
@@ -27,71 +27,84 @@ def convert_index_to_datetime(data, unit='s', origin='unix'):
         
     Returns
     ----------
-    pandas DataFrame
-        Data with DatetimeIndex
+    pandas Index
+        DataFrame index in datetime
     """
     
-    df = data.copy()
-    
-    df.index = pd.to_datetime(df.index, unit=unit, origin=origin)
-    df.index = df.index.round('ms') # round to nearest milliseconds
+    index2 = pd.to_datetime(index, unit=unit, origin=origin)
+    index2 = index2.round('ms') # round to nearest milliseconds
         
-    return df
+    return index2
 
-def convert_index_to_elapsed_time(data, origin=0.0):
+def datetime_to_elapsedtime(index, origin=0.0):
     """
     Convert DataFrame index from datetime to elapsed time in seconds
     
     Parameters
     --------------
-    data : pandas DataFrame
-        Data with DatetimeIndex
+    index : pandas Index
+        DataFrame index in datetime
     
     origin : float
         Reference for elapsed time
     
     Returns
     ----------
-    pandas DataFrame
-        Data with index in elapsed seconds
+    pandas Index
+        DataFrame index in elapsed seconds
+    """
+
+    index2 = index - index[0]
+    index2 = index2.total_seconds() + origin
+    
+    return index2
+
+def datetime_to_clocktime(index):
+    """
+    Convert DataFrame index from datetime to clocktime (seconds past midnight)
+    
+    Parameters
+    --------------
+    index : pandas Index
+        DataFrame index in datetime
+    
+    Returns
+    ----------
+    pandas Index
+        DataFrame index in clocktime
     """
     
-    df = data.copy()
+    clocktime = index.hour*3600 + index.minute*60 + index.second + index.microsecond/1e6
     
-    index = df.index - df.index[0]
-    df.index = index.total_seconds() + origin
+    return clocktime
     
-    return df
-
-def convert_index_to_epoch_time(data):
+def datetime_to_epochtime(index):
     """
     Convert DataFrame index from datetime to epoch time
     
     Parameters
     --------------
-    data : pandas DataFrame
-        Data with DatetimeIndex
+    index : pandas Index
+        DataFrame index in datetime
     
     Returns
     ----------
-    pandas DataFrame
-        Data with index in epoch time
+    pandas Index
+        DataFrame index in epoch time
     """
     
-    df = data.copy()
+    index2 = index.astype('int64')/10**9
     
-    df.index = df.index.astype('int64')/10**9
-    
-    return df
+    return index2
 
-def round_index(data, frequency, how='nearest'):
+def round_index(index, frequency, how='nearest'):
     """
     Round DataFrame index
     
     Parameters
     ----------
-    data : pandas DataFrame
-        Data with DatetimeIndex
+    index : pandas Index
+        Datetime index
     
     frequency : int
         Expected time series frequency, in seconds
@@ -110,20 +123,17 @@ def round_index(data, frequency, how='nearest'):
     pandas Datarame
         Data with rounded datetime index
     """
-    df = data.copy()
 
     window_str=str(int(frequency*1e3)) + 'ms' # milliseconds
     
     if how=='nearest':
-        rounded_index = df.index.round(window_str)
+        rounded_index = index.round(window_str)
     elif how=='floor':
-        rounded_index = df.index.floor(window_str)
+        rounded_index = index.floor(window_str)
     elif how=='ceiling':
-        rounded_index = df.index.ceil(window_str)
+        rounded_index = index.ceil(window_str)
     else:
         logger.info("Invalid input, index not rounded")
-        rounded_index = df.index
-        
-    df.index = rounded_index
-    
-    return df
+        rounded_index = index
+
+    return rounded_index

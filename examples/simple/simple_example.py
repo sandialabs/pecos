@@ -31,8 +31,9 @@ pm.add_translation_dictionary({'Wave': ['C','D']}) # group C and D
 pm.check_timestamp(900)
  
 # Generate a time filter to exclude data points early and late in the day
-clock_time = pm.get_clock_time()
-time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+clock_time = pecos.utils.datetime_to_clocktime(pm.df.index)
+time_filter = pd.Series((clock_time > 3*3600) & (clock_time < 21*3600), 
+                        index=pm.df.index)
 pm.add_time_filter(time_filter)
 
 # Check for missing data
@@ -42,11 +43,11 @@ pm.check_missing()
 pm.check_corrupt([-999]) 
 
 # Add a composite signal which compares measurements to a model
-elapsed_time= pm.get_elapsed_time()
-wave_model = np.sin(10*(elapsed_time/86400))
-wave_model_abs_error = np.abs(np.subtract(pm.df[pm.trans['Wave']], wave_model))
-wave_model_abs_error.columns=['Wave Error C', 'Wave Error D']
-pm.add_dataframe(wave_model_abs_error)
+wave_model = np.array(np.sin(10*clock_time/86400))
+wave_measurments = pm.df[pm.trans['Wave']]
+wave_error = np.abs(wave_measurments.subtract(wave_model,axis=0))
+wave_error.columns=['Wave Error C', 'Wave Error D']
+pm.add_dataframe(wave_error)
 pm.add_translation_dictionary({'Wave Error': ['Wave Error C', 'Wave Error D']})
 
 # Check data for expected ranges

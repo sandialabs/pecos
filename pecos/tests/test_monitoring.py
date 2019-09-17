@@ -39,8 +39,9 @@ def simple_example_run_analysis(df):
     pm.check_timestamp(expected_frequency)
 
     # Generate time filter
-    clock_time = pm.get_clock_time()
-    time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+    clocktime = pecos.utils.datetime_to_clocktime(pm.df.index)
+    time_filter = (clocktime > 3*3600) & (clocktime < 21*3600)
+    time_filter = pd.Series(time_filter, index=pm.df.index)
     pm.add_time_filter(time_filter)
 
     # Check missing
@@ -50,11 +51,11 @@ def simple_example_run_analysis(df):
     pm.check_corrupt(corrupt_values)
 
     # Add composite signals
-    elapsed_time= pm.get_elapsed_time()
-    wave_model = np.sin(10*(elapsed_time/86400))
-    wave_model_abs_error = np.abs(np.subtract(pm.df[pm.trans['Wave']], wave_model))
-    wave_model_abs_error.columns=['Wave Error C', 'Wave Error D']
-    pm.add_dataframe(wave_model_abs_error)
+    wave_model = np.array(np.sin(10*clocktime/86400))
+    wave_measurments = pm.df[pm.trans['Wave']]
+    wave_abs_error = np.abs(wave_measurments.subtract(wave_model,axis=0))
+    wave_abs_error.columns=['Wave Error C', 'Wave Error D']
+    pm.add_dataframe(wave_abs_error)
     pm.add_translation_dictionary({'Wave Error': ['Wave Error C', 'Wave Error D']})
 
     # Check range
@@ -89,8 +90,9 @@ class Test_simple_example(unittest.TestCase):
         self.pm.add_dataframe(self.raw_data)
         self.pm.add_translation_dictionary(trans)
         self.pm.check_timestamp(900)
-        clock_time = self.pm.get_clock_time()
-        self.time_filter = (clock_time > 3*3600) & (clock_time < 21*3600)
+        clocktime = pecos.utils.datetime_to_clocktime(self.pm.df.index)
+        time_filter = (clocktime > 3*3600) & (clocktime < 21*3600)
+        self.time_filter = pd.Series(time_filter, index=self.pm.df.index)
         self.pm.add_time_filter(self.time_filter)
         
     @classmethod
@@ -184,7 +186,7 @@ class Test_simple_example(unittest.TestCase):
         # Functional tests
         results = pecos.monitoring.check_timestamp(self.raw_data, 900)
         results = pecos.monitoring.check_corrupt(results['cleaned_data'], [-999])
-        raw_data = results['cleaned_data'].loc[self.time_filter[0],:]
+        raw_data = results['cleaned_data'].loc[self.time_filter,:]
         
         results = pecos.monitoring.check_range(raw_data[['B']],[0, 1])
         test_results = results['test_results']
@@ -217,7 +219,7 @@ class Test_simple_example(unittest.TestCase):
         # Functional tests
         results = pecos.monitoring.check_timestamp(self.raw_data, 900)
         results = pecos.monitoring.check_corrupt(results['cleaned_data'], [-999])
-        raw_data = results['cleaned_data'].loc[self.time_filter[0],:]
+        raw_data = results['cleaned_data'].loc[self.time_filter,:]
         
         results = pecos.monitoring.check_increment(raw_data[['A']],[0.0001, None])
         test_results = results['test_results']
@@ -244,7 +246,7 @@ class Test_simple_example(unittest.TestCase):
         # Functional tests
         results = pecos.monitoring.check_timestamp(self.raw_data, 900)
         results = pecos.monitoring.check_corrupt(results['cleaned_data'], [-999])
-        raw_data = results['cleaned_data'].loc[self.time_filter[0],:]
+        raw_data = results['cleaned_data'].loc[self.time_filter,:]
         
         results = pecos.monitoring.check_delta(raw_data[['A']],[0.0001, None], window=2*3600)
         test_results = results['test_results']
@@ -255,12 +257,13 @@ class Test_simple_example(unittest.TestCase):
 
     def test_composite_signal(self):
         self.pm.check_corrupt([-999])
-
-        elapsed_time = self.pm.get_elapsed_time()
-        wave_model = np.sin(10*(elapsed_time/86400))
-        wave_model_abs_error = np.abs(np.subtract(self.pm.df[self.pm.trans['Wave']], wave_model))
-        wave_model_abs_error.columns=['Wave Error C', 'Wave Error D']
-        self.pm.add_dataframe(wave_model_abs_error)
+        
+        clocktime = pecos.utils.datetime_to_clocktime(self.pm.df.index)
+        wave_model = np.array(np.sin(10*clocktime/86400))
+        wave_measurments = self.pm.df[self.pm.trans['Wave']]
+        wave_abs_error = np.abs(wave_measurments.subtract(wave_model,axis=0))
+        wave_abs_error.columns=['Wave Error C', 'Wave Error D']
+        self.pm.add_dataframe(wave_abs_error)
         self.pm.add_translation_dictionary({'Wave Error': ['Wave Error C', 'Wave Error D']})
 
         self.pm.check_range([None, 0.25], 'Wave Error')
@@ -298,14 +301,14 @@ class Test_simple_example(unittest.TestCase):
         data_file = join(simpleexampledir,'simple.xlsx')
         df = pd.read_excel(data_file, index_col=0)
         
-        df2 = pecos.utils.convert_index_to_elapsed_time(df)
-        df2.index = df2.index/1e5 # millisecond resolution
+        index = pecos.utils.datetime_to_elapsedtime(df.index)
+        df.index = index/1e5 # millisecond resolution
         
-        df3 = pecos.utils.convert_index_to_datetime(df2)
+        df.index = pecos.utils.index_to_datetime(df.index)
         pm = pecos.monitoring.PerformanceMonitoring()
 
         # Populate the PerformanceMonitoring instance
-        pm.add_dataframe(df3)
+        pm.add_dataframe(df)
     
         # Check timestamp
         pm.check_timestamp(900/1e5)
@@ -330,45 +333,6 @@ class Test_simple_example(unittest.TestCase):
         actual = pd.read_csv('test_results.csv', index_col=0)
         expected = pd.read_csv(join(datadir,'Simple_test_results_with_timezone.csv'), index_col=0)
         assert_frame_equal(actual, expected, check_dtype=False)
-
-class Test_get_time(unittest.TestCase):
-
-    @classmethod
-    def setUp(self):
-        self.nPeriods = 48
-        index = pd.date_range('1/1/1990 2:15', periods=self.nPeriods, freq='H')
-        data = np.random.rand(self.nPeriods)
-        df = pd.DataFrame(data=data, index=index, columns=['test'])
-
-        self.pm = pecos.monitoring.PerformanceMonitoring()
-        self.pm.add_dataframe(df)
-
-    @classmethod
-    def tearDown(self):
-        pass
-
-    def test_get_elapsed_time(self):
-        elapsed_time = self.pm.get_elapsed_time()
-        expected = np.arange(0,self.nPeriods*3600,3600)
-        assert_list_equal(elapsed_time.iloc[:,0].values.tolist(), expected.tolist())
-
-    def test_get_clock_time(self):
-        clock_time = self.pm.get_clock_time()
-        expected = np.mod(np.arange(2.25*3600,(self.nPeriods+2.25)*3600,3600), 86400)
-        assert_list_equal(clock_time.iloc[:,0].values.tolist(), expected.tolist())
-
-    def test_get_elapsed_time_with_timezone(self):
-        self.pm.df.index = self.pm.df.index.tz_localize('MST')
-        elapsed_time = self.pm.get_elapsed_time()
-        expected = np.arange(0,self.nPeriods*3600,3600)
-        assert_list_equal(elapsed_time.iloc[:,0].values.tolist(), expected.tolist())
-
-    def test_get_clock_time_with_timezone(self):
-        self.pm.df.index = self.pm.df.index.tz_localize('MST')
-        clock_time = self.pm.get_clock_time()
-        expected = np.mod(np.arange(2.25*3600,(self.nPeriods+2.25)*3600,3600), 86400)
-        assert_list_equal(clock_time.iloc[:,0].values.tolist(), expected.tolist())
-
 
 class Test_check_timestamp(unittest.TestCase):
 
