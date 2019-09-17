@@ -19,7 +19,7 @@ def insolation(G, tfilter=None):
     The time integral is computed using the trapezoidal rule.
     Results are given in [irradiance units]*seconds.
     
-     Parameters
+    Parameters
     -----------
     G : pandas DataFrame
         Irradiance time series

@@ -49,7 +49,8 @@ def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
     
     Returns
     ---------
-    pandas DataFrame with data
+    pandas DataFrame
+        Data
     """
     logger.info("Reading Campbell Scientific CSV file " + filename)
 
@@ -158,7 +159,8 @@ def write_metrics(metrics, filename='metrics.csv'):
     
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
     logger.info("Write metrics file")
 
@@ -196,7 +198,8 @@ def write_test_results(test_results, filename='test_results.csv'):
     
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
 
     test_results.sort_values(list(test_results.columns), inplace=True)
@@ -266,7 +269,8 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
         
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
     logger.info("Writing HTML report")
     
@@ -397,7 +401,8 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
     
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
     
     logger.info("Writing dashboard")

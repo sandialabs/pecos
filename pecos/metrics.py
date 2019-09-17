@@ -253,7 +253,7 @@ def false_alarm_rate(observed, actual, tfilter=None):
     Returns
     -------
     pandas Series
-        False alarm rate (FAR)
+        False alarm rate
     """
     
     if len(set(observed.columns).symmetric_difference(set(actual.columns))) > 0:

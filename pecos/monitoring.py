@@ -28,11 +28,12 @@ def _documented_by(original):
         """
         new_docstring = docstring.replace(old, new) + \
         """   
-                Returns    
-                ----------
-                Dictionary
-                    Results include cleaned data, mask, and test results summary
+        Returns    
+        ----------
+        dictionary
+            Results include cleaned data, mask, and test results summary
         """
+
         target.__doc__ = new_docstring
         return target
     return wrapper
