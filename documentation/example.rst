@@ -3,7 +3,7 @@
 Simple example
 ================
 
-A simple example is included in the examples/simple directory.  
+A simple example is included in the `examples/simple <https://github.com/sandialabs/pecos/tree/master/examples/simple>`_ directory.  
 This example uses data from an excel file, **simple.xlsx**, which 
 contains 4 columns of data (A through D). 
 
@@ -45,7 +45,7 @@ The script performs the following steps:
 
 * Run quality control tests
 
-* Save test results and performance metrics to CSV files
+* Save test results to a CSV files
 
 * Generate an HTML report
 
@@ -53,11 +53,9 @@ The script performs the following steps:
 
 Results include:
 
-* HTML monitoring report, **monitoring_report.html** (:numref:`fig-monitor-1`), includes summary tables and graphics
+* HTML monitoring report, **monitoring_report.html** (:numref:`fig-monitor-1`), includes quality control index, summary table, and graphics
 
 * Test results CSV file, **test_results.csv**, includes information from the summary tables
-
-* Performance metric CSV file, **metrics.csv**, includes a quality control index based on the analysis.  
 
 .. _fig-monitor-1:
 .. figure:: figures/monitoring_report.png

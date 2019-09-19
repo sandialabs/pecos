@@ -18,7 +18,6 @@ pecos.logger.initialize()
 pm = pecos.monitoring.PerformanceMonitoring()
 
 # Populate the object with a dataframe and translation dictionary
-system_name = 'System1'
 data_file = 'System1_2015_performance_metrics.xlsx'
 df = pd.read_excel(data_file, index_col=0)
 pm.add_dataframe(df)
@@ -33,12 +32,10 @@ pm.check_missing()
 pm.check_corrupt([-999]) 
 
 # Check range for all columns
-for key in pm.trans.keys():
-    pm.check_range([0.5,1], key)
+pm.check_range([0.5,1])
 
 # Check increment for all columns
-for key in pm.trans.keys():
-    pm.check_increment([-0.5, None], key, absolute_value=False) 
+pm.check_increment([-0.5, None], absolute_value=False) 
 
 # Generate graphics
 test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
@@ -48,4 +45,4 @@ plt.savefig('custom.png', format='png', dpi=500)
 # Write test results and report files
 pecos.io.write_test_results(pm.test_results)
 pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
-                                 ['custom.png'], title='System1 2015 Performance Metrics')
+                                 ['custom.png'], title='System1 2015')

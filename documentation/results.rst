@@ -3,7 +3,8 @@
 Results
 ==========
 
-Pecos can be used to collect quality control test results and performance metrics, and generate HTML reports and dashboards.
+Pecos can be used to collect quality control test results and performance 
+metrics, and generate HTML reports and dashboards.
 
 Quality control test results
 ------------------------------
@@ -105,13 +106,12 @@ Possible strategies include:
 These strategies can be accomplished using the Pandas methods ``interpolate``, ``replace``, and ``fillna``.  
 See Pandas documentation for more details.
 
-Performance metrics
+Metrics
 -----------------------------
 
-The :class:`~pecos.io.write_metrics` method is used to write performance metrics to a CSV file.
+The :class:`~pecos.io.write_metrics` method is used to write metrics that describe the quality control analysis (i.e. QCI) to a CSV file.
 This method can be customized to write performance metrics to a database or to other file formats.
 The method can be called multiple times to appended metrics based on the timestamp of the DataFrame.
-:numref:`fig-metrics` shows a simple example where two metrics DataFrames are appended in a single file.
 
 .. doctest::
     :hide:
@@ -207,8 +207,7 @@ For each row and column in the dashboard, the following information can be speci
 * Links (i.e. the path to a monitoring report or other file/site for additional information)
 
 Text, graphics, tables, and links can be combined to create custom dashboards.
-Pecos includes dashboard examples (**dashboard_example_1.py**, **dashboard_example_2.py**, and 
-**dashboard_example_3.py**) in the examples/dashboard directory.
+Pecos includes dashboard examples in the `examples/dashboard <https://github.com/sandialabs/pecos/tree/master/examples/dashboard>`_ directory. 
 :numref:`fig-dashboard1`, :numref:`fig-dashboard2`, and  :numref:`fig-dashboard3` show example dashboards generated using Pecos.
 
 .. _fig-dashboard1:

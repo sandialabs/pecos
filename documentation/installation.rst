@@ -8,7 +8,6 @@ are recommended to manage the Python interface.
 Anaconda Python distributions include the Python packages needed to run Pecos.
 
 Pecos can be installed using pip, git, or a downloaded zip file.  
-Note that the pip installation will NOT include the examples folder referenced in this manual.
 
 **pip:** To install Pecos using pip::
 

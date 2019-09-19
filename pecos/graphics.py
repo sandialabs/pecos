@@ -4,7 +4,10 @@ heatmap plots for reports.
 """
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
+try:
+    import matplotlib.pyplot as plt
+except:
+    pass
 try:
     import plotly
 except:
@@ -300,7 +303,7 @@ def plot_heatmap(data, colors=[(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75,
     
     Parameters
     -----------
-    data : pandas DataFrame or numpy ndarray
+    data : pandas DataFrame, pandas Series, or numpy array
         Data
     
     colors : list (optional)
@@ -326,9 +329,11 @@ def plot_heatmap(data, colors=[(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75,
     figsize : tuple (optional)
         Figure size, default = (5.0, 5.0)
     """
-    if type(data) is pd.core.frame.DataFrame:
+    if isinstance(data, (pd.DataFrame, pd.Series)):
             data = data.values
-            
+    if len(data.shape) == 1:
+        data = np.expand_dims(data, axis=0)
+        
     if not cmap:
         from matplotlib.colors import LinearSegmentedColormap
         cmap = LinearSegmentedColormap.from_list(name='custom', colors=colors, N=nColors)

@@ -49,7 +49,8 @@ def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
     
     Returns
     ---------
-    pandas DataFrame with data
+    pandas DataFrame
+        Data
     """
     logger.info("Reading Campbell Scientific CSV file " + filename)
 
@@ -158,7 +159,8 @@ def write_metrics(metrics, filename='metrics.csv'):
     
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
     logger.info("Write metrics file")
 
@@ -196,7 +198,8 @@ def write_test_results(test_results, filename='test_results.csv'):
     
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
 
     test_results.sort_values(list(test_results.columns), inplace=True)
@@ -239,7 +242,7 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     custom_graphics : list of strings (optional)
         Custom files, with full path.  Created by the user.
     
-    metrics : pandas DataFrame (optional)
+    metrics : pandas Series or DataFrame (optional)
         Performance metrics to add as a table to the monitoring report
     
     title : string (optional)
@@ -266,7 +269,8 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
         
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
     logger.info("Writing HTML report")
     
@@ -299,8 +303,12 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     # Convert to html format
     if metrics is None:
         metrics = pd.DataFrame()
+    if isinstance(metrics, pd.Series):
+        metrics_html = metrics.to_frame().to_html(header=False)
+    if isinstance(metrics, pd.DataFrame):  
+        metrics_html = metrics.to_html(justify='left')
+        
     test_results_html = test_results.to_html(justify='left')
-    metrics_html = metrics.to_html(justify='left')
     notes_html = notes_df.to_html(justify='left', header=False)
     
     content = {'start_time': str(start_time), 
@@ -393,7 +401,8 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
     
     Returns
     ------------
-    filename : string
+    string
+        filename
     """
     
     logger.info("Writing dashboard")

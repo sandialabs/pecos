@@ -7,6 +7,7 @@ import pandas as pd
 import numpy as np
 import re
 import logging
+from pecos.utils import datetime_to_clocktime, datetime_to_elapsedtime
 
 none_list = ['','none','None','NONE', None, [], {}]
 
@@ -28,11 +29,12 @@ def _documented_by(original):
         """
         new_docstring = docstring.replace(old, new) + \
         """   
-                Returns    
-                ----------
-                Dictionary
-                    Results include cleaned data, mask, and test results summary
+        Returns    
+        ----------
+        dictionary
+            Results include cleaned data, mask, and test results summary
         """
+
         target.__doc__ = new_docstring
         return target
     return wrapper
@@ -93,7 +95,7 @@ class PerformanceMonitoring(object):
         """
         return self.df[self.mask]
 
-    def _setup_data(self, key, rolling_mean):
+    def _setup_data(self, key, window):
         """
         Setup DataFrame, by (optionally) extracting a column and/or smoothing
         data using rolling window mean.
@@ -113,9 +115,9 @@ class PerformanceMonitoring(object):
             df = self.df
 
         # Compute moving average
-        if rolling_mean > 0:
-            rolling_mean_str = str(rolling_mean) + 's'
-            df = df.rolling(rolling_mean_str).mean()
+        if window > 0:
+            window_str = str(int(window*1e3)) + 'ms' # milliseconds
+            df = df.rolling(window_str).mean()
 
         return df
 
@@ -240,7 +242,7 @@ class PerformanceMonitoring(object):
         if self.df is not None:
             self.df = temp.combine_first(self.df)
         else:
-            self.df = temp.copy()
+            self.df = temp
 
         # Add identity 1:1 translation dictionary
         trans = {}
@@ -355,7 +357,7 @@ class PerformanceMonitoring(object):
             expected_end_time = max(self.df.index)
 
         rng = pd.date_range(start=expected_start_time, end=expected_end_time,
-                            freq=str(int(frequency*1e6)) + 'us') # microseconds
+                            freq=str(int(frequency*1e3)) + 'ms') # milliseconds
 
         # Check to see if timestamp is monotonic
 #        mask = pd.TimeSeries(self.df.index).diff() < 0
@@ -410,7 +412,7 @@ class PerformanceMonitoring(object):
             # uses pandas >= 0.18 resample syntax
             df_index = pd.DataFrame(index=self.df.index)
             df_index[0]=1 # populate with placeholder values
-            mask = df_index.resample('{}s'.format(frequency)).count() == 0
+            mask = df_index.resample(str(int(frequency*1e3))+'ms').count() == 0 # milliseconds
             self._append_test_results(mask, 'Missing timestamp',
                                  use_mask_only=True,
                                  min_failures=min_failures)
@@ -550,7 +552,7 @@ class PerformanceMonitoring(object):
         if df is None:
             return
 
-        window_str = str(int(window*1e6)) + 'us'
+        window_str = str(int(window*1e3)) + 'ms' # milliseconds
 
         def f(data=None, method=None):
             if data.notnull().sum() < 2: # there has to be at least two numbers
@@ -678,7 +680,7 @@ class PerformanceMonitoring(object):
 
         # Compute normalized data
         if window is not None:
-            window_str = str(int(window*1e6)) + 'us'
+            window_str = str(int(window*1e3)) + 'ms' # milliseconds
             df = (df - df.rolling(window_str).mean())/df.rolling(window_str).std()
         else:
             df = (df - df.mean())/df.std()
@@ -777,7 +779,8 @@ class PerformanceMonitoring(object):
 
         Returns
         --------
-        pandas DataFrame or pandas Series with the evaluated string
+        pandas DataFrame or pandas Series
+            Evaluated string
         """
 
         match = re.findall(r"\{(.*?)\}", string_to_eval)
@@ -785,10 +788,12 @@ class PerformanceMonitoring(object):
             m = m.replace('[','') # check for list
 
             if m == 'ELAPSED_TIME':
-                ELAPSED_TIME = self.get_elapsed_time()
+                ELAPSED_TIME = datetime_to_elapsedtime(self.df.index)
+                ELAPSED_TIME = pd.Series(ELAPSED_TIME, index=self.df.index)
                 string_to_eval = string_to_eval.replace("{"+m+"}",m)
             elif m == 'CLOCK_TIME':
-                CLOCK_TIME = self.get_clock_time()
+                CLOCK_TIME = datetime_to_clocktime(self.df.index)
+                CLOCK_TIME = pd.Series(CLOCK_TIME, index=self.df.index)
                 string_to_eval = string_to_eval.replace("{"+m+"}",m)
             else:
                 try:
@@ -825,37 +830,6 @@ class PerformanceMonitoring(object):
 
         return signal
 
-    def get_elapsed_time(self):
-        """
-        Returns the elapsed time in seconds for each Timestamp in the
-        DataFrame index.
-
-        Returns
-        --------
-        pandas DataFrame with elapsed time of the DataFrame index
-        """
-        elapsed_time = ((self.df.index - self.df.index[0]).values)/1000000000 # convert ns to s
-        elapsed_time = pd.DataFrame(data=elapsed_time, index=self.df.index, dtype=int)
-
-        return elapsed_time
-
-    def get_clock_time(self):
-        """
-        Returns the time of day in seconds past midnight for each Timestamp
-        in the DataFrame index.
-
-        Returns
-        --------
-        pandas DataFrame with clock time of the DataFrame index
-        """
-
-        secofday = self.df.index.hour*3600 + \
-                   self.df.index.minute*60 + \
-                   self.df.index.second + \
-                   self.df.index.microsecond/1000000.0
-        clock_time = pd.DataFrame(secofday, index=self.df.index)
-
-        return clock_time
 
 ### Functional approach
 @_documented_by(PerformanceMonitoring.check_timestamp)

@@ -8,7 +8,7 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.colors import rgb2hex
 import pecos
 
-# Color value used in Pandas Styling
+# Red/yellow/green color used in Pandas Styling
 def color_value(val):
     
     nThresholds = 10

@@ -11,14 +11,14 @@ Composite Signals:
 
 Time Filter: "({CLOCK_TIME} > 3*3600) & ({CLOCK_TIME} < 21*3600)"
 
-Corrupt Values: [-999]
+Corrupt: [-999]
 
-Range Bounds:
+Range:
   B: [0, 1]
   Wave: [-1, 1]
   Wave Error: [None, 0.25]
  
-Increment Bounds:
+Increment:
   A: [0.0001, None]
   B: [0.0001, None]
   Wave: [0.0001, 0.6] 

@@ -9,12 +9,11 @@ between pecos and pvlib.
 * A time filter is established based on sun position
 * Electrical and weather data are loaded into a pecos PerformanceMonitoring 
   object and a series of quality control tests are run
-* A performance model is computed using pvlib, additional quality control test
-  is run to compare observed to predicted power output
+* A performance model is computed using pvlib, additional quality control tests
+  are run to compare observed to predicted power output
 * PV performance metrics are computed
-* The results are printed to csv and html reports
+* The results are written to an html report
 """
-import datetime
 import yaml
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -24,10 +23,6 @@ import pecos
 
 # Initialize logger
 pecos.logger.initialize()
-
-# Define system name and analysis date
-system_name = 'Baseline_System'
-analysis_date = datetime.date(2015, 11, 11)
 
 # Open config file and extract information
 config_file = 'Baseline_config.yml'
@@ -47,13 +42,13 @@ increment_bounds = config['Increment Bounds']
 pm = pecos.monitoring.PerformanceMonitoring()
 
 # Populate the object with pv and weather dataframes and translation dictionaries
-database_file = 'Baseline6kW' + analysis_date.strftime('_%Y_%m_%d') + '.dat'
+database_file = 'Baseline6kW_2015_11_11.dat'
 df = pecos.io.read_campbell_scientific(database_file)
 df.index = df.index.tz_localize(location['Timezone'])
 pm.add_dataframe(df)
 pm.add_translation_dictionary(BASE_translation_dictionary)
 
-database_file = 'MET' + analysis_date.strftime('_%Y_%m_%d') + '.dat'
+database_file = 'MET_2015_11_11.dat'
 df = pecos.io.read_campbell_scientific(database_file)
 df.index = df.index.tz_localize(location['Timezone'])
 pm.add_dataframe(df)
@@ -63,7 +58,8 @@ pm.add_translation_dictionary(MET_translation_dictionary)
 pm.check_timestamp(60) 
     
 # Generate a time filter based on sun position
-solarposition = pvlib.solarposition.ephemeris(pm.df.index, location['Latitude'], location['Longitude'])
+solarposition = pvlib.solarposition.ephemeris(pm.df.index, location['Latitude'], 
+                                              location['Longitude'])
 time_filter = solarposition['apparent_elevation'] > 10 
 pm.add_time_filter(time_filter)
 
@@ -88,20 +84,17 @@ for key,value in range_bounds.items():
 for key,value in increment_bounds.items():
     pm.check_increment([value[0], value[1]], key, min_failures=value[2]) 
     
-# Compute QCI only using columns defined in the translation dictionary
-mask = pm.mask
-col = [item for sublist in pm.trans.values() for item in sublist]
-QCI = pecos.metrics.qci(mask[col], pm.tfilter)
+# Compute QCI
+QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
 
-# Generate a performance model using observed POA, wind speed, and air temp.
-# Remove data points that failed a previous quality control test before running the model (using 'mask').
-# Check range on DC power relative error and normlized efficiency.
-# Compute PV metrics.  
-poa = pm.df[pm.trans['POA']][mask[pm.trans['POA']]]
-wind = pm.df[pm.trans['Wind Speed']][mask[pm.trans['Wind Speed']]]
-temp = pm.df[pm.trans['Ambient Temperature']][mask[pm.trans['Ambient Temperature']]]
-pv_metrics = pv_model.sapm(pm, poa, wind, temp, sapm_parameters, location)
-metrics = pd.concat([QCI, pv_metrics], axis=1)
+# Run the SAPM and compute metrics. Remove data points that failed a previous 
+# quality control test before running the model (using pm.cleaned_data). Check range 
+# on DC power relative error and normalized efficiency. Compute PV metrics.  
+metrics = pv_model.sapm(pm, sapm_parameters, location)
+
+# Add QCI to the metrics
+metrics['QCI'] = QCI.mean()
+metrics = pd.Series(metrics)
 
 # Generate graphics
 test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results, pm.tfilter)
@@ -110,9 +103,7 @@ plt.savefig('custom1.png', format='png', dpi=500)
 pm.df[['Diffuse_Wm2_Avg', 'Direct_Wm2_Avg', 'Global_Wm2_Avg']].plot(figsize=(7,3.5))
 plt.savefig('custom2.png', format='png', dpi=500)
 
-# Write metrics, test results, and report files
-pecos.io.write_metrics(metrics)
+# Write test results and report files
 pecos.io.write_test_results(pm.test_results)
 pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
-                                 ['custom1.png', 'custom2.png'], metrics.transpose(), 
-                                 'Baseline System, Performance Monitoring Report', config)
+                                 ['custom1.png', 'custom2.png'], metrics)
