@@ -120,8 +120,8 @@ def round_index(index, frequency, how='nearest'):
         
     Returns
     -------
-    pandas Datarame
-        Data with rounded datetime index
+    pandas Index
+        DataFrame index with rounded values
     """
 
     window_str=str(int(frequency*1e3)) + 'ms' # milliseconds
