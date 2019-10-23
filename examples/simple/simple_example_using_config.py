@@ -29,7 +29,7 @@ pm.add_translation_dictionary(config['Translation'])
 pm.check_timestamp(config['Specifications']['Frequency'])
  
 # Generate a time filter to exclude data points early and late in the day
-time_filter = pm.evaluate_string('Time Filter', config['Time Filter'])
+time_filter = pecos.utils.evaluate_string(config['Time Filter'], df)
 pm.add_time_filter(time_filter)
 
 # Check for missing data
@@ -39,9 +39,10 @@ pm.check_missing()
 pm.check_corrupt(config['Corrupt']) 
 
 # Add a composite signal which compares measurements to a model
+specs = config['Specifications']
 for composite_signal in config['Composite Signals']:
     for key, value in composite_signal.items():
-        signal = pm.evaluate_string(key, value, config['Specifications'])
+        signal = pecos.utils.evaluate_string(value, pm.df, pm.trans, specs, key)
         pm.add_dataframe(signal)
         pm.add_translation_dictionary({key: list(signal.columns)})
 

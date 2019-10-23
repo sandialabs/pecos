@@ -686,78 +686,6 @@ class PerformanceMonitoring(object):
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
 
-    def evaluate_string(self, col_name, string_to_eval, specs={}):
-        """
-        Returns the evaluated Python equation written as a string (BETA)
-        
-        For each {keyword} in string_to_eval,
-        {keyword} is first expanded to self.df[self.trans[keyword]],
-        if that fails, then {keyword} is expanded to specs[keyword].
-
-        Parameters
-        ----------
-        col_name : string
-            Column name for the new signal
-
-        string_to_eval : string
-            String to evaluate
-
-        specs : dictionary (optional)
-            Constants used as keywords
-
-        Returns
-        --------
-        pandas DataFrame or pandas Series
-            Evaluated string
-        """
-
-        match = re.findall(r"\{(.*?)\}", string_to_eval)
-        for m in set(match):
-            m = m.replace('[','') # check for list
-
-            if m == 'ELAPSED_TIME':
-                ELAPSED_TIME = datetime_to_elapsedtime(self.df.index)
-                ELAPSED_TIME = pd.Series(ELAPSED_TIME, index=self.df.index)
-                string_to_eval = string_to_eval.replace("{"+m+"}",m)
-            elif m == 'CLOCK_TIME':
-                CLOCK_TIME = datetime_to_clocktime(self.df.index)
-                CLOCK_TIME = pd.Series(CLOCK_TIME, index=self.df.index)
-                string_to_eval = string_to_eval.replace("{"+m+"}",m)
-            else:
-                try:
-                    self.df[self.trans[m]]
-                    datastr = "self.df[self.trans['" + m + "']]"
-                    string_to_eval = string_to_eval.replace("{"+m+"}",datastr)
-                except:
-                    try:
-                        specs[m]
-                        datastr = "specs['" + m + "']"
-                        string_to_eval = string_to_eval.replace("{"+m+"}",datastr)
-                    except:
-                        pass
-
-        try:
-            signal = eval(string_to_eval)
-            if type(signal) is tuple: # A tuple of series
-                col_name = [col_name + " " + str(i+1)  for i in range(len(signal))]
-                signal = pd.concat(signal, axis=1)
-                signal.columns = col_name
-                signal.index = self.df.index
-            elif type(signal) is float:
-                signal = signal
-            else:
-                signal = pd.DataFrame(signal)
-                if len(signal.columns) == 1:
-                    signal.columns = [col_name]
-                else:
-                    signal.columns = [col_name + " " + str(i+1)  for i in range(signal.shape[1])]
-                signal.index = self.df.index
-        except:
-            signal = None
-            logger.warning("Insufficient data for Composite Signals: " + col_name + ' -- ' + string_to_eval)
-
-        return signal
-
 
 ### Functional approach
 @_documented_by(PerformanceMonitoring.check_timestamp)
@@ -814,7 +742,7 @@ def check_outlier(data, bound, key=None, window=3600, absolute_value=True,
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_outlier(bound, None, window, absolute_value, min_failures)
+    pm.check_outlier(bound, key, window, absolute_value, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}

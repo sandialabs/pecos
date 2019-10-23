@@ -18,37 +18,37 @@ configuration file to run the simple example.
 
 .. literalinclude:: ../examples/simple/simple_config.yml
 
-In the configuration file, composite signals and time filters can be defined 
-using strings of Python code. 
-Numpy (and other Python modules if needed) can be used for computation.  
-**Strings of Python code should be thoroughly tested by the user.**  
-A list of key:value pairs can be used to specify the order of evaluation.
+For some use cases, it is convenient to use strings of Python code in 
+a configuration file to define time filters, 
+quality control bounds, and composite signals.
+These strings can be evaluated using :class:`~pecos.utils.evaluate_string`.
+**WARNING this function calls ``eval``. Strings of Python code should be 
+thoroughly tested by the user.**
 
-When using a string of Python code, keywords in {} are expanded using the following rules in this order:
-
-1. Keywords ELAPSED_TIME and CLOCK_TIME return time in seconds
-
-2. Keywords that are a key in the translation dictionary return 'pm.df[pm.trans[Keyword]]'
-
-3. Keywords that are a key in a user specified dictionary of constants, specs, return 'specs[Keyword]'.
-   
-The configuration file can also be used to store constants that are used to
-generate a time filter, 
-define upper and lower bounds in quality control tests, 
-define system location, 
-or other input needed in composite signals, for example,
-	
-.. doctest::
-
-    >>> specs = {'Frequency': 900, 'Multiplier': 10, 'Latitude': 35.05, 'Longitude': -106.53}
-
-Strings are evaluated and added to the DataFrame using the following code,
+For each {keyword} in the string, {keyword} is expanded in the following order:
+    
+* If keyword is ELAPSED_TIME, CLOCK_TIME or EPOCH_TIME then data.index is 
+  converted to seconds (elapsed time, clock time, or epoch time) is used in the evaluation
+* If keyword is used to select a column (or columns) of data, then data[keyword] 
+  is used in the evaluation
+* If a translation dictionary is used to select a column (or columns) of data, then 
+  data[trans[keyword]] is used in the evaluation
+* If the keyword is a key in a dictionary of constants (specs), then 
+  specs[keyword] is used in the evaluation
+      
+For example, the time filter string is evaluated below.
 
 .. doctest::
+    :hide:
 
-    >>> signal = pm.evaluate_string('Signal', string, specs) #doctest:+SKIP 
-    >>> pm.add_dataframe(signal) #doctest:+SKIP 
-	
-If the string evaluation fails, the error message is printed.  
-See the :class:`~pecos.monitoring.PerformanceMonitoring.evaluate_string` 
-for more details.
+    >>> import pandas as pd
+    >>> import numpy as np
+    >>> import pecos
+    >>> index = pd.date_range('1/1/2015', periods=96, freq='15Min')
+    >>> data = {'A': np.random.rand(96), 'B': np.random.rand(96)}
+    >>> df = pd.DataFrame(data, index=index)
+    
+.. doctest::
+
+    >>> string_to_eval = "({CLOCK_TIME} > 3*3600) & ({CLOCK_TIME} < 21*3600)"
+    >>> time_filter = pecos.utils.evaluate_string(string_to_eval, df)
