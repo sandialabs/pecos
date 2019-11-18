@@ -34,8 +34,8 @@ pm.check_corrupt([-999])
 # Check range for all columns
 pm.check_range([0.5,1])
 
-# Check increment for all columns
-pm.check_increment([-0.5, None], absolute_value=False) 
+# Check to see if data decreases by more than -0.5 between consecutive days
+pm.check_increment([-0.5, None], absolute_value=False)  
 
 # Generate graphics
 test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
