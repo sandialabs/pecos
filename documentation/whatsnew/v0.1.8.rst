@@ -34,5 +34,8 @@ v0.1.8 (master)
 * Timestamp indexes down to millisecond resolution are supported
 * Added additional helper functions in pecos.utils to convert to/from datetime indexes.
   Methods ``get_elapsed_time`` and ``get_clock_time`` were removed from the PerformanceMonitoring class (API change).
+* Moved functionality to evaluate strings from the PerformanceMonitoring class into a stand alone utility function (API change).
+* Removed option to smooth data using a rolling mean within the quality control tests (API change).
+  Preprocessing steps should be done before the quality control test is run. 
 * Added Python 3.7 tests
 * Updated examples, tests, and documentation
