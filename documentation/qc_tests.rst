@@ -104,14 +104,11 @@ For example, composite signals can be add to the analysis to check for expected 
 vs. measured values (i.e. absolute error or relative error) or an expected
 relationships between data columns (i.e. column A divided by column B).
 An upper bound, lower bound, or both can be specified.
-Additionally, the data can be smoothed using a rolling mean before the test is run.
 Input includes:
 
 * Upper and lower bound
 
 * Data column (default = all columns)
-
-* Rolling window used to smooth the data before test is run (default = 0)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -119,18 +116,15 @@ For example,
 
 .. doctest::
 
-    >>> pm.check_range([None, 1], 'A', rolling_mean=2)
+    >>> pm.check_range([None, 1], 'A')
 
-checks for values greater than 1 in the columns associated with the key 'A',
-using a rolling average of 2 time steps.
+checks for values greater than 1 in the columns associated with the key 'A'
 
 Delta test
 --------------------
 The :class:`~pecos.monitoring.PerformanceMonitoring.check_delta` method is used to check for stagnant data and abrupt changes in data.
 The test checks if the difference between the minimum and maximum data value within a moving window is within expected bounds.
 **Currently, this method is not efficient for large data sets (> 100000 pts).**
-Like the check_range method, the user can specify if the data
-should be smoothed using a rolling mean before the test is run.
 Input includes:
 
 * Upper and lower bound
@@ -139,9 +133,7 @@ Input includes:
 
 * Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
 
-* Flag indicating if the absolute value is taken (default = True)
-
-* Rolling window used to smooth the data before test is run (default = 0)
+* Flag indicating if the absolute value is used (default = True)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -167,8 +159,6 @@ The test checks if the difference between
 consecutive data values (or other specified increment) is within expected bounds.
 This method does not use timestamp indices to find the min and max value within a moving window,
 therefore it is less robust than the check_delta method.
-Like the check_range method, the user can specify if the data
-should be smoothed using a rolling mean before the test is run.
 Input includes:
 
 * Upper and lower bound
@@ -177,9 +167,7 @@ Input includes:
 
 * Increment used for difference calculation (default = 1 timestamp)
 
-* Flag indicating if the absolute value is taken (default = True)
-
-* Rolling window used to smooth the data before test is run (default = 0)
+* Flag indicating if the absolute value is used (default = True)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -202,8 +190,6 @@ Outlier test
 The :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier` method is used to check if normalized data
 falls outside expected bounds.  Data is normalized using the mean and standard deviation, using either a
 moving window or using the entire data set.  If multiple columns of data are used, each column is normalized separately.
-Like the check_range method, the user can specify if the data
-should be smoothed using a rolling mean before the test is run.
 Input includes:
 
 * Upper and lower bound (in standard deviations)
@@ -212,9 +198,7 @@ Input includes:
 
 * Size of the moving window used to normalize the data (default = 3600 seconds)
 
-* Flag indicating if the absolute value is taken (default = True)
-
-* Rolling window used to smooth the data before test is run (default = 0)
+* Flag indicating if the absolute value is used (default = True)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 

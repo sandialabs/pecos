@@ -72,13 +72,16 @@ pm.check_corrupt(corrupt_values)
 # Add composite signals
 for composite_signal in composite_signals:
     for key,value in composite_signal.items():
-        signal = pm.evaluate_string(key, value)
+        signal = pecos.utils.evaluate_string(value, data=pm.df, 
+                                             trans=pm.trans, col_name=key)
         pm.add_dataframe(signal)
         pm.add_translation_dictionary({key: list(signal.columns)})
 
 # Check range
 for key,value in range_bounds.items():
-    pm.check_range(value, key, sapm_parameters) 
+    value[0] = pecos.utils.evaluate_string(value[0], specs=sapm_parameters) 
+    value[1] = pecos.utils.evaluate_string(value[1], specs=sapm_parameters)
+    pm.check_range(value, key) 
 
 # Check increment
 for key,value in increment_bounds.items():

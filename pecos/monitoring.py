@@ -52,7 +52,7 @@ class PerformanceMonitoring(object):
         self.test_results = pd.DataFrame(columns=['Variable Name',
                                                 'Start Time', 'End Time',
                                                 'Timesteps', 'Error Flag'])
-    
+
     @property
     def mask(self):
         """
@@ -95,10 +95,9 @@ class PerformanceMonitoring(object):
         """
         return self.df[self.mask]
 
-    def _setup_data(self, key, window):
+    def _setup_data(self, key):
         """
-        Setup DataFrame, by (optionally) extracting a column and/or smoothing
-        data using rolling window mean.
+        Setup data to use in the quality control test
         """
         if self.df.empty:
             logger.info("Empty database")
@@ -114,14 +113,9 @@ class PerformanceMonitoring(object):
         else:
             df = self.df
 
-        # Compute moving average
-        if window > 0:
-            window_str = str(int(window*1e3)) + 'ms' # milliseconds
-            df = df.rolling(window_str).mean()
-
         return df
 
-    def _generate_test_results(self, df, bound, specs, min_failures, error_prefix):
+    def _generate_test_results(self, df, bound, min_failures, error_prefix):
         """
         Compare DataFrame to bounds to generate a True/False mask where
         True = passed, False = failed.  Append results to test_results.
@@ -131,8 +125,6 @@ class PerformanceMonitoring(object):
         for i in range(len(bound)):
             if bound[i] in none_list:
                 bound[i] = None
-            elif type(bound[i]) is str:
-                bound[i] = self.evaluate_string('', bound[i], specs)
 
         # Lower Bound
         if bound[0] is not None:
@@ -279,39 +271,6 @@ class PerformanceMonitoring(object):
         else:
             self.tfilter = time_filter
 
-#    def add_signal(self, col_name, data):
-#        """
-#        Add signal to the PerformanceMonitoring DataFrame.
-#
-#        Parameters
-#        -----------
-#        col_name : string
-#            Column name to add to translation dictionary
-#
-#        data : pandas DataFrame or pandas Series
-#            Data to add to df
-#        """
-#        if type(data) is pd.core.series.Series:
-#            data = data.to_frame(col_name)
-#        if type(data) is not pd.core.frame.DataFrame:
-#            logger.warning("Add signal failed")
-#            return
-#
-#        if col_name in self.trans.keys():
-#            logger.info(col_name + ' already exists in trans')
-#            return
-#        for col in data.columns.values.tolist():
-#            if col in self.df.columns.values.tolist():
-#                logger.info(col + ' already exists in df')
-#                return
-#        try:
-#            self.trans[col_name] = data.columns.values.tolist()
-#            #self.df[df.columns] = df
-#            for col in data.columns:
-#                self.df[col] = data[col]
-#        except:
-#            logger.warning("Add signal failed: " + col_name)
-#            return
 
     def check_timestamp(self, frequency, expected_start_time=None,
                         expected_end_time=None, min_failures=1,
@@ -417,9 +376,9 @@ class PerformanceMonitoring(object):
                                  use_mask_only=True,
                                  min_failures=min_failures)
 
-    def check_range(self, bound, key=None, specs={}, rolling_mean=0, min_failures=1):
+    def check_range(self, bound, key=None, min_failures=1):
         """
-        Check upper and lower bounds on data
+        Check for data that is outside expected range
 
         Parameters
         ----------
@@ -428,15 +387,8 @@ class PerformanceMonitoring(object):
             or upper bound
 
         key : string (optional)
-            Translation dictionary key.  If not specified, all columns are
-            used in the test.
-
-        specs : dictionary (optional)
-            Constants used in bound
-
-        rolling_mean : int (optional)
-            Size of the moving window (in seconds) used to smooth data using a
-            rolling mean before the test is run, default = 0 (i.e., not used)
+            Data column name or translation dictionary key.  If not specified, 
+            all columns are used in the test.
 
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -444,19 +396,18 @@ class PerformanceMonitoring(object):
         """
         logger.info("Check data range")
 
-        df = self._setup_data(key, rolling_mean)
+        df = self._setup_data(key)
         if df is None:
             return
 
         error_prefix = 'Data'
 
-        self._generate_test_results(df, bound, specs, min_failures, error_prefix)
+        self._generate_test_results(df, bound, min_failures, error_prefix)
 
-    def check_increment(self, bound, key=None, specs={}, increment=1,
-                        absolute_value=True, rolling_mean=0, min_failures=1):
+    def check_increment(self, bound, key=None, increment=1, absolute_value=True, 
+                        min_failures=1):
         """
-        Check upper and lower bounds on the difference between data values, 
-        separated by a set increment
+        Check data increments using the difference between values
 
         Parameters
         ----------
@@ -465,21 +416,14 @@ class PerformanceMonitoring(object):
             or upper bound
 
         key : string (optional)
-            Translation dictionary key. If not specified, all columns are
-            used in the test.
-
-        specs : dictionary (optional)
-            Constants used in bound
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
 
         increment : int (optional)
             Time step shift used to compute difference, default = 1
 
         absolute_value : boolean (optional)
-            Take the absolute value of the increment data, default = True
-
-        rolling_mean : int (optional)
-            Size of the moving window (in seconds) used to smooth data using a
-            rolling mean before the test is run, default = 0 (i.e., not used)
+            Use the absolute value of the increment data, default = True
 
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -487,7 +431,7 @@ class PerformanceMonitoring(object):
         """
         logger.info("Check increment range")
 
-        df = self._setup_data(key, rolling_mean)
+        df = self._setup_data(key)
         if df is None:
             return
 
@@ -506,13 +450,14 @@ class PerformanceMonitoring(object):
         else:
             error_prefix = 'Increment'
 
-        self._generate_test_results(df, bound, specs, min_failures, error_prefix)
+        self._generate_test_results(df, bound, min_failures, error_prefix)
+    
 
-    def check_delta(self, bound, key=None, specs={}, window=3600,
-                    absolute_value=True, rolling_mean=0, min_failures=1):
+    def check_delta(self, bound, key=None, window=3600, absolute_value=True, 
+                    min_failures=1):
         """
-        Check upper and lower bounds on the difference between max and min data 
-        values within a rolling window
+        Check for stagant data and/or abrupt changes in the data using the 
+        difference between max and min values within a rolling window
           
         Note, this method is currently NOT efficient for large
         data sets (> 100000 pts) because it uses df.rolling().apply() to find
@@ -525,22 +470,15 @@ class PerformanceMonitoring(object):
             or upper bound
 
         key : string (optional)
-            Translation dictionary key. If not specified, all columns are used
-            in the test.
-
-        specs : dictionary (optional)
-            Constants used in bound
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
 
         window : int (optional)
-            Size of the moving window (in seconds) used to compute delta,
+            Size of the rolling window (in seconds) used to compute delta,
             default = 3600
 
         absolute_value : boolean (optional)
-            Take the absolute value of delta, default = True
-
-        rolling_mean : int (optional)
-            Size of the moving window (in seconds) used to smooth data using a
-            rolling mean before the test is run, default = 0 (i.e., not used)
+            Use the absolute value of delta, default = True
 
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -548,7 +486,7 @@ class PerformanceMonitoring(object):
         """
         logger.info("Check delta (max-min) range")
         
-        df = self._setup_data(key, rolling_mean)
+        df = self._setup_data(key)
         if df is None:
             return
 
@@ -595,8 +533,6 @@ class PerformanceMonitoring(object):
         for i in range(len(bound)):
             if bound[i] in none_list:
                 bound[i] = None
-            elif type(bound[i]) is str:
-                bound[i] = self.evaluate_string('', bound[i], specs)
 
         def extract_exact_position(mask1, tmin_df, tmax_df):
             mask2 = pd.DataFrame(False, columns=mask1.columns, index=mask1.index)
@@ -634,11 +570,10 @@ class PerformanceMonitoring(object):
                 self._append_test_results(mask, error_prefix+' > upper bound, '+str(bound[1]),
                                          min_failures=min_failures)
 
-    def check_outlier(self, bound, key=None, specs={}, window=3600,
-                        absolute_value=True, rolling_mean=0, min_failures=1):
+    def check_outlier(self, bound, key=None, window=3600, absolute_value=True, 
+                      min_failures=1):
         """
-        Check upper and lower bounds on normalized data within a moving window
-        to find outliers
+        Check for outliers using normalized data within a rolling window
         
         The upper and lower bounds are specified in standard deviations.
         Data normalized using (data-mean)/std.
@@ -650,23 +585,16 @@ class PerformanceMonitoring(object):
             or upper bound
 
         key : string (optional)
-            Translation dictionary key. If not specified, all columns are used
-            in the test.
-
-        specs : dictionary (optional)
-            Constants used in bound
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
 
         window : int or None (optional)
-            Size of the moving window (in seconds) used to normalize data,
+            Size of the rolling window (in seconds) used to normalize data,
             default = 3600.  If window is set to None, data is normalized using
             the entire data sets mean and standard deviation (column by column).
 
         absolute_value : boolean (optional)
-            Take the absolute value the normalized data, default = True
-
-        rolling_mean : int (optional)
-            Size of the moving window (in seconds) used to smooth data using a
-            rolling mean before the test is run, default = 0 (i.e., not used)
+            Use the absolute value the normalized data, default = True
 
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -674,7 +602,7 @@ class PerformanceMonitoring(object):
         """
         logger.info("Check for outliers")
 
-        df = self._setup_data(key, rolling_mean)
+        df = self._setup_data(key)
         if df is None:
             return
 
@@ -695,7 +623,7 @@ class PerformanceMonitoring(object):
 
         #df[df.index[0]:df.index[0]+datetime.timedelta(seconds=window)] = np.nan
 
-        self._generate_test_results(df, bound, specs, min_failures, error_prefix)
+        self._generate_test_results(df, bound, min_failures, error_prefix)
 
     def check_missing(self, key=None, min_failures=1):
         """
@@ -704,8 +632,8 @@ class PerformanceMonitoring(object):
         Parameters
         ----------
         key : string (optional)
-            Translation dictionary key. If not specified, all columns are used
-            in the test.
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
 
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -713,7 +641,7 @@ class PerformanceMonitoring(object):
         """
         logger.info("Check for missing data")
 
-        df = self._setup_data(key, 0)
+        df = self._setup_data(key)
         if df is None:
             return
 
@@ -737,8 +665,8 @@ class PerformanceMonitoring(object):
             List of corrupt data values
 
         key : string (optional)
-            Translation dictionary key. If not specified, all columns are used
-            in the test.
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
 
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -746,7 +674,7 @@ class PerformanceMonitoring(object):
         """
         logger.info("Check for corrupt data")
 
-        df = self._setup_data(key, 0)
+        df = self._setup_data(key)
         if df is None:
             return
 
@@ -757,78 +685,6 @@ class PerformanceMonitoring(object):
         self.df[mask] = np.nan
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
-
-    def evaluate_string(self, col_name, string_to_eval, specs={}):
-        """
-        Returns the evaluated Python equation written as a string (BETA)
-        
-        For each {keyword} in string_to_eval,
-        {keyword} is first expanded to self.df[self.trans[keyword]],
-        if that fails, then {keyword} is expanded to specs[keyword].
-
-        Parameters
-        ----------
-        col_name : string
-            Column name for the new signal
-
-        string_to_eval : string
-            String to evaluate
-
-        specs : dictionary (optional)
-            Constants used as keywords
-
-        Returns
-        --------
-        pandas DataFrame or pandas Series
-            Evaluated string
-        """
-
-        match = re.findall(r"\{(.*?)\}", string_to_eval)
-        for m in set(match):
-            m = m.replace('[','') # check for list
-
-            if m == 'ELAPSED_TIME':
-                ELAPSED_TIME = datetime_to_elapsedtime(self.df.index)
-                ELAPSED_TIME = pd.Series(ELAPSED_TIME, index=self.df.index)
-                string_to_eval = string_to_eval.replace("{"+m+"}",m)
-            elif m == 'CLOCK_TIME':
-                CLOCK_TIME = datetime_to_clocktime(self.df.index)
-                CLOCK_TIME = pd.Series(CLOCK_TIME, index=self.df.index)
-                string_to_eval = string_to_eval.replace("{"+m+"}",m)
-            else:
-                try:
-                    self.df[self.trans[m]]
-                    datastr = "self.df[self.trans['" + m + "']]"
-                    string_to_eval = string_to_eval.replace("{"+m+"}",datastr)
-                except:
-                    try:
-                        specs[m]
-                        datastr = "specs['" + m + "']"
-                        string_to_eval = string_to_eval.replace("{"+m+"}",datastr)
-                    except:
-                        pass
-
-        try:
-            signal = eval(string_to_eval)
-            if type(signal) is tuple: # A tuple of series
-                col_name = [col_name + " " + str(i+1)  for i in range(len(signal))]
-                signal = pd.concat(signal, axis=1)
-                signal.columns = col_name
-                signal.index = self.df.index
-            elif type(signal) is float:
-                signal = signal
-            else:
-                signal = pd.DataFrame(signal)
-                if len(signal.columns) == 1:
-                    signal.columns = [col_name]
-                else:
-                    signal.columns = [col_name + " " + str(i+1)  for i in range(signal.shape[1])]
-                signal.index = self.df.index
-        except:
-            signal = None
-            logger.warning("Insufficient data for Composite Signals: " + col_name + ' -- ' + string_to_eval)
-
-        return signal
 
 
 ### Functional approach
@@ -846,47 +702,47 @@ def check_timestamp(data, frequency, expected_start_time=None,
 
 
 @_documented_by(PerformanceMonitoring.check_range)
-def check_range(data, bound, key=None, specs={}, rolling_mean=0, min_failures=1):
+def check_range(data, bound, key=None, min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_range(bound, key, specs, rolling_mean, min_failures)
+    pm.check_range(bound, key, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
 @_documented_by(PerformanceMonitoring.check_increment)
-def check_increment(data, bound, key=None, specs={}, increment=1, absolute_value=True,
-                    rolling_mean=0, min_failures=1):
+def check_increment(data, bound, key=None, increment=1, absolute_value=True,
+                    min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_increment(bound, key, specs, increment, absolute_value, rolling_mean, min_failures)
+    pm.check_increment(bound, key, increment, absolute_value, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
 @_documented_by(PerformanceMonitoring.check_delta)
-def check_delta(data, bound, key=None, specs={}, window=3600, absolute_value=True,
-                rolling_mean=0, min_failures=1):
+def check_delta(data, bound, key=None, window=3600, absolute_value=True,
+                min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_delta(bound, key, specs, window, absolute_value, rolling_mean, min_failures)
+    pm.check_delta(bound, key, window, absolute_value, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
 @_documented_by(PerformanceMonitoring.check_outlier)
-def check_outlier(data, bound, key=None, specs={}, window=3600, absolute_value=True,
-                  rolling_mean=0, min_failures=1):
+def check_outlier(data, bound, key=None, window=3600, absolute_value=True,
+                  min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_outlier(bound, None, {}, window, absolute_value, rolling_mean, min_failures)
+    pm.check_outlier(bound, key, window, absolute_value, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}

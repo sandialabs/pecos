@@ -4,6 +4,7 @@ from nose import SkipTest
 from nose.tools import *
 from pandas.util.testing import assert_frame_equal, assert_index_equal
 import pandas as pd
+import numpy as np
 import pecos
 
 class TestConvertIndex(unittest.TestCase):
@@ -139,5 +140,48 @@ class TestRoundIndex(unittest.TestCase):
         diff = index.difference(self.df.index)
         assert_equals(len(diff), 0)
 
+
+class TestEvaluateString(unittest.TestCase):
+
+    @classmethod
+    def setUp(self):
+        index = pd.date_range('1/1/2020', periods=72, freq='H')
+        data = {'A': np.random.rand(72), 
+                'B': np.random.rand(72)}
+        self.df = pd.DataFrame(data, index=index)
+
+    @classmethod
+    def tearDown(self):
+        pass
+    
+    def test_evaluate_string_index(self):
+        string_to_eval = "({CLOCK_TIME} > 3*3600) & ({CLOCK_TIME} < 21*3600)"
+        x = pecos.utils.evaluate_string(string_to_eval, self.df)
+
+        assert_equal(x.sum()[0], 72-4*3-3*3)
+        
+    def test_evaluate_string_specs(self):
+        string_to_eval = "{A}*5"
+        x = pecos.utils.evaluate_string(string_to_eval, specs={'A': 10})
+
+        assert_equal(x, 50)
+        
+    def test_evaluate_string_data(self):
+        string_to_eval = "{A}*5"
+        x = pecos.utils.evaluate_string(string_to_eval, self.df, col_name='A')
+
+        assert_frame_equal(x, self.df[['A']]*5)
+        
+    def test_evaluate_string_multiple_keywords(self):
+        string_to_eval = "{A}*5 + {C}"
+        x = pecos.utils.evaluate_string(string_to_eval, self.df, specs={'C': 10}, col_name='A')
+
+        assert_frame_equal(x, self.df[['A']]*5+10)
+        
+    def test_evaluate_string_value(self):
+        x = pecos.utils.evaluate_string(5)
+
+        assert_equal(x, 5)
+        
 if __name__ == '__main__':
     unittest.main()

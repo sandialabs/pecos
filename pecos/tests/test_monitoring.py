@@ -98,17 +98,6 @@ class Test_simple_example(unittest.TestCase):
     @classmethod
     def tearDown(self):
         pass
-    
-    def test_evaluate_string(self):
-        time_filter_string = "({CLOCK_TIME} > 3*3600) & ({CLOCK_TIME} < 21*3600)"
-        time_filter = self.pm.evaluate_string('Time Filter', time_filter_string)
-        
-        expected = pd.DataFrame(index=self.pm.df.index, columns=['Time Filter'])
-        expected['Time Filter'] = False
-        expected[(self.pm.df.index > pd.Timestamp('2015-01-01 03:00:00')) & 
-                 (self.pm.df.index < pd.Timestamp('2015-01-01 21:00:00'))] = True
-                
-        assert_frame_equal(time_filter, expected, check_dtype=False)
         
     def test_check_timestamp(self):
         #Missing timestamp at 5:00
