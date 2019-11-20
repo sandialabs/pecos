@@ -31,6 +31,8 @@ v0.1.8 (master)
   * pv metrics were also updated to return 1 value per column (API change)
   * Deprecated per_day option. Data can be grouped by custom time intervals before 
     computing metrics (API change)
+* Efficiency improvements to ``check_delta``. As part of these changes, the input argument 
+  `absolute_value` has been removed and `direction` has been added (API change).
 * Timestamp indexes down to millisecond resolution are supported
 * Added additional helper functions in pecos.utils to convert to/from datetime indexes.
   Methods ``get_elapsed_time`` and ``get_clock_time`` were removed from the PerformanceMonitoring class (API change).
