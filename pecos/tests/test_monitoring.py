@@ -226,7 +226,7 @@ class Test_simple_example(unittest.TestCase):
         test_results = self.pm.test_results[['Delta' in ef for ef in self.pm.test_results['Error Flag']]]
         
         #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_check_delta')
-        
+        print(test_results.reset_index(drop=True))
         assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
 
         # Functional tests
