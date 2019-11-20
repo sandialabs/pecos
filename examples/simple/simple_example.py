@@ -55,11 +55,14 @@ pm.check_range([0, 1], 'B')
 pm.check_range([-1, 1], 'Wave')
 pm.check_range([None, 0.25], 'Wave Error')
 
-# Check data for stagnant and abrupt changes
-pm.check_increment([0.0001, None], 'A') 
-pm.check_increment([0.0001, None], 'B') 
-pm.check_increment([0.0001, 0.6], 'Wave') 
+# Check for stagnant data within a 1 hour moving window
+pm.check_delta([0.0001, None], 'A', 3600) 
+pm.check_delta([0.0001, None], 'B', 3600) 
+pm.check_delta([0.0001, None], 'Wave', 3600) 
     
+# Check for abrupt changes between consecutive time steps
+pm.check_increment([None, 0.6], 'Wave') 
+
 # Compute the quality control index for A, B, C, and D
 mask = pm.mask[['A','B','C','D']]
 QCI = pecos.metrics.qci(mask, pm.tfilter)

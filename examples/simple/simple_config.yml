@@ -18,7 +18,10 @@ Range:
   Wave: [-1, 1]
   Wave Error: [None, 0.25]
  
-Increment:
+Delta:
   A: [0.0001, None]
   B: [0.0001, None]
-  Wave: [0.0001, 0.6] 
+  Wave: [0.0001, None] 
+  
+Increment:
+  Wave: [None, 0.6] 
