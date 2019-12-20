@@ -141,7 +141,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
     try:
         # plot time series
         if isinstance(data, pd.Series):
-            data.plot(ax=ax, linewidth=1, grid=False, legend=False, color='k', 
+            data.plot(ax=ax, linewidth=0.5, grid=False, legend=False, color='k', 
                       fontsize=8, rot=90, label='Data', x_compat=True)
         else:
             data.plot(ax=ax, linewidth=1, grid=False, legend=False, 
@@ -198,17 +198,17 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
                 if error_flag in ['Duplicate timestamp', 'Missing data', 
                                   'Corrupt data', 'Nonmonotonic timestamp']:
                     continue
-                if "Data" in error_flag:
-                    color='r'
-                elif "Delta" in error_flag:
-                    color = 'g'
-                else: # Outlier
-                    color = 'b'
+                #if "Data" in error_flag:
+                #    color='r'
+                #elif "Delta" in error_flag:
+                #    color = 'g'
+                #else: # Outlier
+                #    color = 'b'
                 try:
-                    ax.scatter(data2.index, data2.values, c=color, marker='+', 
+                    ax.scatter(data2.index, data2.values, marker='+', # c=color,
                                linewidths=1, label=error_label)   
                 except:
-                    ax.scatter(data2.index[0], data2.values[0], c=color, marker='+', 
+                    ax.scatter(data2.index[0], data2.values[0], marker='+', # c=color,
                                linewidths=1, label=error_label) 
         
         # Format axis
