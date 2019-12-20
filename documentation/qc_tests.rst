@@ -133,7 +133,7 @@ Input includes:
 
 * Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
 
-* Flag indicating if the test should check for positive delta (the min occurs before the max) or negative delta (the max occurs before the min) (default = both)
+* Flag indicating if the test should only check for positive delta (the min occurs before the max) or negative delta (the max occurs before the min) (default = both)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -157,7 +157,9 @@ Similar to the check_delta method above, the :class:`~pecos.monitoring.Performan
 method can be used to check for stagnant data and abrupt changes in data.
 The test checks if the difference between
 consecutive data values (or other specified increment) is within expected bounds.
-While this method is faster than the check_delta method, it does not consider changes within a moving window, making its ability to 
+While this method is faster than the check_delta method, it does not consider 
+the timestamp index or
+changes within a moving window, making its ability to 
 find stagnant data and abrupt changes less robust.
 
 Input includes:
@@ -178,13 +180,13 @@ For example,
 
 	>>> pm.check_increment([0.0001, None], min_failures=60)
 	
-checks if value increments are less than 0.0001 for 60 consecutive time steps.
+checks if increments are less than 0.0001 for 60 consecutive time steps.
 
 .. doctest::
 
 	>>> pm.check_increment([-800, None], absolute_value=False)
 
-checks if value increments decrease by more than -800 in a single time step.
+checks if increments decrease by more than 800 in a single time step.
 
 Outlier test
 --------------------

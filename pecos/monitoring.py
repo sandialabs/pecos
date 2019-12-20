@@ -468,7 +468,7 @@ class PerformanceMonitoring(object):
         self._generate_test_results(df, bound, min_failures, error_prefix)
     
 
-    def check_delta(self, bound, key=None, window=3600,  direction='both', 
+    def check_delta(self, bound, key=None, window=3600,  direction=None, 
                     min_failures=1):
         """
         Check for stagant data and/or abrupt changes in the data using the 
@@ -489,12 +489,14 @@ class PerformanceMonitoring(object):
             default = 3600
 
         direction : str (optional)
-            If direction is 'positive', then only identify data that has a 
-            positive slope within the rolling window (the min occurs before the max).  
-            If direction is 'negative', then only identify data that has a 
-            negative slope within the rolling window (the max occurs before the min).  
-            If direction is 'both', then identify both positive and negative 
-            slopes within the rolling window.
+            Options = 'positive', 'negative', or None
+            
+            * If direction is positive, then only identify positive deltas 
+              (the min occurs before the max) 
+            * If direction is negative, then only identify negative deltas 
+              (the max occurs before the min)
+            * If direction is None, then identify both positive and negative 
+              deltas
             
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
@@ -503,7 +505,7 @@ class PerformanceMonitoring(object):
         assert isinstance(bound, list)
         assert isinstance(key, (NoneType, str))
         assert isinstance(window, (int, float))
-        assert direction in ['both', 'positive', 'negative']
+        assert direction in [None, 'positive', 'negative']
         assert isinstance(min_failures, int)
         
         logger.info("Check for stagant data and/or abrupt changes using delta (max-min) within a rolling window")
@@ -534,7 +536,7 @@ class PerformanceMonitoring(object):
                 it = mask1.index.get_loc(t)
                 t1 = t-pd.Timedelta(window_str)
 
-                if (bound == 'lower') and (direction == 'both'):
+                if (bound == 'lower') and (direction is None):
                     # set the entire time interval to True
                     mask2[(index >= t1) & (index <= t),icol] = True
                 
@@ -550,19 +552,18 @@ class PerformanceMonitoring(object):
                         elif (direction == 'negative') and (min_time >= max_time):
                             mask2[(index >= t1) & (index <= t),icol] = True
                     
-                    elif bound == 'upper': # bound = upper, direction = both, positive or negative
+                    elif bound == 'upper': # bound = upper, direction = None, positive or negative
                         # set the initially flaged location to False
                         mask2[it,icol] = False
                         # set the time between max/min or min/max to true
-                        if min_time < max_time and (direction == 'both' or direction == 'positive'):
+                        if min_time < max_time and (direction is None or direction == 'positive'):
                             mask2[(index >= min_time) & (index <= max_time),icol] = True
-                        elif min_time > max_time and (direction == 'both' or direction == 'negative'):
+                        elif min_time > max_time and (direction is None or direction == 'negative'):
                             mask2[(index >= max_time) & (index <= min_time),icol] = True
                         elif min_time == max_time:
                             mask2[it,icol] = True
                         
             mask2 = pd.DataFrame(mask2, columns=mask1.columns, index=mask1.index)
-            #mask2.loc[diff_df.index[0]:diff_df.index[0]+pd.Timedelta(window_str),:] = False
             return mask2
         
         if direction == 'positive':
@@ -572,17 +573,13 @@ class PerformanceMonitoring(object):
         else:
             error_prefix = 'Delta'
         
-        #diff_df.to_csv('diff_df.csv')
-        
         # Lower Bound
         if bound[0] not in none_list:
             mask = (diff_df < bound[0])
             error_msg = error_prefix+' < lower bound, '+str(bound[0])
             if not self.tfilter.empty:
                 mask[~self.tfilter] = False
-            #mask.to_csv('lb'+str(bound[0])+'_mask1.csv')
             mask = update_mask(mask, df, window_str, 'lower', direction) 
-            #mask.to_csv('lb'+str(bound[0])+'_mask2.csv')
             self._append_test_results(mask, error_msg, min_failures)
         
         # Upper Bound
@@ -765,7 +762,7 @@ def check_increment(data, bound, key=None, increment=1, absolute_value=True,
 
 
 @_documented_by(PerformanceMonitoring.check_delta)
-def check_delta(data, bound, key=None, window=3600, direction='both', min_failures=1):
+def check_delta(data, bound, key=None, window=3600, direction=None, min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)

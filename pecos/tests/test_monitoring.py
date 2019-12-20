@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 import pecos
 import pandas as pd
 from pandas import Timestamp, RangeIndex
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 import numpy as np
 from numpy import array
 
@@ -370,6 +370,7 @@ class Test_check_timestamp(unittest.TestCase):
             )
         assert_frame_equal(expected, self.pm.test_results)
 
+    
 class Test_check_delta(unittest.TestCase):
 
     @classmethod
@@ -399,6 +400,11 @@ class Test_check_delta(unittest.TestCase):
             )
         #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_deadsensor')
         assert_frame_equal(expected, self.pm.test_results)
+        
+    def test_increment_deadsensor(self):
+        # As expected, check_increment does not produce the same results as check_delta
+        self.pm.check_increment([1, None], 'A', increment=5)
+        assert_equal(10, self.pm.test_results['Timesteps'].sum())
         
     def test_abrupt_change(self):
         # abrupt change = > 7 in 3 hours
@@ -433,11 +439,10 @@ class Test_check_delta(unittest.TestCase):
             )
         assert_frame_equal(expected, self.pm.test_results)
 
-    def test_delta_scale(self, generate_output=False):
+    def test_delta_scale(self, output=False):
         # The following function was used to test scalability of the delta test
         # by increasing N and timing results.  The data includes stagnant data and 
-        # abrupt changes (some positive some negative) of varing degree.  This 
-        # function could be built into a formal test by adding assert statements
+        # abrupt changes (some positive some negative) of varing degree.  
         import time
         
         np.random.seed(123)
@@ -475,32 +480,40 @@ class Test_check_delta(unittest.TestCase):
         # Uniform, value of 1, delta = 0
         df.loc['1970-01-05',:] = 1 
         
+        # NaNs
+        df.loc['1970-01-02 00:00:00':'1970-01-02 06:00:00',:] = np.nan
+        
         # Steep decline (delta = 20,10,2), followed by delta = 1
         num = df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00',:].shape[0]
         noise = np.array(np.random.rand(num))-0.5
         df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00','A'] = -10+noise 
         df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00','B'] = -5+noise
         df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00','C'] = -1+noise
-        
-        if generate_output:
-            df.plot()
-        
+
+        summary = []
         for lb in [2,5,10,20]:
-            for direction in ['both', 'positive', 'negative']:
+            for direction in [None, 'positive', 'negative']:
                 tic = time.time()
                 results = pecos.monitoring.check_delta(df, [lb,None], window=12*3600, direction=direction)
-                if generate_output:
-                    print('lb', lb, direction, time.time() - tic, sum(results['test_results']['Timesteps']))
-                    pecos.graphics.plot_test_results(df, results['test_results'], filename_root='lb'+str(lb)+'_'+direction)
+                summary.append(['lb'+str(lb), direction, time.time() - tic, sum(results['test_results']['Timesteps'])])
+                if output:
+                    pecos.graphics.plot_test_results(df, results['test_results'], filename_root='lb'+str(lb)+'_'+str(direction))
         
         for ub in [2,5,10,20]:
-            for direction in ['both', 'positive', 'negative']:
+            for direction in [None, 'positive', 'negative']:
                 tic = time.time()
                 results = pecos.monitoring.check_delta(df, [None,ub], window=12*3600, direction=direction)
-                if generate_output:
-                    print('ub', ub, direction, time.time() - tic, sum(results['test_results']['Timesteps']))
-                    pecos.graphics.plot_test_results(df, results['test_results'], filename_root='ub'+str(ub)+'_'+direction)
-            
+                summary.append(['ub'+str(ub), direction, time.time() - tic, sum(results['test_results']['Timesteps'])])
+                if output:
+                    pecos.graphics.plot_test_results(df, results['test_results'], filename_root='ub'+str(ub)+'_'+str(direction))
+        
+        summary = pd.DataFrame(summary, columns=['Bound', 'Direction', 'Runtime', 'Number'])
+        if output:
+            summary.to_csv('delta_summary_'+str(N)+'.csv')
+        
+        # test to make sure the results don't change
+        expected = pd.read_csv(join(datadir,'delta_summary_100.csv'), index_col=0)
+        assert_series_equal(summary['Number'], expected['Number'], check_dtype=False)
         
 class Test_check_outlier(unittest.TestCase):
 
