@@ -29,13 +29,13 @@ Input includes:
 
 * Expected frequency of the time series in seconds
 
-* Expected start time (default = first index of the time series)
+* Expected start time (default = None, which uses the first index of the time series)
 
-* Expected end time (default = last index of the time series)
+* Expected end time (default = None, which uses the last index of the time series)
 
-* Minimum number of consecutive failures for reporting (default = 1 timestamp)
+* Minimum number of consecutive failures for reporting (default = 1)
 
-* A flag indicating if exact timestamps are expected.  When set to False, irregular timestamps can be used in the Pecos analysis.
+* A flag indicating if exact timestamps are expected.  When set to False, irregular timestamps can be used in the Pecos analysis (default = True).
 
 For example,
 
@@ -64,9 +64,9 @@ Unlike missing timestamps, missing data only impacts a subset of data columns.
 NaN is included as missing.
 Input includes:
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
-* Minimum number of consecutive failures for reporting (default = 1 timestamp)
+* Minimum number of consecutive failures for reporting (default = 1)
 
 For example,
 
@@ -84,9 +84,9 @@ Input includes:
 
 * List of corrupt values
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
-* Minimum number of consecutive failures for reporting (default = 1 timestamp)
+* Minimum number of consecutive failures for reporting (default = 1)
 
 For example,
 
@@ -108,7 +108,7 @@ Input includes:
 
 * Upper and lower bound
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -118,7 +118,7 @@ For example,
 
     >>> pm.check_range([None, 1], 'A')
 
-checks for values greater than 1 in the columns associated with the key 'A'
+checks for values greater than 1 in the columns associated with the key 'A'.
 
 Delta test
 --------------------
@@ -129,11 +129,11 @@ Input includes:
 
 * Upper and lower bound
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
 
-* Flag indicating if the test should only check for positive delta (the min occurs before the max) or negative delta (the max occurs before the min) (default = both)
+* Flag indicating if the test should only check for positive delta (the min occurs before the max) or negative delta (the max occurs before the min) (default = False)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -143,13 +143,13 @@ For example,
 
 	>>> pm.check_delta([0.0001, None], window=3600)
 
-checks if data changes by less than 0.0001 in a 1 hour window.
+checks if data changes by less than 0.0001 in a 1 hour moving window.
 
 .. doctest::
 
 	>>> pm.check_delta([None, 800], window=1800, direction='negative')
 
-checks if data decrease by more than 800 in a 30 minute window.
+checks if data decrease by more than 800 in a 30 minute moving window.
 
 Increment test
 --------------------
@@ -166,7 +166,7 @@ Input includes:
 
 * Upper and lower bound
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Increment used for difference calculation (default = 1 timestamp)
 
@@ -197,7 +197,7 @@ Input includes:
 
 * Upper and lower bound (in standard deviations)
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Size of the moving window used to normalize the data (default = 3600 seconds)
 

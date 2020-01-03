@@ -5,9 +5,7 @@ functions that can be used to run quality control tests.
 """
 import pandas as pd
 import numpy as np
-import re
 import logging
-from pecos.utils import datetime_to_clocktime, datetime_to_elapsedtime
 
 none_list = ['','none','None','NONE', None, [], {}]
 NoneType = type(None)
@@ -221,8 +219,8 @@ class PerformanceMonitoring(object):
         data : pandas DataFrame
             Data to add to the PerformanceMonitoring object, indexed by datetime
         """
-        assert isinstance(data, pd.DataFrame)
-        assert isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex)
+        assert isinstance(data, pd.DataFrame), 'data must be of type pd.DataFrame'
+        assert isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex), 'data.index must be a DatetimeIndex'
         
         temp = data.copy()
 
@@ -247,7 +245,7 @@ class PerformanceMonitoring(object):
         trans : dictionary
             Translation dictionary
         """
-        assert isinstance(trans, dict)
+        assert isinstance(trans, dict), 'trans must be of type dictionary'
         
         for key, values in trans.items():
             self.trans[key] = []
@@ -263,7 +261,7 @@ class PerformanceMonitoring(object):
         time_filter : pandas DataFrame with a single column or pandas Series
             Time filter containing boolean values for each time index
         """
-        assert isinstance(time_filter, (pd.Series, pd.DataFrame))
+        assert isinstance(time_filter, (pd.Series, pd.DataFrame)), 'time_filter must be of type pd.Series or pd.DataFrame'
         
         if isinstance(time_filter, pd.DataFrame):
             self.tfilter = pd.Series(data = time_filter.values[:,0], index = self.df.index)
@@ -304,11 +302,11 @@ class PerformanceMonitoring(object):
             interval (specified in frequency) and the DataFrame is not
             reindexed.
         """
-        assert isinstance(frequency, (int, float))
-        assert isinstance(expected_start_time, (NoneType, pd.Timestamp))
-        assert isinstance(expected_end_time, (NoneType, pd.Timestamp))
-        assert isinstance(min_failures, int)
-        assert isinstance(exact_times, bool)
+        assert isinstance(frequency, (int, float)), 'frequency must be of type int or float'
+        assert isinstance(expected_start_time, (NoneType, pd.Timestamp)), 'expected_start_time must be None or of type pd.Timestamp'
+        assert isinstance(expected_end_time, (NoneType, pd.Timestamp)), 'expected_end_time must be None or of type pd.Timestamp'
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
+        assert isinstance(exact_times, bool), 'exact_times must be of type bool'
         
         logger.info("Check timestamp")
 
@@ -399,9 +397,9 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        assert isinstance(bound, list)
-        assert isinstance(key, (NoneType, str))
-        assert isinstance(min_failures, int)
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
         
         logger.info("Check for data outside expected range")
 
@@ -438,11 +436,11 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        assert isinstance(bound, list)
-        assert isinstance(key, (NoneType, str))
-        assert isinstance(increment, int)
-        assert isinstance(absolute_value, bool)
-        assert isinstance(min_failures, int)
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(increment, int), 'increment must be of type int'
+        assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
         
         logger.info("Check for data increment outside expected range")
 
@@ -502,11 +500,11 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        assert isinstance(bound, list)
-        assert isinstance(key, (NoneType, str))
-        assert isinstance(window, (int, float))
-        assert direction in [None, 'positive', 'negative']
-        assert isinstance(min_failures, int)
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(window, (int, float)), 'window must be of type int or float'
+        assert direction in [None, 'positive', 'negative'], "direction must None or the string 'positive' or 'negative'"
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
         
         logger.info("Check for stagant data and/or abrupt changes using delta (max-min) within a rolling window")
         
@@ -622,11 +620,11 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        assert isinstance(bound, list)
-        assert isinstance(key, (NoneType, str))
-        assert isinstance(window, (NoneType, int, float))
-        assert isinstance(absolute_value, bool)
-        assert isinstance(min_failures, int)
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(window, (NoneType, int, float)), 'window must be None or of type int or float'
+        assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
         
         logger.info("Check for outliers")
 
@@ -669,8 +667,8 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        assert isinstance(key, (NoneType, str))
-        assert isinstance(min_failures, int)
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
         
         logger.info("Check for missing data")
 
@@ -705,9 +703,9 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        assert isinstance(corrupt_values, list)
-        assert isinstance(key, (NoneType, str))
-        assert isinstance(min_failures, int)
+        assert isinstance(corrupt_values, list), 'corrupt_values must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
         
         logger.info("Check for corrupt data")
 
