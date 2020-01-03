@@ -31,6 +31,7 @@ v0.1.8 (master)
   * pv metrics were also updated to return 1 value per column (API change)
   * Deprecated per_day option. Data can be grouped by custom time intervals before 
     computing metrics (API change)
+
 * Efficiency improvements to ``check_delta``. As part of these changes, the optional input argument 
   `absolute_value` has been removed and `direction` has been added (API change). If direction is set to positive, 
   then the test only identify positive deltas (the min occurs before the max). If direction is set to negative, 
