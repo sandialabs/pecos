@@ -60,14 +60,14 @@ A subset of quality control test results from the :ref:`simple_example` are show
 .. doctest::
 
     >>> print(pm.test_results)
-      Variable Name      Start Time        End Time  Timesteps                         Error Flag
-    1           NaN   1/1/2015 5:00   1/1/2015 5:00          1                  Missing timestamp
-    2           NaN  1/1/2015 17:00  1/1/2015 17:00          1                Duplicate timestamp
-    3           NaN  1/1/2015 19:30  1/1/2015 19:30          1             Nonmonotonic timestamp
-    4             A  1/1/2015 12:15  1/1/2015 14:30         10  |Increment| < lower bound, 0.0001
-    5             B   1/1/2015 6:30   1/1/2015 6:30          1              Data < lower bound, 0
-    6             B  1/1/2015 15:30  1/1/2015 15:30          1              Data > upper bound, 1
-    7             C   1/1/2015 7:30   1/1/2015 9:30          9                       Corrupt data
+      Variable Name      Start Time        End Time  Timesteps                   Error Flag
+    1           NaN   1/1/2015 5:00   1/1/2015 5:00          1            Missing timestamp
+    2           NaN  1/1/2015 17:00  1/1/2015 17:00          1          Duplicate timestamp
+    3           NaN  1/1/2015 19:30  1/1/2015 19:30          1       Nonmonotonic timestamp
+    4             A  1/1/2015 12:00  1/1/2015 14:30         11  Delta < lower bound, 0.0001
+    5             B   1/1/2015 6:30   1/1/2015 6:30          1        Data < lower bound, 0
+    6             B  1/1/2015 15:30  1/1/2015 15:30          1        Data > upper bound, 1
+    7             C   1/1/2015 7:30   1/1/2015 9:30          9                 Corrupt data
 
 Note that variable names are not recorded for timestamp test failures (Test results 1, 2, and 3).
 	

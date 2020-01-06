@@ -29,13 +29,13 @@ Input includes:
 
 * Expected frequency of the time series in seconds
 
-* Expected start time (default = first index of the time series)
+* Expected start time (default = None, which uses the first index of the time series)
 
-* Expected end time (default = last index of the time series)
+* Expected end time (default = None, which uses the last index of the time series)
 
-* Minimum number of consecutive failures for reporting (default = 1 timestamp)
+* Minimum number of consecutive failures for reporting (default = 1)
 
-* A flag indicating if exact timestamps are expected.  When set to False, irregular timestamps can be used in the Pecos analysis.
+* A flag indicating if exact timestamps are expected.  When set to False, irregular timestamps can be used in the Pecos analysis (default = True).
 
 For example,
 
@@ -64,9 +64,9 @@ Unlike missing timestamps, missing data only impacts a subset of data columns.
 NaN is included as missing.
 Input includes:
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
-* Minimum number of consecutive failures for reporting (default = 1 timestamp)
+* Minimum number of consecutive failures for reporting (default = 1)
 
 For example,
 
@@ -84,9 +84,9 @@ Input includes:
 
 * List of corrupt values
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
-* Minimum number of consecutive failures for reporting (default = 1 timestamp)
+* Minimum number of consecutive failures for reporting (default = 1)
 
 For example,
 
@@ -108,7 +108,7 @@ Input includes:
 
 * Upper and lower bound
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -118,22 +118,22 @@ For example,
 
     >>> pm.check_range([None, 1], 'A')
 
-checks for values greater than 1 in the columns associated with the key 'A'
+checks for values greater than 1 in the columns associated with the key 'A'.
 
 Delta test
 --------------------
 The :class:`~pecos.monitoring.PerformanceMonitoring.check_delta` method is used to check for stagnant data and abrupt changes in data.
 The test checks if the difference between the minimum and maximum data value within a moving window is within expected bounds.
-**Currently, this method is not efficient for large data sets (> 100000 pts).**
+
 Input includes:
 
 * Upper and lower bound
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
 
-* Flag indicating if the absolute value is used (default = True)
+* Flag indicating if the test should only check for positive delta (the min occurs before the max) or negative delta (the max occurs before the min) (default = False)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -141,15 +141,15 @@ For example,
 
 .. doctest::
 
-	>>> pm.check_delta([None, 0.000001], window=3600)
+	>>> pm.check_delta([0.0001, None], window=3600)
 
-checks if data changes by more than 0.000001 in 1 hour.
+checks if data changes by less than 0.0001 in a 1 hour moving window.
 
 .. doctest::
 
-	>>> pm.check_delta([-800, None], window=1800, absolute_value=False)
+	>>> pm.check_delta([None, 800], window=1800, direction='negative')
 
-checks if data decrease by more than -800 in 30 minutes.
+checks if data decrease by more than 800 in a 30 minute moving window.
 
 Increment test
 --------------------
@@ -157,17 +157,20 @@ Similar to the check_delta method above, the :class:`~pecos.monitoring.Performan
 method can be used to check for stagnant data and abrupt changes in data.
 The test checks if the difference between
 consecutive data values (or other specified increment) is within expected bounds.
-This method does not use timestamp indices to find the min and max value within a moving window,
-therefore it is less robust than the check_delta method.
+While this method is faster than the check_delta method, it does not consider 
+the timestamp index or
+changes within a moving window, making its ability to 
+find stagnant data and abrupt changes less robust.
+
 Input includes:
 
 * Upper and lower bound
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Increment used for difference calculation (default = 1 timestamp)
 
-* Flag indicating if the absolute value is used (default = True)
+* Flag indicating if the absolute value of the increment is used in the test (default = True)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
@@ -175,15 +178,15 @@ For example,
 
 .. doctest::
 
-	>>> pm.check_increment([None, 0.000001], min_failures=60)
+	>>> pm.check_increment([0.0001, None], min_failures=60)
 	
-checks if value increments are greater than 0.000001 for 60 consecutive time steps.
+checks if increments are less than 0.0001 for 60 consecutive time steps.
 
 .. doctest::
 
 	>>> pm.check_increment([-800, None], absolute_value=False)
 
-checks if value increments decrease by more than -800 in a single time step.
+checks if increments decrease by more than 800 in a single time step.
 
 Outlier test
 --------------------
@@ -194,11 +197,11 @@ Input includes:
 
 * Upper and lower bound (in standard deviations)
 
-* Data column (default = all columns)
+* Data column (default = None, which indicates that all columns are used)
 
 * Size of the moving window used to normalize the data (default = 3600 seconds)
 
-* Flag indicating if the absolute value is used (default = True)
+* Flag indicating if the absolute value of the normalize data is used in the test (default = True)
 
 * Minimum number of consecutive failures for reporting (default = 1)
 

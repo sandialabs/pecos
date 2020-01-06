@@ -10,7 +10,7 @@ import matplotlib.pylab as plt
 testdir = dirname(abspath(inspect.getfile(inspect.currentframe())))
 datadir = abspath(join(testdir, 'data'))    
 
-def test_plot_scatter1():
+def test_plot_scatter1():            
     filename = abspath(join(testdir, 'plot_scatter1.png'))
     if isfile(filename):
         os.remove(filename)
@@ -35,7 +35,7 @@ def test_plot_scatter2():
     y = pd.DataFrame({'y1' : pd.Series([1., 2., 3.], index=['a', 'b', 'c'])})
     
     plt.figure()
-    pecos.graphics.plot_scatter(x,y,xaxis_min=0.5, xaxis_max=6.5, yaxis_min=0.5, yaxis_max=3.5)
+    pecos.graphics.plot_scatter(x,y,title='scatter2')
     plt.savefig(filename, format='png')
     plt.close()
     

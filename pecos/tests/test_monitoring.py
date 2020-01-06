@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 import pecos
 import pandas as pd
 from pandas import Timestamp, RangeIndex
-from pandas.util.testing import assert_frame_equal
+from pandas.util.testing import assert_frame_equal, assert_series_equal
 import numpy as np
 from numpy import array
 
@@ -15,59 +15,53 @@ datadir = join(testdir,'data')
 simpleexampledir = join(testdir,'..', '..', 'examples','simple')
 
 def simple_example_run_analysis(df):
-    # Input
-    translation_dictionary = {'Wave': ['C','D']}
-    expected_frequency = 900 # s
-    corrupt_values = [-999]
-    range_bounds = {
-        'B': [0, 1],
-        'Wave': [-1, 1],
-        'Wave Error': [None, 0.25]}
-    increment_bounds = {
-        'A': [0.0001, None],
-        'B': [0.0001, None],
-        'Wave': [0.0001, 0.6]}
 
     # Create an PerformanceMonitoring instance
     pm = pecos.monitoring.PerformanceMonitoring()
 
     # Populate the PerformanceMonitoring instance
     pm.add_dataframe(df)
-    pm.add_translation_dictionary(translation_dictionary)
+    pm.add_translation_dictionary({'Wave': ['C','D']}) # group C and D
 
     # Check timestamp
-    pm.check_timestamp(expected_frequency)
+    pm.check_timestamp(900)
 
     # Generate time filter
-    clocktime = pecos.utils.datetime_to_clocktime(pm.df.index)
-    time_filter = (clocktime > 3*3600) & (clocktime < 21*3600)
-    time_filter = pd.Series(time_filter, index=pm.df.index)
+    clock_time = pecos.utils.datetime_to_clocktime(pm.df.index)
+    time_filter = pd.Series((clock_time > 3*3600) & (clock_time < 21*3600), 
+                        index=pm.df.index)
     pm.add_time_filter(time_filter)
 
     # Check missing
     pm.check_missing()
 
     # Check corrupt
-    pm.check_corrupt(corrupt_values)
+    pm.check_corrupt([-999]) 
 
-    # Add composite signals
-    wave_model = np.array(np.sin(10*clocktime/86400))
+    # Add a composite signal which compares measurements to a model
+    wave_model = np.array(np.sin(10*clock_time/86400))
     wave_measurments = pm.df[pm.trans['Wave']]
-    wave_abs_error = np.abs(wave_measurments.subtract(wave_model,axis=0))
-    wave_abs_error.columns=['Wave Error C', 'Wave Error D']
-    pm.add_dataframe(wave_abs_error)
+    wave_error = np.abs(wave_measurments.subtract(wave_model,axis=0))
+    wave_error.columns=['Wave Error C', 'Wave Error D']
+    pm.add_dataframe(wave_error)
     pm.add_translation_dictionary({'Wave Error': ['Wave Error C', 'Wave Error D']})
-
-    # Check range
-    for key,value in range_bounds.items():
-        pm.check_range(value, key)
-
-    # Check increment
-    for key,value in increment_bounds.items():
-        pm.check_increment(value, key)
-
-    # Compute metrics
-    QCI = pecos.metrics.qci(pm.mask, pm.tfilter)
+    
+    # Check data for expected ranges
+    pm.check_range([0, 1], 'B')
+    pm.check_range([-1, 1], 'Wave')
+    pm.check_range([None, 0.25], 'Wave Error')
+    
+    # Check for stagnant data within a 1 hour moving window
+    pm.check_delta([0.0001, None], 'A', 3600) 
+    pm.check_delta([0.0001, None], 'B', 3600) 
+    pm.check_delta([0.0001, None], 'Wave', 3600) 
+        
+    # Check for abrupt changes between consecutive time steps
+    pm.check_increment([None, 0.6], 'Wave') 
+    
+    # Compute the quality control index for A, B, C, and D
+    mask = pm.mask[['A','B','C','D']]
+    QCI = pecos.metrics.qci(mask, pm.tfilter)
 
     # Write test results
     pecos.io.write_test_results(pm.test_results)
@@ -221,15 +215,18 @@ class Test_simple_example(unittest.TestCase):
         #Column C does not follow the expected sine function from 13:00 until 16:15. 
         #The change is abrupt and gradually corrected.
         expected = pd.DataFrame(
-            [('A', pd.Timestamp('2015-01-01 12:15:00'), pd.Timestamp('2015-01-01 14:15:00'), 9.0, '|Delta| < lower bound, 0.0001'),
-             ('C', pd.Timestamp('2015-01-01 12:45:00'), pd.Timestamp('2015-01-01 13:00:00'), 2.0, '|Delta| > upper bound, 0.6')],
+            [('A', pd.Timestamp('2015-01-01 12:00:00'), pd.Timestamp('2015-01-01 14:30:00'), 11.0, 'Delta < lower bound, 0.0001'),
+             ('C', pd.Timestamp('2015-01-01 12:45:00'), pd.Timestamp('2015-01-01 13:00:00'), 2.0,  'Delta > upper bound, 0.6')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
         
         # Object-oriented test
         self.pm.check_corrupt([-999])
         self.pm.check_delta([0.0001, None], window=2*3600)
-        self.pm.check_delta([None, 0.6], 'Wave', window=1800)
+        self.pm.check_delta([None, 0.6], 'Wave', window=900)
         test_results = self.pm.test_results[['Delta' in ef for ef in self.pm.test_results['Error Flag']]]
+        
+        #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_check_delta')
+
         assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
 
         # Functional tests
@@ -373,6 +370,7 @@ class Test_check_timestamp(unittest.TestCase):
             )
         assert_frame_equal(expected, self.pm.test_results)
 
+    
 class Test_check_delta(unittest.TestCase):
 
     @classmethod
@@ -393,48 +391,130 @@ class Test_check_delta(unittest.TestCase):
     
     def test_deadsensor(self):
         # dead sensor = < 1 in 5 hours
-        self.pm.check_delta([1, None], window=5*3600+1, absolute_value=True)
+        self.pm.check_delta([1, None], window=5*3600)
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 00:00:00'), Timestamp('2017-01-01 05:00:00'), 6, '|Delta| < lower bound, 1'],
-                   ['A', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 23:00:00'), 8, '|Delta| < lower bound, 1']], dtype=object),
+            array([['A', Timestamp('2017-01-01 01:00:00'), Timestamp('2017-01-01 08:00:00'), 8, 'Delta < lower bound, 1'],
+                   ['A', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 23:00:00'), 8, 'Delta < lower bound, 1']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=RangeIndex(start=0, stop=2, step=1)
             )
+        #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_deadsensor')
         assert_frame_equal(expected, self.pm.test_results)
+        
+    def test_increment_deadsensor(self):
+        # As expected, check_increment does not produce the same results as check_delta
+        self.pm.check_increment([1, None], 'A', increment=5)
+        assert_equal(10, self.pm.test_results['Timesteps'].sum())
         
     def test_abrupt_change(self):
         # abrupt change = > 7 in 3 hours
-        self.pm.check_delta([None, 7], window=3*3600+1, absolute_value=True)
+        self.pm.check_delta([None, 7], window=3*3600)
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 13:00:00'), Timestamp('2017-01-01 16:00:00'), 4, '|Delta| > upper bound, 7'],
-                   ['B', Timestamp('2017-01-01 10:00:00'), Timestamp('2017-01-01 12:00:00'), 3, '|Delta| > upper bound, 7'],
-                   ['B', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 19:00:00'), 4, '|Delta| > upper bound, 7']], dtype=object),
+            array([['A', Timestamp('2017-01-01 13:00:00'), Timestamp('2017-01-01 16:00:00'), 4, 'Delta > upper bound, 7'],
+                   ['B', Timestamp('2017-01-01 10:00:00'), Timestamp('2017-01-01 12:00:00'), 3, 'Delta > upper bound, 7'],
+                   ['B', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 19:00:00'), 4, 'Delta > upper bound, 7']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=RangeIndex(start=0, stop=3, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
-    
+
     def test_abrupt_positive_change(self):
         # abrupt positive change = > 7 in 3 hours
-        self.pm.check_delta([None, 7], window=3*3600+1, absolute_value=False)
+        self.pm.check_delta([None, 7], window=3*3600, direction='positive')
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 13:00:00'), Timestamp('2017-01-01 16:00:00'), 4, 'Delta > upper bound, 7'],
-                   ['B', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 19:00:00'), 4, 'Delta > upper bound, 7']], dtype=object),
+            array([['A', Timestamp('2017-01-01 13:00:00'), Timestamp('2017-01-01 16:00:00'), 4, 'Delta (+) > upper bound, 7'],
+                   ['B', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 19:00:00'), 4, 'Delta (+) > upper bound, 7']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
         
     def test_abrupt_negative_change(self):
-        # abrupt negative change = < -7 in 3 hours
-        self.pm.check_delta([-7, None], window=3*3600+1, absolute_value=False)
+        # abrupt negative change = < 7 in 3 hours
+        self.pm.check_delta([None, 7], window=3*3600, direction='negative')
         expected = pd.DataFrame(
-            array([['B', Timestamp('2017-01-01 10:00:00'), Timestamp('2017-01-01 12:00:00'), 3, 'Delta < lower bound, -7']], dtype=object),
+            array([['B', Timestamp('2017-01-01 10:00:00'), Timestamp('2017-01-01 12:00:00'), 3, 'Delta (-) > upper bound, 7']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=RangeIndex(start=0, stop=1, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
 
+    def test_delta_scale(self, output=False):
+        # The following function was used to test scalability of the delta test
+        # by increasing N and timing results.  The data includes stagnant data and 
+        # abrupt changes (some positive some negative) of varing degree.  
+        import time
+        
+        np.random.seed(123)
+    
+        N = 100 # number of data points per column
+        ndays = 7
+        
+        t = np.arange(0,2*np.pi,2*np.pi/N)
+        t = t[0:N]
+        sinwaveA = 10*np.sin(ndays*t)
+        sinwaveB = 5*np.sin(ndays*t)
+        sinwaveC = 1*np.sin(ndays*t)
+        noiseA = np.array(np.random.normal(0,1,N))
+        noiseB = np.array(np.random.normal(0,0.5,N))
+        noiseC = np.array(np.random.normal(0,0.1,N))
+        t = t*(24*ndays)/(2*np.pi)
+        
+        df = pd.DataFrame(columns=['A', 'B'], index=t)
+        df.index = pecos.utils.index_to_datetime(df.index, unit='h')
+        
+        # Sin wave with noise
+        df['A'] = sinwaveA+noiseA # delta = 20
+        df['B'] = sinwaveB+noiseB # delta = 10
+        df['C'] = sinwaveC+noiseC # delta = 2
+        
+        # Random, truncated normal distribution, delta = 5
+        num = df.loc['1970-01-03',:].shape[0]
+        normdist = np.random.normal(0,1,num) 
+        normdist[normdist > 2.5] = 2.5
+        normdist[normdist < -2.5] = -2.5
+        df.loc['1970-01-03','A'] = normdist
+        df.loc['1970-01-03','B'] = normdist
+        df.loc['1970-01-03','C'] = normdist
+        
+        # Uniform, value of 1, delta = 0
+        df.loc['1970-01-05',:] = 1 
+        
+        # NaNs
+        df.loc['1970-01-02 00:00:00':'1970-01-02 06:00:00',:] = np.nan
+        
+        # Steep decline (delta = 20,10,2), followed by delta = 1
+        num = df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00',:].shape[0]
+        noise = np.array(np.random.rand(num))-0.5
+        df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00','A'] = -10+noise 
+        df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00','B'] = -5+noise
+        df.loc['1970-01-06 06:00:00':'1970-01-06 18:00:00','C'] = -1+noise
+
+        summary = []
+        for lb in [2,5,10,20]:
+            for direction in [None, 'positive', 'negative']:
+                tic = time.time()
+                results = pecos.monitoring.check_delta(df, [lb,None], window=12*3600, direction=direction)
+                summary.append(['lb'+str(lb), direction, time.time() - tic, sum(results['test_results']['Timesteps'])])
+                if output:
+                    pecos.graphics.plot_test_results(df, results['test_results'], filename_root='lb'+str(lb)+'_'+str(direction))
+        
+        for ub in [2,5,10,20]:
+            for direction in [None, 'positive', 'negative']:
+                tic = time.time()
+                results = pecos.monitoring.check_delta(df, [None,ub], window=12*3600, direction=direction)
+                summary.append(['ub'+str(ub), direction, time.time() - tic, sum(results['test_results']['Timesteps'])])
+                if output:
+                    pecos.graphics.plot_test_results(df, results['test_results'], filename_root='ub'+str(ub)+'_'+str(direction))
+        
+        summary = pd.DataFrame(summary, columns=['Bound', 'Direction', 'Runtime', 'Number'])
+        if output:
+            summary.to_csv('delta_summary_'+str(N)+'.csv')
+        
+        # test to make sure the results don't change
+        expected = pd.read_csv(join(datadir,'delta_summary_100.csv'), index_col=0)
+        assert_series_equal(summary['Number'], expected['Number'], check_dtype=False)
+        
 class Test_check_outlier(unittest.TestCase):
 
     @classmethod

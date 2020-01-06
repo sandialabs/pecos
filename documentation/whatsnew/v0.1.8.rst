@@ -31,11 +31,16 @@ v0.1.8 (master)
   * pv metrics were also updated to return 1 value per column (API change)
   * Deprecated per_day option. Data can be grouped by custom time intervals before 
     computing metrics (API change)
+
+* Efficiency improvements to ``check_delta``. As part of these changes, the optional input argument 
+  `absolute_value` has been removed and `direction` has been added (API change). If direction is set to positive, 
+  then the test only identify positive deltas (the min occurs before the max). If direction is set to negative, 
+  then the test only identify negative deltas (the max occurs before the min).
 * Timestamp indexes down to millisecond resolution are supported
 * Added additional helper functions in pecos.utils to convert to/from datetime indexes.
   Methods ``get_elapsed_time`` and ``get_clock_time`` were removed from the PerformanceMonitoring class (API change).
 * Moved functionality to evaluate strings from the PerformanceMonitoring class into a stand alone utility function (API change).
 * Removed option to smooth data using a rolling mean within the quality control tests (API change).
   Preprocessing steps should be done before the quality control test is run. 
-* Added Python 3.7 tests
+* Added Python 3.7 tests, dropped Python 3.5 tests
 * Updated examples, tests, and documentation

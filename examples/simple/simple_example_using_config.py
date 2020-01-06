@@ -50,7 +50,11 @@ for composite_signal in config['Composite Signals']:
 for key,value in config['Range'].items():
     pm.check_range(value, key)
 
-# Check data for stagnant and abrupt changes
+# Check for stagnant data within a 1 hour moving window
+for key,value in config['Delta'].items():
+    pm.check_delta(value, key, 3600) 
+
+# Check for abrupt changes between consecutive time steps
 for key,value in config['Increment'].items():
     pm.check_increment(value, key) 
     

@@ -5,11 +5,10 @@ functions that can be used to run quality control tests.
 """
 import pandas as pd
 import numpy as np
-import re
 import logging
-from pecos.utils import datetime_to_clocktime, datetime_to_elapsedtime
 
 none_list = ['','none','None','NONE', None, [], {}]
+NoneType = type(None)
 
 logger = logging.getLogger(__name__)
 
@@ -120,20 +119,15 @@ class PerformanceMonitoring(object):
         Compare DataFrame to bounds to generate a True/False mask where
         True = passed, False = failed.  Append results to test_results.
         """
-
-        # Evaluate strings in bound values
-        for i in range(len(bound)):
-            if bound[i] in none_list:
-                bound[i] = None
-
+        
         # Lower Bound
-        if bound[0] is not None:
+        if bound[0] not in none_list:
             mask = (df < bound[0])
             error_msg = error_prefix+' < lower bound, '+str(bound[0])
             self._append_test_results(mask, error_msg, min_failures)
 
         # Upper Bound
-        if bound[1] is not None:
+        if bound[1] not in none_list:
             mask = (df > bound[1])
             error_msg = error_prefix+' > upper bound, '+str(bound[1])
             self._append_test_results(mask, error_msg, min_failures)
@@ -214,8 +208,7 @@ class PerformanceMonitoring(object):
                     length, error_msg],
                     index=['Variable Name', 'Start Time',
                     'End Time', 'Timesteps', 'Error Flag'])
-                frame_t = frame.transpose()
-                self.test_results = self.test_results.append(frame_t, ignore_index=True)
+                self.test_results = self.test_results.append(frame.T, ignore_index=True)
 
     def add_dataframe(self, data):
         """
@@ -226,8 +219,8 @@ class PerformanceMonitoring(object):
         data : pandas DataFrame
             Data to add to the PerformanceMonitoring object, indexed by datetime
         """
-        assert isinstance(data, pd.DataFrame)
-        assert isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex)
+        assert isinstance(data, pd.DataFrame), 'data must be of type pd.DataFrame'
+        assert isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex), 'data.index must be a DatetimeIndex'
         
         temp = data.copy()
 
@@ -252,6 +245,8 @@ class PerformanceMonitoring(object):
         trans : dictionary
             Translation dictionary
         """
+        assert isinstance(trans, dict), 'trans must be of type dictionary'
+        
         for key, values in trans.items():
             self.trans[key] = []
             for value in values:
@@ -266,6 +261,8 @@ class PerformanceMonitoring(object):
         time_filter : pandas DataFrame with a single column or pandas Series
             Time filter containing boolean values for each time index
         """
+        assert isinstance(time_filter, (pd.Series, pd.DataFrame)), 'time_filter must be of type pd.Series or pd.DataFrame'
+        
         if isinstance(time_filter, pd.DataFrame):
             self.tfilter = pd.Series(data = time_filter.values[:,0], index = self.df.index)
         else:
@@ -281,7 +278,7 @@ class PerformanceMonitoring(object):
 
         Parameters
         ----------
-        frequency : int
+        frequency : int or float
             Expected time series frequency, in seconds
 
         expected_start_time : Timestamp (optional)
@@ -305,6 +302,12 @@ class PerformanceMonitoring(object):
             interval (specified in frequency) and the DataFrame is not
             reindexed.
         """
+        assert isinstance(frequency, (int, float)), 'frequency must be of type int or float'
+        assert isinstance(expected_start_time, (NoneType, pd.Timestamp)), 'expected_start_time must be None or of type pd.Timestamp'
+        assert isinstance(expected_end_time, (NoneType, pd.Timestamp)), 'expected_end_time must be None or of type pd.Timestamp'
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
+        assert isinstance(exact_times, bool), 'exact_times must be of type bool'
+        
         logger.info("Check timestamp")
 
         if self.df.empty:
@@ -394,7 +397,11 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        logger.info("Check data range")
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
+        
+        logger.info("Check for data outside expected range")
 
         df = self._setup_data(key)
         if df is None:
@@ -429,7 +436,13 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        logger.info("Check increment range")
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(increment, int), 'increment must be of type int'
+        assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
+        
+        logger.info("Check for data increment outside expected range")
 
         df = self._setup_data(key)
         if df is None:
@@ -453,16 +466,12 @@ class PerformanceMonitoring(object):
         self._generate_test_results(df, bound, min_failures, error_prefix)
     
 
-    def check_delta(self, bound, key=None, window=3600, absolute_value=True, 
+    def check_delta(self, bound, key=None, window=3600,  direction=None, 
                     min_failures=1):
         """
         Check for stagant data and/or abrupt changes in the data using the 
-        difference between max and min values within a rolling window
-          
-        Note, this method is currently NOT efficient for large
-        data sets (> 100000 pts) because it uses df.rolling().apply() to find
-        the position of the min and max). This method requires pandas 0.23 or greater.
-
+        difference between max and min values (delta) within a rolling window
+        
         Parameters
         ----------
         bound : list of floats
@@ -473,18 +482,31 @@ class PerformanceMonitoring(object):
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        window : int (optional)
+        window : int or float (optional)
             Size of the rolling window (in seconds) used to compute delta,
             default = 3600
 
-        absolute_value : boolean (optional)
-            Use the absolute value of delta, default = True
-
+        direction : str (optional)
+            Options = 'positive', 'negative', or None
+            
+            * If direction is positive, then only identify positive deltas 
+              (the min occurs before the max) 
+            * If direction is negative, then only identify negative deltas 
+              (the max occurs before the min)
+            * If direction is None, then identify both positive and negative 
+              deltas
+            
         min_failures : int (optional)
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
-        logger.info("Check delta (max-min) range")
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(window, (int, float)), 'window must be of type int or float'
+        assert direction in [None, 'positive', 'negative'], "direction must None or the string 'positive' or 'negative'"
+        assert isinstance(min_failures, int), 'min_failures must be of type int'
+        
+        logger.info("Check for stagant data and/or abrupt changes using delta (max-min) within a rolling window")
         
         df = self._setup_data(key)
         if df is None:
@@ -492,83 +514,81 @@ class PerformanceMonitoring(object):
 
         window_str = str(int(window*1e3)) + 'ms' # milliseconds
 
-        def f(data=None, method=None):
-            if data.notnull().sum() < 2: # there has to be at least two numbers
-                return np.nan
-            else:
-                if method == 'idxmin':
-                    # Can't return a timestamp, convert to num, then back to timestamp
-                    return data.idxmin().value
-                elif method == 'min':
-                    return data.min()
-                elif method == 'idxmax':
-                    return data.idxmax().value
-                elif method == 'max':
-                    return data.max()
-                else:
-                    return np.nan
-
-        tmin_df = df.rolling(window_str).apply(lambda x: f(x, 'idxmin'), raw=False) # raw = False passes a Series
-        tmin_df = tmin_df.astype('datetime64[ns]')
-        # Note, the next line should be replaced with df.rolling(window_str).min(),
-        # but the solution is not the same with pandas 0.23
-        min_df = df.rolling(window_str).apply(lambda x: f(x, 'min'), raw=False)
-
-        tmax_df = df.rolling(window_str).apply(lambda x: f(x, 'idxmax'), raw=False)
-        tmax_df = tmax_df.astype('datetime64[ns]')
-        # Same note as above, for max
-        max_df = df.rolling(window_str).apply(lambda x: f(x, 'max'), raw=False)
+        min_df = df.rolling(window_str, min_periods=2, closed='both').min()
+        max_df = df.rolling(window_str, min_periods=2, closed='both').max()
 
         diff_df = max_df - min_df
-        if not absolute_value:
-            reverse_order = tmax_df < tmin_df
-            diff_df[reverse_order] = -diff_df[reverse_order]
-
-        if absolute_value:
-            error_prefix = '|Delta|'
-        else:
-            error_prefix = 'Delta'
-
-        # Evaluate strings for bound values
-        for i in range(len(bound)):
-            if bound[i] in none_list:
-                bound[i] = None
-
-        def extract_exact_position(mask1, tmin_df, tmax_df):
-            mask2 = pd.DataFrame(False, columns=mask1.columns, index=mask1.index)
+        diff_df.loc[diff_df.index[0]:diff_df.index[0]+pd.Timedelta(window_str),:] = None
+        
+        def update_mask(mask1, df, window_str, bound, direction):
+            # While the mask flags data at the time at which the failure occurs, 
+            # the actual timespan betwen the min and max should be flagged so that 
+            # the final results include actual data points that caused the failure.
+            # This function uses numpy arrays to improve performance and returns
+            # a mask DataFrame.
+            mask2 = np.zeros((len(mask1.index), len(mask1.columns)), dtype=bool)
+            index = mask1.index
             # Loop over t, col in mask1 where condition is True
             for t,col in list(mask1[mask1 > 0].stack().index):
-                # set the initially flaged location to False
-                mask2.loc[t,col] = False
-                # extract the start and end time
-                start_time = tmin_df.loc[t,col]
-                end_time = tmax_df.loc[t,col]
-                # update mask2
-                if start_time < end_time:
-                    mask2.loc[start_time:end_time,col] = True # set the time between max and min to true
-                else:
-                    mask2.loc[end_time:start_time,col] = True # set the time between max and min to true
+                icol = mask1.columns.get_loc(col)
+                it = mask1.index.get_loc(t)
+                t1 = t-pd.Timedelta(window_str)
+
+                if (bound == 'lower') and (direction is None):
+                    # set the entire time interval to True
+                    mask2[(index >= t1) & (index <= t),icol] = True
+                
+                else: 
+                    # extract the min and max time
+                    min_time = df.loc[t1:t,col].idxmin()
+                    max_time = df.loc[t1:t,col].idxmax()
+                    
+                    if bound == 'lower': # bound = upper, direction = positive or negative
+                        # set the entire time interval to True
+                        if (direction == 'positive') and (min_time <= max_time):
+                            mask2[(index >= t1) & (index <= t),icol] = True
+                        elif (direction == 'negative') and (min_time >= max_time):
+                            mask2[(index >= t1) & (index <= t),icol] = True
+                    
+                    elif bound == 'upper': # bound = upper, direction = None, positive or negative
+                        # set the initially flaged location to False
+                        mask2[it,icol] = False
+                        # set the time between max/min or min/max to true
+                        if min_time < max_time and (direction is None or direction == 'positive'):
+                            mask2[(index >= min_time) & (index <= max_time),icol] = True
+                        elif min_time > max_time and (direction is None or direction == 'negative'):
+                            mask2[(index >= max_time) & (index <= min_time),icol] = True
+                        elif min_time == max_time:
+                            mask2[it,icol] = True
+                        
+            mask2 = pd.DataFrame(mask2, columns=mask1.columns, index=mask1.index)
             return mask2
-
+        
+        if direction == 'positive':
+            error_prefix = 'Delta (+)'
+        elif direction == 'negative':
+            error_prefix = 'Delta (-)'
+        else:
+            error_prefix = 'Delta'
+        
         # Lower Bound
-        if bound[0] is not None:
+        if bound[0] not in none_list:
             mask = (diff_df < bound[0])
+            error_msg = error_prefix+' < lower bound, '+str(bound[0])
             if not self.tfilter.empty:
                 mask[~self.tfilter] = False
-            if mask.sum(axis=1).sum(axis=0) > 0:
-                mask = extract_exact_position(mask, tmin_df, tmax_df)
-                self._append_test_results(mask, error_prefix+' < lower bound, '+str(bound[0]),
-                                         min_failures=min_failures)
-
+            mask = update_mask(mask, df, window_str, 'lower', direction) 
+            self._append_test_results(mask, error_msg, min_failures)
+        
         # Upper Bound
-        if bound[1] is not None:
+        if bound[1] not in none_list:
             mask = (diff_df > bound[1])
+            error_msg = error_prefix+' > upper bound, '+str(bound[1])
             if not self.tfilter.empty:
                 mask[~self.tfilter] = False
-            if mask.sum(axis=1).sum(axis=0) > 0:
-                mask = extract_exact_position(mask, tmin_df, tmax_df)
-                self._append_test_results(mask, error_prefix+' > upper bound, '+str(bound[1]),
-                                         min_failures=min_failures)
+            mask = update_mask(mask, df, window_str, 'upper', direction) 
+            self._append_test_results(mask, error_msg, min_failures)
+
 
     def check_outlier(self, bound, key=None, window=3600, absolute_value=True, 
                       min_failures=1):
@@ -588,7 +608,7 @@ class PerformanceMonitoring(object):
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        window : int or None (optional)
+        window : int or float (optional)
             Size of the rolling window (in seconds) used to normalize data,
             default = 3600.  If window is set to None, data is normalized using
             the entire data sets mean and standard deviation (column by column).
@@ -600,6 +620,12 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
+        assert isinstance(bound, list), 'bound must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(window, (NoneType, int, float)), 'window must be None or of type int or float'
+        assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
+        
         logger.info("Check for outliers")
 
         df = self._setup_data(key)
@@ -609,7 +635,9 @@ class PerformanceMonitoring(object):
         # Compute normalized data
         if window is not None:
             window_str = str(int(window*1e3)) + 'ms' # milliseconds
-            df = (df - df.rolling(window_str).mean())/df.rolling(window_str).std()
+            df_mean = df.rolling(window_str, min_periods=2, closed='both').mean()
+            df_std = df.rolling(window_str, min_periods=2, closed='both').std()
+            df = (df - df_mean)/df_std
         else:
             df = (df - df.mean())/df.std()
         if absolute_value:
@@ -639,6 +667,9 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
+        
         logger.info("Check for missing data")
 
         df = self._setup_data(key)
@@ -661,7 +692,7 @@ class PerformanceMonitoring(object):
 
         Parameters
         ----------
-        corrupt_values : list of floats
+        corrupt_values : list of int or floats
             List of corrupt data values
 
         key : string (optional)
@@ -672,6 +703,10 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
+        assert isinstance(corrupt_values, list), 'corrupt_values must be of type list'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
+        
         logger.info("Check for corrupt data")
 
         df = self._setup_data(key)
@@ -725,19 +760,18 @@ def check_increment(data, bound, key=None, increment=1, absolute_value=True,
 
 
 @_documented_by(PerformanceMonitoring.check_delta)
-def check_delta(data, bound, key=None, window=3600, absolute_value=True,
-                min_failures=1):
+def check_delta(data, bound, key=None, window=3600, direction=None, min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_delta(bound, key, window, absolute_value, min_failures)
+    pm.check_delta(bound, key, window, direction, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
 @_documented_by(PerformanceMonitoring.check_outlier)
-def check_outlier(data, bound, key=None, window=3600, absolute_value=True,
+def check_outlier(data, bound, key=None, window=3600, absolute_value=True, 
                   min_failures=1):
 
     pm = PerformanceMonitoring()
