@@ -626,6 +626,7 @@ class PerformanceMonitoring(object):
         assert isinstance(window, (NoneType, int, float)), 'window must be None or of type int or float'
         assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
         assert isinstance(min_failures, int), 'min_failures must be type int'
+        assert self.df.index.is_monotonic, 'index must be monotonic'
         
         logger.info("Check for outliers")
 
@@ -707,7 +708,6 @@ class PerformanceMonitoring(object):
         assert isinstance(corrupt_values, list), 'corrupt_values must be of type list'
         assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert isinstance(min_failures, int), 'min_failures must be type int'
-        assert self.df.index.is_monotonic, 'index must be monotonic'
         
         logger.info("Check for corrupt data")
 
