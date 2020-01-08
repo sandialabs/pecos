@@ -23,6 +23,13 @@ and analyze energy production from PV systems.
 Pecos and PVLIB.
 Pecos includes a PV system example in the `examples/pv <https://github.com/sandialabs/pecos/tree/master/examples/pv>`_ directory.  
 
+MRE quality control analysis
+--------------------------------
+Pecos is also being used to perform quality control analysis on data collected from
+marine renewable energy (MRE) systems including wave, tidal, and river
+systems.  
+This effort is part of the `Marine and Hydrokinetic Toolkit (MHKiT) <https://mhkit-code-hub.github.io/MHKiT/>`_.
+  
 Performance metrics
 ---------------------
 Pecos is typically used to run a series of quality control tests on data collected 
