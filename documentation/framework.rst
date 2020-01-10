@@ -14,7 +14,7 @@ Pecos contains the following modules
    :class:`~pecos.metrics`                  Contains metrics that describe the quality control analysis or compute quantities that might be of use in the analysis
    :class:`~pecos.io`		                Contains functions to load data, send email alerts, write results to files, and generate html reports
    :class:`~pecos.graphics`	                Contains functions to generate scatter, time series, and heatmap plots for reports
-   :class:`~pecos.utils`	                Contains helper functions, including functions to convert timeseries indices from seconds to datetime
+   :class:`~pecos.utils`	                Contains helper functions, including functions to convert time series indices from seconds to datetime
    =======================================  =============================================================================================================================================
    
 In addition to the modules listed above, Pecos also includes a :class:`~pecos.pv`
