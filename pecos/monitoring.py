@@ -469,7 +469,7 @@ class PerformanceMonitoring(object):
     def check_delta(self, bound, key=None, window=3600,  direction=None, 
                     min_failures=1):
         """
-        Check for stagant data and/or abrupt changes in the data using the 
+        Check for stagnant data and/or abrupt changes in the data using the 
         difference between max and min values (delta) within a rolling window
         
         Parameters
@@ -505,6 +505,7 @@ class PerformanceMonitoring(object):
         assert isinstance(window, (int, float)), 'window must be of type int or float'
         assert direction in [None, 'positive', 'negative'], "direction must None or the string 'positive' or 'negative'"
         assert isinstance(min_failures, int), 'min_failures must be of type int'
+        assert self.df.index.is_monotonic, 'index must be monotonic'
         
         logger.info("Check for stagant data and/or abrupt changes using delta (max-min) within a rolling window")
         
@@ -625,6 +626,7 @@ class PerformanceMonitoring(object):
         assert isinstance(window, (NoneType, int, float)), 'window must be None or of type int or float'
         assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
         assert isinstance(min_failures, int), 'min_failures must be type int'
+        assert self.df.index.is_monotonic, 'index must be monotonic'
         
         logger.info("Check for outliers")
 
