@@ -5,6 +5,7 @@ functions that can be used to run quality control tests.
 """
 import pandas as pd
 import numpy as np
+import datetime
 import logging
 
 none_list = ['','none','None','NONE', None, [], {}]
@@ -67,7 +68,8 @@ class PerformanceMonitoring(object):
         if self.df.empty:
             logger.info("Empty database")
             return
-
+        
+        # True = pass, False = fail
         mask = ~pd.isnull(self.df) # False if NaN
         for i in self.test_results.index:
             variable = self.test_results.loc[i, 'Variable Name']
@@ -225,7 +227,7 @@ class PerformanceMonitoring(object):
         temp = data.copy()
 
         if self.df is not None:
-            self.df = temp.combine_first(self.df)
+            self.df = data.combine_first(self.df)
         else:
             self.df = temp
 
@@ -681,6 +683,7 @@ class PerformanceMonitoring(object):
         # Extract missing data
         mask = pd.isnull(df) # checks for np.nan, np.inf
 
+        # Check to see if the missing data was already flagged as a missing timestamp
         missing_timestamps = self.test_results[
                 self.test_results['Error Flag'] == 'Missing timestamp']
         for index, row in missing_timestamps.iterrows():
@@ -716,13 +719,95 @@ class PerformanceMonitoring(object):
             return
 
         # Extract corrupt data
-        mask = pd.DataFrame(data = np.zeros(df.shape), index = df.index, columns = df.columns, dtype = bool) # all False
-        for i in corrupt_values:
-            mask = mask | (df == i)
+        mask = df.isin(corrupt_values)
+
+        # Replace corrupt data with NaN
         self.df[mask] = np.nan
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
 
+    def custom_stationary(self, quality_control_func, post_process_func=None, 
+                           error_message=None):
+        """
+        Use custom functions that operate on the entire dataset at once to 
+        perform quality control analysis
+
+        Parameters
+        ----------
+        quality_control_func : function
+            Function that operates on self.df and returns a mask and metadata
+        post_process_func : function
+            Function that operates on mask and returns a mask
+        error_message : str (optional)
+            Error message
+        """
+        # Function that operates on the entire dataset and returns a mask for the 
+        # entire dataset
+        mask, metadata = quality_control_func(self.df) 
+        
+        # Function that modifies the mask
+        if post_process_func is not None:
+            mask = post_process_func(mask)
+        
+        self._append_test_results(~mask, error_message)
+        
+        return metadata
+    
+    def custom_moving_window(self, quality_control_func, window, post_process_func=None, 
+                                  remove_outliers=True, error_message=None):
+        """
+        Use custom functions that cycle through data using a moving window 
+        to perform quality control analysis
+
+        Parameters
+        ----------
+        quality_control_func : function
+            Function that determines if the last data point is normal or anomalous.
+            Returns a mask and metadata for the last data point.
+        post_process_func : function
+            Function that operates on mask and returns a mask
+        remove_outliers : bool
+            Remove outliers
+        error_message : str (optional)
+            Error message
+        """
+        
+        mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
+        metadata = {} 
+        
+        for t in self.df.index:
+            if t < self.df.index[0]+datetime.timedelta(seconds=window):
+                continue
+            
+            if remove_outliers:
+                data_t = self.df[mask].loc[t-datetime.timedelta(seconds=window):t,:]
+                """ Add additional data points, backfill 
+                num_outliers = data_t.isna().any(axis=1).sum()
+                if num_outliers > 0:
+                    print(num_outliers)
+                    previous_t = data_t.index[-2]
+                    outlier_history = mask.loc[mask.index[0]:previous_t-datetime.timedelta(seconds=window)]
+                    outlier_history = outlier_history[outlier_history == True] # history with no outliers
+                    if len(outlier_history) > 0:
+                        pos = min(num_outliers, len(outlier_history))
+                        history_idx = outlier_history.iloc[-pos:].index
+                        data_t = data_t.append(self.df.loc[history_idx,:])
+                        data_t.sort_index(inplace=True)
+                """
+            else:
+                data_t = self.df.loc[t-datetime.timedelta(seconds=window):t,:]
+            
+            # Function that operates on data at time t and returns a mask for time t
+            mask.loc[t,:], metadata[t] = quality_control_func(data_t)
+            
+            # Function that modifies the mask
+            if post_process_func is not None:
+                mask = post_process_func(mask)
+        
+        self._append_test_results(~mask, error_message)
+        
+        return metadata
+    
 
 ### Functional approach
 @_documented_by(PerformanceMonitoring.check_timestamp)
