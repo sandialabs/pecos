@@ -68,7 +68,7 @@ class PerformanceMonitoring(object):
             logger.info("Empty database")
             return
 
-        mask = ~pd.isnull(self.df) # False if NaN
+        mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
         for i in self.test_results.index:
             variable = self.test_results.loc[i, 'Variable Name']
             start_date = self.test_results.loc[i, 'Start Time']
@@ -78,7 +78,9 @@ class PerformanceMonitoring(object):
                     mask.loc[start_date:end_date,variable] = False
                 except:
                     pass
-
+            elif self.test_results.loc[i, 'Error Flag'] == 'Missing timestamp':
+                mask.loc[start_date:end_date,:] = False
+                
         return mask
 
     @property
