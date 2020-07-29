@@ -1,0 +1,9 @@
+.. _whatsnew_0181:
+
+v0.1.8.1 (master)
+--------------------------
+
+* Bug fix in the way masks are generated.  Data points that have Null values were always assigned to False, indicating 
+  that a quality control test failed.  Null values are now assumed to be True, unless a specific test fails (e.g. check_missing).
+
+
