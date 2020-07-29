@@ -70,7 +70,7 @@ class PerformanceMonitoring(object):
             return
         
         # True = pass, False = fail
-        mask = ~pd.isnull(self.df) # False if NaN
+        mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns) #~pd.isnull(self.df) # False if NaN
         for i in self.test_results.index:
             variable = self.test_results.loc[i, 'Variable Name']
             start_date = self.test_results.loc[i, 'Start Time']
@@ -753,8 +753,8 @@ class PerformanceMonitoring(object):
         
         return metadata
     
-    def custom_moving_window(self, quality_control_func, window, post_process_func=None, 
-                                  remove_outliers=True, error_message=None):
+    def custom_moving_window(self, quality_control_func, window, history=None, post_process_func=None, 
+                                  return_history_t = None, error_message=None):
         """
         Use custom functions that cycle through data using a moving window 
         to perform quality control analysis
@@ -766,47 +766,65 @@ class PerformanceMonitoring(object):
             Returns a mask and metadata for the last data point.
         post_process_func : function
             Function that operates on mask and returns a mask
-        remove_outliers : bool
-            Remove outliers
+
         error_message : str (optional)
             Error message
         """
+        count = 0
+        history_window = history.index[-1] - history.index[0]
         
         mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
         metadata = {} 
         
-        for t in self.df.index:
-            if t < self.df.index[0]+datetime.timedelta(seconds=window):
-                continue
+        if history is None:
+            history = self.df.loc[self.df.index[0]:self.df.index[0]+datetime.timedelta(seconds=window),:]
+            print(history)
+            tidx = self.df.index[history.shape[0]:-1]
+        else:
+            tidx = self.df.index
             
-            if remove_outliers:
-                data_t = self.df[mask].loc[t-datetime.timedelta(seconds=window):t,:]
-                """ Add additional data points, backfill 
-                num_outliers = data_t.isna().any(axis=1).sum()
-                if num_outliers > 0:
-                    print(num_outliers)
-                    previous_t = data_t.index[-2]
-                    outlier_history = mask.loc[mask.index[0]:previous_t-datetime.timedelta(seconds=window)]
-                    outlier_history = outlier_history[outlier_history == True] # history with no outliers
-                    if len(outlier_history) > 0:
-                        pos = min(num_outliers, len(outlier_history))
-                        history_idx = outlier_history.iloc[-pos:].index
-                        data_t = data_t.append(self.df.loc[history_idx,:])
-                        data_t.sort_index(inplace=True)
-                """
-            else:
-                data_t = self.df.loc[t-datetime.timedelta(seconds=window):t,:]
-            
+        for t in tidx:
+            # Current data point
+            data_t = self.df.loc[t,:]
+
             # Function that operates on data at time t and returns a mask for time t
-            mask.loc[t,:], metadata[t] = quality_control_func(data_t)
+            mask.loc[t,:], metadata[t] = quality_control_func(data_t, history)
             
+            history = history.append(self.df.loc[t,mask.loc[t,:]])
+            history = history.loc[t-history_window:t,:]
+            
+            # rebase
+            rebase = history.loc[:,history.isna().sum()/history.shape[0] > 0.5]
+            if rebase.shape[1] > 0:
+                columns = rebase.columns.to_list()
+                history.loc[t, columns] = self.df.loc[t, columns]
+                #mask.loc[t,columns] = True
+                
+                #index_start = max(self.df.index[0], history.index[0])
+                #index_end = history.index[-1]
+                #columns = rebase.columns.to_list()
+                #history.loc[index_start:index_end, columns] = self.df.loc[index_start:index_end, columns]
+
+            #if mask.loc[t,:].sum() == mask.shape[1]:
+            #    history = history.append(self.df.loc[t,:])
+            #    history = history.iloc[1::,:]
+                
+            if t >= return_history_t and count == 0:
+                return_history = history.copy()
+                count = count + 1
+                
             # Function that modifies the mask
             if post_process_func is not None:
                 mask = post_process_func(mask)
         
         self._append_test_results(~mask, error_message)
         
-        return metadata
+        if count == 0:
+            return_history = history
+        
+        #history.reindex(self.df.index).plot(legend=False)
+        
+        return metadata, return_history
     
 
 ### Functional approach
