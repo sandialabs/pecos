@@ -113,7 +113,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
         Boolean values used to include time filter in the plot, default = None 
         
     test_results_group : pandas DataFrame (optional)
-        Test results for a particular variable.
+        Test results for the data
         default = None 
     
     xaxis_min : float (optional)
@@ -169,7 +169,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
         except:
             pass
         if test_results_group is not None:
-            key2 = test_results_group['Error Flag']
+            key2 = test_results_group['Error Flag'].fillna('')
             grouped2 = test_results_group.groupby(key2)
             
             for error_flag in key2.unique():

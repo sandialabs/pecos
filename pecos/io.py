@@ -220,7 +220,8 @@ def write_test_results(test_results, filename='test_results.csv'):
 def write_monitoring_report(data, test_results, test_results_graphics=[], 
                             custom_graphics=[], metrics=None, 
                             title='Pecos Monitoring Report', config={}, logo=False, 
-                            im_width_test_results=700, im_width_custom=700, encode=False,
+                            im_width_test_results=1, im_width_custom=1, im_width_logo=1,
+                            encode=False, file_format='html',
                             filename='monitoring_report.html'):
     """
     Generate a monitoring report.  
@@ -254,11 +255,14 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     logo : string (optional)
         Graphic to be added to the report header
     
-    im_width_test_results=700 : float (optional)
-        Image width for test results graphics in the HTML report, default = 700
+    im_width_test_results : float (optional)
+        Image width as a fraction of page size, for test results graphics, default = 1
     
-    im_width_custom=700 : float (optional)
-        Image width for custom graphics in the HTML report, default = 700
+    im_width_custom : float (optional)
+        Image width as a fraction of page size, for custom graphics, default = 1
+        
+    im_width_logo: float (optional)
+        Image width as a fraction of page size, for the logo, default = 1
         
     encode : boolean (optional)
         Encode graphics in the html, default = False
@@ -283,7 +287,7 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
         end_time = data.index[-1]
     
     # Set pandas display option     
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', 40)
     
     # Collect notes (from the logger file)
@@ -303,38 +307,63 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     # Convert to html format
     if metrics is None:
         metrics = pd.DataFrame()
-    if isinstance(metrics, pd.Series):
-        metrics_html = metrics.to_frame().to_html(header=False)
-    if isinstance(metrics, pd.DataFrame):  
-        metrics_html = metrics.to_html(justify='left')
-        
-    test_results_html = test_results.to_html(justify='left')
-    notes_html = notes_df.to_html(justify='left', header=False)
+    
+    pecos_logo = join(dirname(pecos.__file__), '..', 'documentation', 'figures', 'logo.png')
     
     content = {'start_time': str(start_time), 
-                'end_time': str(end_time), 
-                'num_notes': str(notes_df.shape[0]),
-                'notes': notes_html, 
-                'num_test_results': str(test_results.shape[0]),
-                'test_results': test_results_html,
-                'test_results_graphics': test_results_graphics,
-                'custom_graphics': custom_graphics,
-                'num_metrics': str(metrics.shape[0]),
-                'metrics': metrics_html,
-                'config': config}
+               'end_time': str(end_time), 
+               'num_notes': str(notes_df.shape[0]),
+               'num_data_columns': str(data.shape[1]),
+               'num_test_results': str(test_results.shape[0]),
+               'num_metrics': str(metrics.shape[0]),
+               'config': config}
                 
     title = os.path.basename(title)
     
-    html_string = _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, encode)
+    if file_format == 'html':
+        content['test_results_graphics'] = test_results_graphics
+        content['custom_graphics'] = custom_graphics
+        content['pecos_logo'] = pecos_logo
+        
+        if isinstance(metrics, pd.Series):
+            metrics_html = metrics.to_frame().to_html(header=False)
+        if isinstance(metrics, pd.DataFrame):  
+            metrics_html = metrics.to_html(justify='left')
+            
+        content['metrics'] = metrics_html    
+        content['test_results'] = test_results.to_html(justify='left')
+        content['notes'] = notes_df.to_html(justify='left', header=False)
+        
+        im_width_test_results = im_width_test_results*100
+        im_width_custom = im_width_custom*100
+        im_width_logo = im_width_logo*100
+        
+        file_string = _html_template_monitoring_report(content, title, logo, 
+                            im_width_test_results, im_width_custom, im_width_logo, encode)
+    else:
+        test_results_graphics = [g.replace('\\', '/') for g in test_results_graphics]
+        custom_graphics = [g.replace('\\', '/') for g in custom_graphics]
+        pecos_logo = pecos_logo.replace('\\', '/')
+        
+        content['test_results_graphics'] = test_results_graphics
+        content['custom_graphics'] = custom_graphics
+        content['pecos_logo'] = pecos_logo
+        
+        content['metrics'] = metrics.to_latex(longtable=True)
+        content['test_results'] = test_results.to_latex(longtable=True)
+        content['notes'] = notes_df.to_latex(longtable=True)
+        
+        file_string = _latex_template_monitoring_report(content, title, logo, 
+                            im_width_test_results, im_width_custom, im_width_logo)
     
-    # Write html file
+    # Write file
     if os.path.dirname(filename) == '':
         full_filename = os.path.join(os.getcwd(), filename)
     else:
         full_filename = filename
-    html_file = open(full_filename,"w")
-    html_file.write(html_string)
-    html_file.close()
+    fid = open(full_filename,"w")
+    fid.write(file_string)
+    fid.close()
     
     logger.info("")
     
@@ -426,7 +455,18 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
 
     return full_filename
 
-def _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, encode):
+def _latex_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, im_width_logo):
+    
+    template = env.get_template('monitoring_report.tex')
+
+    date = datetime.datetime.now()
+    datestr = date.strftime('%m/%d/%Y')
+    
+    version = pecos.__version__
+    
+    return template.render(**locals())
+
+def _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, im_width_logo, encode):
     
     # if encode == True, encode the images
     img_dic = {}
@@ -435,6 +475,9 @@ def _html_template_monitoring_report(content, title, logo, im_width_test_results
             img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
             img_dic[im] = img_encode
         for im in content['test_results_graphics']:
+            img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
+            img_dic[im] = img_encode
+        for im in content['pecos_logo']:
             img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
             img_dic[im] = img_encode
 

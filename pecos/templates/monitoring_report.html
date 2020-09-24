@@ -13,7 +13,9 @@
 <tr>
 <td align="left" valign="center">
 {% if logo %}
-    <img  src="{{ logo }}" alt='Logo' />
+    <H2><img  src="{{ logo }}" alt='Logo' width="{{ im_width_logo }}%"> {{ title }}</H2>
+{% else %}
+    <H2>{{ title }}</H2>
 {% endif %}
 </td>
 <td align="right" valign="center">
@@ -21,19 +23,18 @@
 </tr>
 </table>
 <hr>
-<H2>{{ title }}</H2>
 
-Start time: {{ content['start_time'] }} <br>
-End time:  {{ content['end_time'] }} <br>
-Test Failures: {{ content['num_test_results'] }} <br>        
-Notes: {{ content['num_notes'] }} <br>
+Data start time: {{ content['start_time'] }} <br>
+Data end time:  {{ content['end_time'] }} <br>
+Number of variables: {{ content['num_data_columns']}} <br>    
+Number of test failures: {{ content['num_test_results'] }} <br>   
 <br>
 
 {% for im in content['custom_graphics'] %}
     {% if encode %}
-        <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_custom }}"><br>
+        <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_custom }}%"><br>
     {% else %}
-        <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_custom }}"><br>
+        <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_custom }}%"><br>
     {% endif %}
 {% endfor %}
 
@@ -50,9 +51,9 @@ Notes: {{ content['num_notes'] }} <br>
 
     {% for im in content['test_results_graphics'] %}
         {% if encode %}
-            <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_test_results }}"><br>
+            <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_test_results }}%"><br>
         {% else %}
-            <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_test_results }}"><br>
+            <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_test_results }}%"><br>
         {% endif %}
     {% endfor %}
 
@@ -62,8 +63,6 @@ Notes: {{ content['num_notes'] }} <br>
     <H3>Notes:</H3>
     {{ content['notes'] }}
     <br>
-{% else %}
-    <H3>Notes:</H3> None<br><br>
 {% endif %}
 
 {% if content['config'] %}

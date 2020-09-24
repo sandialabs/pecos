@@ -594,7 +594,7 @@ class PerformanceMonitoring(object):
 
 
     def check_outlier(self, bound, key=None, window=3600, absolute_value=True, 
-                      min_failures=1):
+                      streaming=False, min_failures=1):
         """
         Check for outliers using normalized data within a rolling window
         
@@ -630,32 +630,56 @@ class PerformanceMonitoring(object):
         assert isinstance(min_failures, int), 'min_failures must be type int'
         assert self.df.index.is_monotonic, 'index must be monotonic'
         
+        def outlier(data):
+
+            mean = data.iloc[:-1,:].mean()
+            std = data.iloc[:-1,:].std()
+            zt = (data.iloc[-1,:] - mean)/std
+            zt.replace([np.inf, -np.inf], np.nan, inplace=True)
+            
+            # True = pass, False = fail
+            if absolute_value:
+                zt = abs(zt)
+            
+            mask = pd.Series(True, index=zt.index)
+            if bound[0] not in none_list:
+                mask = mask & (zt >= bound[0])
+            if bound[1] not in none_list:   
+                mask = mask & (zt <= bound[1])
+            
+            return mask, zt
+
         logger.info("Check for outliers")
 
         df = self._setup_data(key)
         if df is None:
             return
-
-        # Compute normalized data
-        if window is not None:
-            window_str = str(int(window*1e3)) + 'ms' # milliseconds
-            df_mean = df.rolling(window_str, min_periods=2, closed='both').mean()
-            df_std = df.rolling(window_str, min_periods=2, closed='both').std()
-            df = (df - df_mean)/df_std
-        else:
-            df = (df - df.mean())/df.std()
-        if absolute_value:
-            df = np.abs(df)
-        df.replace([np.inf, -np.inf], np.nan, inplace=True)
-
+        
         if absolute_value:
             error_prefix = '|Outlier|'
         else:
             error_prefix = 'Outlier'
-
-        #df[df.index[0]:df.index[0]+datetime.timedelta(seconds=window)] = np.nan
-
-        self._generate_test_results(df, bound, min_failures, error_prefix)
+            
+        if streaming:
+            metadata = self.custom_streaming(outlier, window, rebase=0.5, error_message=error_prefix)
+        else:
+            # Compute normalized data
+            if window is not None:
+                window_str = str(int(window*1e3)) + 'ms' # milliseconds
+                df_mean = df.rolling(window_str, min_periods=2, closed='both').mean()
+                df_std = df.rolling(window_str, min_periods=2, closed='both').std()
+                df = (df - df_mean)/df_std
+            else:
+                df = (df - df.mean())/df.std()
+            
+            df.replace([np.inf, -np.inf], np.nan, inplace=True)
+            
+            if absolute_value:
+                df = np.abs(df)
+    
+            #df[df.index[0]:df.index[0]+datetime.timedelta(seconds=window)] = np.nan
+    
+            self._generate_test_results(df, bound, min_failures, error_prefix)
 
     def check_missing(self, key=None, min_failures=1):
         """
@@ -726,7 +750,7 @@ class PerformanceMonitoring(object):
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
 
-    def custom_stationary(self, quality_control_func, post_process_func=None, 
+    def custom_stationary(self, quality_control_func, key=None, min_failures=1,
                            error_message=None):
         """
         Use custom functions that operate on the entire dataset at once to 
@@ -736,96 +760,96 @@ class PerformanceMonitoring(object):
         ----------
         quality_control_func : function
             Function that operates on self.df and returns a mask and metadata
-        post_process_func : function
-            Function that operates on mask and returns a mask
-        error_message : str (optional)
+        
+        key : string, optional
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
+
+        min_failures : int, optional
+            Minimum number of consecutive failures required for reporting,
+            default = 1
+            
+        error_message : str, optional
             Error message
         """
-        # Function that operates on the entire dataset and returns a mask for the 
-        # entire dataset
+        
+        df = self._setup_data(key)
+        if df is None:
+            return
+        
+        # Function that operates on the entire dataset and returns a mask and
+        # metadata for the entire dataset
         mask, metadata = quality_control_func(self.df) 
         
         # Function that modifies the mask
-        if post_process_func is not None:
-            mask = post_process_func(mask)
+        #if post_process_func is not None:
+        #    mask = post_process_func(mask)
         
-        self._append_test_results(~mask, error_message)
+        self._append_test_results(~mask, error_message, min_failures)
         
         return metadata
     
-    def custom_moving_window(self, quality_control_func, window, history=None, post_process_func=None, 
-                                  return_history_t = None, error_message=None):
+    def custom_streaming(self, quality_control_func, window, rebase=0.5, key=None, 
+                         error_message=None):
         """
-        Use custom functions that cycle through data using a moving window 
-        to perform quality control analysis
+        Check for anomolous data using a streaming mechanism which removes 
+        anomolous data from the history after each timestamp.  A custom quality 
+        control function is supplied by the user to determine if the data is anomolous.
 
         Parameters
         ----------
         quality_control_func : function
             Function that determines if the last data point is normal or anomalous.
             Returns a mask and metadata for the last data point.
-        post_process_func : function
-            Function that operates on mask and returns a mask
+        
+        window : int or float
+            Size of the rolling window (in seconds) used to define history
+            If window is set to None, data is normalized using
+            the entire data sets mean and standard deviation (column by column).
+        
+        rebase : int or float
+            Value between 0 and 1 that indicates the fraction of 
+            
+        key : string, optional
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
 
-        error_message : str (optional)
+        error_message : str, optional
             Error message
         """
-        count = 0
-        history_window = history.index[-1] - history.index[0]
-        
-        mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
+
         metadata = {} 
+        history_window = datetime.timedelta(seconds=window)
+        history = self.df.loc[self.df.index[0]:self.df.index[0]+datetime.timedelta(seconds=window),:]
+        tidx = self.df.index[history.shape[0]:-1]
         
-        if history is None:
-            history = self.df.loc[self.df.index[0]:self.df.index[0]+datetime.timedelta(seconds=window),:]
-            print(history)
-            tidx = self.df.index[history.shape[0]:-1]
-        else:
-            tidx = self.df.index
-            
+        # The mask must be the same size as data, which includes history
+        mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
+        
         for t in tidx:
             # Current data point
-            data_t = self.df.loc[t,:]
-
-            # Function that operates on data at time t and returns a mask for time t
-            mask.loc[t,:], metadata[t] = quality_control_func(data_t, history)
+            data_t = history.append(self.df.loc[t,:])
+            
+            # Function that operates on data (with history) and returns a mask
+            # and metadata for data at time t
+            mask.loc[t,:], metadata[t] = quality_control_func(data_t)
             
             history = history.append(self.df.loc[t,mask.loc[t,:]])
             history = history.loc[t-history_window:t,:]
             
             # rebase
-            rebase = history.loc[:,history.isna().sum()/history.shape[0] > 0.5]
-            if rebase.shape[1] > 0:
-                columns = rebase.columns.to_list()
+            check_rebase = history.loc[:,history.isna().sum()/history.shape[0] > rebase]
+            if check_rebase.shape[1] > 0:
+                columns = check_rebase.columns.to_list()
                 history.loc[t, columns] = self.df.loc[t, columns]
-                #mask.loc[t,columns] = True
-                
-                #index_start = max(self.df.index[0], history.index[0])
-                #index_end = history.index[-1]
-                #columns = rebase.columns.to_list()
-                #history.loc[index_start:index_end, columns] = self.df.loc[index_start:index_end, columns]
 
-            #if mask.loc[t,:].sum() == mask.shape[1]:
-            #    history = history.append(self.df.loc[t,:])
-            #    history = history.iloc[1::,:]
-                
-            if t >= return_history_t and count == 0:
-                return_history = history.copy()
-                count = count + 1
-                
             # Function that modifies the mask
-            if post_process_func is not None:
-                mask = post_process_func(mask)
+            #if post_process_func is not None:
+            #    mask = post_process_func(mask)
         
         self._append_test_results(~mask, error_message)
         
-        if count == 0:
-            return_history = history
-        
-        #history.reindex(self.df.index).plot(legend=False)
-        
-        return metadata, return_history
-    
+        return metadata
 
 ### Functional approach
 @_documented_by(PerformanceMonitoring.check_timestamp)
