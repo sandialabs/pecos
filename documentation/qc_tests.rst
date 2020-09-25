@@ -232,15 +232,15 @@ The custom quality control function takes the general form:
 
 .. doctest::
 
-    >>> def custom_qc_function(data):
-    >>>    ... 
-    >>>    return mask, metadata
+    >>> def custom_qc_function(data): # doctest: +SKIP
+    >>>    ... 						  # doctest: +SKIP
+    >>>    return mask, metadata      # doctest: +SKIP
 	
 The custom function is then used as an input argument to the custom quality control methods, for example:
 
 .. doctest::
 
-    >>> pm.custom_static(custom_qc_function)
+    >>> pm.custom_static(custom_qc_function) # doctest: +SKIP
 
 For static analysis:
 
