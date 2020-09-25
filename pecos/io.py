@@ -41,10 +41,10 @@ def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
     filename : string
         File name
 
-    index_col : string (optional)
+    index_col : string, optional
         Index column name, default = 'TIMESTAMP'
 
-    encoding : string (optional)
+    encoding : string, optional
         Character encoding (i.e. utf-16)
     
     Returns
@@ -93,16 +93,16 @@ def send_email(subject, body, recipient, sender, attachment=None,
     sender : string
         Sender email address
         
-    attachment : string (optional)
+    attachment : string, optional
         Name of file to attach
         
-    host : string (optional)
+    host : string, optional
         Name of email host (or host:port), default = 'localhost'
     
-    username : string (optional)
+    username : string, optional
         Email username for authentication
     
-    password : string (optional)
+    password : string, optional
         Email password for authentication
     """
     
@@ -153,7 +153,7 @@ def write_metrics(metrics, filename='metrics.csv'):
     metrics : pandas DataFrame
         Data to add to the metrics file
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'metrics.csv'
     
@@ -192,7 +192,7 @@ def write_test_results(test_results, filename='test_results.csv'):
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'test_results.csv'
     
@@ -236,38 +236,38 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
         
-    test_results_graphics : list of strings (optional)
+    test_results_graphics : list of strings, optional
         Graphics files, with full path.  These graphics highlight data points 
         that failed a quality control test, created using pecos.graphics.plot_test_results()
         
-    custom_graphics : list of strings (optional)
+    custom_graphics : list of strings, optional
         Custom files, with full path.  Created by the user.
     
-    metrics : pandas Series or DataFrame (optional)
+    metrics : pandas Series or DataFrame, optional
         Performance metrics to add as a table to the monitoring report
     
-    title : string (optional)
+    title : string, optional
         Monitoring report title, default = 'Pecos Monitoring Report'
         
-    config : dictionary (optional)
+    config : dictionary, optional
         Configuration options, to be printed at the end of the report
     
-    logo : string (optional)
+    logo : string, optional
         Graphic to be added to the report header
     
-    im_width_test_results : float (optional)
+    im_width_test_results : float, optional
         Image width as a fraction of page size, for test results graphics, default = 1
     
-    im_width_custom : float (optional)
+    im_width_custom : float, optional
         Image width as a fraction of page size, for custom graphics, default = 1
         
-    im_width_logo: float (optional)
+    im_width_logo: float, optional
         Image width as a fraction of page size, for the logo, default = 1
         
-    encode : boolean (optional)
+    encode : boolean, optional
         Encode graphics in the html, default = False
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'monitoring_report.html'
         
@@ -406,25 +406,25 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
                 'table': df.to_html(), 
                 'link': {'Link to monitoring report': 'C:\\\\pecos\\\\results\\\\monitoring_report.html'}}
         
-    title : string (optional)
+    title : string, optional
         Dashboard title, default = 'Pecos Dashboard'
     
-    footnote : string (optional)
+    footnote : string, optional
         Text to be added to the end of the report
     
-    logo : string (optional)
+    logo : string, optional
         Graphic to be added to the report header
     
-    im_width : float (optional)
+    im_width : float, optional
         Image width in the HTML report, default = 250
         
-    datatables : boolean (optional)
+    datatables : boolean, optional
         Use datatables.net to format the dashboard, default = False.  See https://datatables.net/ for more information.
     
-    encode : boolean (optional)
+    encode : boolean, optional
         Encode graphics in the html, default = False
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'dashboard.html'
     
