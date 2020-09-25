@@ -477,9 +477,9 @@ def _html_template_monitoring_report(content, title, logo, im_width_test_results
         for im in content['test_results_graphics']:
             img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
             img_dic[im] = img_encode
-        for im in content['pecos_logo']:
-            img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
-            img_dic[im] = img_encode
+        im = content['pecos_logo']
+        img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
+        img_dic[im] = img_encode
 
     template = env.get_template('monitoring_report.html')
 
