@@ -13,7 +13,7 @@ NoneType = type(None)
 
 logger = logging.getLogger(__name__)
 
-def _documented_by(original):
+def _documented_by(original, include_metadata=False):
     def wrapper(target):
         docstring = original.__doc__
         old = """
@@ -27,7 +27,16 @@ def _documented_by(original):
             Data used in the quality control test, indexed by datetime
             
         """
-        new_docstring = docstring.replace(old, new) + \
+        if include_metadata:
+           new_docstring = docstring.replace(old, new) + \
+        """   
+        Returns    
+        ----------
+        dictionary
+            Results include cleaned data, mask, test results summary, and metadata
+        """
+        else:
+            new_docstring = docstring.replace(old, new) + \
         """   
         Returns    
         ----------
@@ -54,16 +63,18 @@ class PerformanceMonitoring(object):
                                                 'Timesteps', 'Error Flag'])
 
     @property
+    def data(self):
+        """
+        Data used in quality control analysis, added to the PerformanceMonitoring
+        object using ``add_dataframe``.
+        """
+        return self.df
+    
+    @property
     def mask(self):
         """
-        Boolean mask indicating data that failed a quality control test
-
-        Returns
-        --------
-        pandas DataFrame
-            Boolean values for each data point,
-            True = data point pass all tests,
-            False = data point did not pass at least one test (or data is NaN).
+        Boolean mask indicating if data that failed a quality control test. 
+        True = data point pass all tests, False = data point did not pass at least one test.
         """
         if self.df.empty:
             logger.info("Empty database")
@@ -89,15 +100,10 @@ class PerformanceMonitoring(object):
     @property
     def cleaned_data(self):
         """
-        Cleaned data set
-        
-        Returns
-        --------
-        pandas DataFrame
-            Cleaned data set, data that failed a quality control test are
-            replaced by NaN
+        Cleaned data set, data that failed a quality control test are replaced by NaN.
         """
         return self.df[self.mask]
+    
 
     def _setup_data(self, key):
         """
@@ -149,15 +155,15 @@ class PerformanceMonitoring(object):
         error_msg : string
             Error message to store with the QC results
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
 
-        use_mask_only : boolean  (optional)
+        use_mask_only : boolean, optional
             When True, the mask is used directly to determine test
             results and the variable name is not included in the
             test_results. When False, the mask is used in combination with
-            pm.df to extract test results. Default = False
+            pm.data to extract test results. Default = False
         """
         if not self.tfilter.empty:
             mask[~self.tfilter] = False
@@ -286,19 +292,19 @@ class PerformanceMonitoring(object):
         frequency : int or float
             Expected time series frequency, in seconds
 
-        expected_start_time : Timestamp (optional)
+        expected_start_time : Timestamp, optional
             Expected start time. If not specified, the minimum timestamp
             is used
 
-        expected_end_time : Timestamp (optional)
+        expected_end_time : Timestamp, optional
             Expected end time. If not specified, the maximum timestamp
             is used
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for
             reporting, default = 1
 
-        exact_times : bool (optional)
+        exact_times : bool, optional
             Controls how missing times are checked.
             If True, times are expected to occur at regular intervals
             (specified in frequency) and the DataFrame is reindexed to match
@@ -394,11 +400,11 @@ class PerformanceMonitoring(object):
             [lower bound, upper bound], None can be used in place of a lower
             or upper bound
 
-        key : string (optional)
+        key : string, optional
             Data column name or translation dictionary key.  If not specified, 
             all columns are used in the test.
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
@@ -427,17 +433,17 @@ class PerformanceMonitoring(object):
             [lower bound, upper bound], None can be used in place of a lower
             or upper bound
 
-        key : string (optional)
+        key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        increment : int (optional)
+        increment : int, optional
             Time step shift used to compute difference, default = 1
 
-        absolute_value : boolean (optional)
+        absolute_value : boolean, optional
             Use the absolute value of the increment data, default = True
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
@@ -471,7 +477,7 @@ class PerformanceMonitoring(object):
         self._generate_test_results(df, bound, min_failures, error_prefix)
     
 
-    def check_delta(self, bound, key=None, window=3600,  direction=None, 
+    def check_delta(self, bound, window, key=None,  direction=None, 
                     min_failures=1):
         """
         Check for stagnant data and/or abrupt changes in the data using the 
@@ -483,15 +489,14 @@ class PerformanceMonitoring(object):
             [lower bound, upper bound], None can be used in place of a lower
             or upper bound
 
-        key : string (optional)
+        window : int or float
+            Size of the rolling window (in seconds) used to compute delta
+            
+        key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        window : int or float (optional)
-            Size of the rolling window (in seconds) used to compute delta,
-            default = 3600
-
-        direction : str (optional)
+        direction : str, optional
             Options = 'positive', 'negative', or None
             
             * If direction is positive, then only identify positive deltas 
@@ -501,7 +506,7 @@ class PerformanceMonitoring(object):
             * If direction is None, then identify both positive and negative 
               deltas
             
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
@@ -596,8 +601,8 @@ class PerformanceMonitoring(object):
             self._append_test_results(mask, error_msg, min_failures)
 
 
-    def check_outlier(self, bound, key=None, window=3600, absolute_value=True, 
-                      streaming=False, min_failures=1):
+    def check_outlier(self, bound, key=None, window=None, absolute_value=True, 
+                      min_failures=1, streaming=False):
         """
         Check for outliers using normalized data within a rolling window
         
@@ -610,21 +615,26 @@ class PerformanceMonitoring(object):
             [lower bound, upper bound], None can be used in place of a lower
             or upper bound
 
-        key : string (optional)
+        key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        window : int or float (optional)
+        window : int or float, optional
             Size of the rolling window (in seconds) used to normalize data,
-            default = 3600.  If window is set to None, data is normalized using
+            If window is set to None, data is normalized using
             the entire data sets mean and standard deviation (column by column).
+            default = None.
 
-        absolute_value : boolean (optional)
+        absolute_value : boolean, optional
             Use the absolute value the normalized data, default = True
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
+            
+        streaming : boolean, optional
+            Indicates if streaming analysis should be used, default = False
+            
         """
         assert isinstance(bound, list), 'bound must be of type list'
         assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
@@ -690,11 +700,11 @@ class PerformanceMonitoring(object):
 
         Parameters
         ----------
-        key : string (optional)
+        key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
@@ -727,11 +737,11 @@ class PerformanceMonitoring(object):
         corrupt_values : list of int or floats
             List of corrupt data values
 
-        key : string (optional)
+        key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
 
-        min_failures : int (optional)
+        min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
         """
@@ -753,7 +763,7 @@ class PerformanceMonitoring(object):
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
 
-    def custom_stationary(self, quality_control_func, key=None, min_failures=1,
+    def custom_static(self, quality_control_func, key=None, min_failures=1,
                            error_message=None):
         """
         Use custom functions that operate on the entire dataset at once to 
@@ -792,10 +802,10 @@ class PerformanceMonitoring(object):
         
         return metadata
     
-    def custom_streaming(self, quality_control_func, window, rebase=0.5, key=None, 
+    def custom_streaming(self, quality_control_func, window, rebase=None, key=None, 
                          error_message=None):
         """
-        Check for anomolous data using a streaming mechanism which removes 
+        Check for anomolous data using a streaming framework which removes 
         anomolous data from the history after each timestamp.  A custom quality 
         control function is supplied by the user to determine if the data is anomolous.
 
@@ -810,8 +820,9 @@ class PerformanceMonitoring(object):
             If window is set to None, data is normalized using
             the entire data sets mean and standard deviation (column by column).
         
-        rebase : int or float
+        rebase : int, float, or None
             Value between 0 and 1 that indicates the fraction of 
+            default = None.
             
         key : string, optional
             Data column name or translation dictionary key. If not specified, 
@@ -841,10 +852,11 @@ class PerformanceMonitoring(object):
             history = history.loc[t-history_window:t,:]
             
             # rebase
-            check_rebase = history.loc[:,history.isna().sum()/history.shape[0] > rebase]
-            if check_rebase.shape[1] > 0:
-                columns = check_rebase.columns.to_list()
-                history.loc[t, columns] = self.df.loc[t, columns]
+            if rebase is not None:
+                check_rebase = history.loc[:,history.isna().sum()/history.shape[0] > rebase]
+                if check_rebase.shape[1] > 0:
+                    columns = check_rebase.columns.to_list()
+                    history.loc[t, columns] = self.df.loc[t, columns]
 
             # Function that modifies the mask
             #if post_process_func is not None:
@@ -865,7 +877,7 @@ def check_timestamp(data, frequency, expected_start_time=None,
                        min_failures, exact_times)
     mask = pm.mask
 
-    return {'cleaned_data': pm.df, 'mask': mask, 'test_results': pm.test_results}
+    return {'cleaned_data': pm.data, 'mask': mask, 'test_results': pm.test_results}
 
 
 @_documented_by(PerformanceMonitoring.check_range)
@@ -892,23 +904,23 @@ def check_increment(data, bound, key=None, increment=1, absolute_value=True,
 
 
 @_documented_by(PerformanceMonitoring.check_delta)
-def check_delta(data, bound, key=None, window=3600, direction=None, min_failures=1):
+def check_delta(data, bound, window, key=None, direction=None, min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_delta(bound, key, window, direction, min_failures)
+    pm.check_delta(bound, window, key, direction, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
 
 @_documented_by(PerformanceMonitoring.check_outlier)
-def check_outlier(data, bound, key=None, window=3600, absolute_value=True, 
-                  min_failures=1):
+def check_outlier(data, bound, key=None, window=None, absolute_value=True, 
+                  min_failures=1, streaming=False):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_outlier(bound, key, window, absolute_value, min_failures)
+    pm.check_outlier(bound, key, window, absolute_value, min_failures, streaming)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
@@ -934,3 +946,27 @@ def check_corrupt(data, corrupt_values, key=None, min_failures=1):
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
+
+@_documented_by(PerformanceMonitoring.custom_static, include_metadata=True)
+def custom_static(data, quality_control_func, key=None, min_failures=1,
+                           error_message=None):
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+    metadata = pm.custom_static(quality_control_func, key, min_failures, error_message)
+    mask = pm.mask
+
+    return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results,
+            'metadata': metadata}
+
+@_documented_by(PerformanceMonitoring.custom_streaming, include_metadata=True)
+def custom_streaming(data, quality_control_func, window, rebase=None, key=None, 
+                         error_message=None):
+
+    pm = PerformanceMonitoring()
+    pm.add_dataframe(data)
+    metadata = pm.custom_streaming(quality_control_func, window, rebase, key, error_message)
+    mask = pm.mask
+
+    return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results,
+            'metadata': metadata}

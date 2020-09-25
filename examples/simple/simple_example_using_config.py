@@ -42,7 +42,7 @@ pm.check_corrupt(config['Corrupt'])
 specs = config['Specifications']
 for composite_signal in config['Composite Signals']:
     for key, value in composite_signal.items():
-        signal = pecos.utils.evaluate_string(value, pm.df, pm.trans, specs, key)
+        signal = pecos.utils.evaluate_string(value, pm.data, pm.trans, specs, key)
         pm.add_dataframe(signal)
         pm.add_translation_dictionary({key: list(signal.columns)})
 
@@ -52,7 +52,7 @@ for key,value in config['Range'].items():
 
 # Check for stagnant data within a 1 hour moving window
 for key,value in config['Delta'].items():
-    pm.check_delta(value, key, 3600) 
+    pm.check_delta(value, 3600, key) 
 
 # Check for abrupt changes between consecutive time steps
 for key,value in config['Increment'].items():
@@ -63,11 +63,11 @@ mask = pm.mask[['A','B','C','D']]
 QCI = pecos.metrics.qci(mask, pm.tfilter)
 
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
+test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results)
 df.plot(ylim=[-1.5,1.5], figsize=(7.0,3.5))
 plt.savefig('custom.png', format='png', dpi=500)
 
 # Write test results and report files
 pecos.io.write_test_results(pm.test_results)
-pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+pecos.io.write_monitoring_report(pm.data, pm.test_results, test_results_graphics, 
                                  ['custom.png'], QCI)

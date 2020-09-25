@@ -38,11 +38,11 @@ pm.check_range([0.5,1])
 pm.check_increment([-0.5, None], absolute_value=False)  
 
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
+test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results)
 df.plot(ylim=[-0.2,1.2], figsize=(10.0,4.0))
 plt.savefig('custom.png', format='png', dpi=500)
 
 # Write test results and report files
 pecos.io.write_test_results(pm.test_results)
-pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+pecos.io.write_monitoring_report(pm.data, pm.test_results, test_results_graphics, 
                                  ['custom.png'], title='System1 2015')

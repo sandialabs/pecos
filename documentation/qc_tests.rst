@@ -25,7 +25,7 @@ duplicate, and non-monotonic indexes.  If a duplicate timestamp is found, Pecos 
 If timestamps are not monotonic, the timestamps are reordered.
 For this reason, the timestamp should be corrected before other quality control
 tests are run.
-**The timestamp test is the only test that modifies the data stored in pm.df.**
+**The timestamp test is the only test that modifies the data stored in pm.data.**
 Input includes:
 
 * Expected frequency of the time series in seconds
@@ -130,9 +130,9 @@ Input includes:
 
 * Upper and lower bound
 
-* Data column (default = None, which indicates that all columns are used)
+* Size of the moving window used to compute the difference between the minimum and maximum
 
-* Size of the moving window used to compute the difference between the minimum and maximum (default = 3600 seconds)
+* Data column (default = None, which indicates that all columns are used)
 
 * Flag indicating if the test should only check for positive delta (the min occurs before the max) or negative delta (the max occurs before the min) (default = False)
 
@@ -200,7 +200,7 @@ Input includes:
 
 * Data column (default = None, which indicates that all columns are used)
 
-* Size of the moving window used to normalize the data (default = 3600 seconds)
+* Size of the moving window used to normalize the data (default = None). Note that when the window is set to None, the mean and standard deviation of the entire data set is used to normalize the data.
 
 * Flag indicating if the absolute value of the normalize data is used in the test (default = True)
 

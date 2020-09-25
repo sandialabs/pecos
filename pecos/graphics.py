@@ -420,7 +420,7 @@ def plot_test_results(data, test_results, tfilter=None, image_format='png',
     Parameters
     ----------
     data : pandas DataFrame
-        Data, indexed by time (pm.df)
+        Data, indexed by time (pm.data)
         
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)

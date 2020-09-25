@@ -43,7 +43,7 @@ the PerformanceMonitoring object.
 	
 .. doctest::
 
-    >>> clocktime = pecos.utils.datetime_to_clocktime(pm.df.index)
+    >>> clocktime = pecos.utils.datetime_to_clocktime(pm.data.index)
     >>> wave_model = pd.DataFrame(np.sin(10*(clocktime/86400)), 
-    ...                           index=pm.df.index, columns=['Wave Model'])
+    ...                           index=pm.data.index, columns=['Wave Model'])
     >>> pm.add_dataframe(wave_model)

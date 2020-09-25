@@ -51,7 +51,7 @@ Inside Pecos, the translation dictionary is used to index into the DataFrame, fo
 
 .. doctest::
 
-    >>> pm.df[pm.trans['Wave']] #doctest:+SKIP 
+    >>> pm.data[pm.trans['Wave']] #doctest:+SKIP 
 
 returns columns 'C' and 'D' from the DataFrame.
 

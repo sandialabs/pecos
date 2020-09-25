@@ -50,10 +50,10 @@ for location_name in locations:
         pm.check_timestamp(specs['Frequency']) 
         
         # Generate a time filter
-        clock_time = pecos.utils.datetime_to_clocktime(pm.df.index)
+        clock_time = pecos.utils.datetime_to_clocktime(pm.data.index)
         time_filter = pd.Series((clock_time > specs['Time Filter Min']*3600) & \
                                 (clock_time < specs['Time Filter Max']*3600),
-                                index=pm.df.index)
+                                index=pm.data.index)
         pm.add_time_filter(time_filter)
         
         # Check missing
@@ -77,14 +77,14 @@ for location_name in locations:
         report_file =  os.path.join(results_subdirectory, 'monitoring_report.html')
         
         # Generate graphics
-        test_results_graphics = pecos.graphics.plot_test_results(pm.df, 
+        test_results_graphics = pecos.graphics.plot_test_results(pm.data, 
                                         pm.test_results, filename_root=graphics_file_rootname)
         df.plot()
         plt.savefig(custom_graphics_file, format='png', dpi=500)
 
         # Write test results and report files
         pecos.io.write_test_results(pm.test_results, test_results_file)
-        pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+        pecos.io.write_monitoring_report(pm.data, pm.test_results, test_results_graphics, 
                                          [custom_graphics_file], QCI, filename=report_file)
         
         # Store content to be displayed in the dashboard

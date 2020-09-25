@@ -52,9 +52,9 @@ def simple_example_run_analysis(df):
     pm.check_range([None, 0.25], 'Wave Error')
     
     # Check for stagnant data within a 1 hour moving window
-    pm.check_delta([0.0001, None], 'A', 3600) 
-    pm.check_delta([0.0001, None], 'B', 3600) 
-    pm.check_delta([0.0001, None], 'Wave', 3600) 
+    pm.check_delta([0.0001, None], 3600, 'A') 
+    pm.check_delta([0.0001, None], 3600, 'B') 
+    pm.check_delta([0.0001, None], 3600, 'Wave') 
         
     # Check for abrupt changes between consecutive time steps
     pm.check_increment([None, 0.6], 'Wave') 
@@ -221,8 +221,8 @@ class Test_simple_example(unittest.TestCase):
         
         # Object-oriented test
         self.pm.check_corrupt([-999])
-        self.pm.check_delta([0.0001, None], window=2*3600)
-        self.pm.check_delta([None, 0.6], 'Wave', window=900)
+        self.pm.check_delta([0.0001, None], 2*3600)
+        self.pm.check_delta([None, 0.6], 900, 'Wave')
         test_results = self.pm.test_results[['Delta' in ef for ef in self.pm.test_results['Error Flag']]]
         
         #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_check_delta')

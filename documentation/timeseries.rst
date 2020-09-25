@@ -44,7 +44,7 @@ The data is accessed using
 
 .. doctest::
 
-    >>> pm.df #doctest:+SKIP 
+    >>> pm.data #doctest:+SKIP 
 
 Multiple DataFrames can be added to the PerformanceMonitoring object.  
 New data overrides existing data if DataFrames share indexes and columns.  
@@ -80,7 +80,7 @@ Missing indexes and columns are filled with NaN.  An example is shown below.
 	
     >>> pm.add_dataframe(data1)
     >>> pm.add_dataframe(data2)
-    >>> print(pm.df)
+    >>> print(pm.data)
                   A    B    C
     2018-01-01  0.0  5.0  NaN
     2018-01-02  1.0  0.0  5.0

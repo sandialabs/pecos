@@ -231,7 +231,7 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     Parameters
     ----------
     data : pandas DataFrame
-        Data, indexed by time (pm.df)
+        Data, indexed by time (pm.data)
         
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
