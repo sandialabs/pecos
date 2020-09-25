@@ -4,7 +4,7 @@ Time series data
 Pecos uses Pandas DataFrames to store and analyze data indexed by time. 
 Pandas DataFrames store 2D data with labeled columns.  Pandas includes a wide range of 
 time series analysis and date-time functionality.  By using Pandas DataFrames, 
-Pecos is able to take advantage of a wide range of timestamp strings, including
+Pecos is able to take advantage of a wide range of timestamp string formats, including
 UTC offset. 
 
 Pandas includes many built-in functions to read data from CSV, Excel, SQL, etc.
@@ -27,7 +27,7 @@ To get started, create an instance of the :class:`~pecos.monitoring.PerformanceM
     >>> import pecos
     >>> pm = pecos.monitoring.PerformanceMonitoring()
 
-Data, in the form of a Pandas Dataframe, can then be added to the PerformanceMonitoring object.
+Data, in the form of a Pandas DataFrame, can then be added to the PerformanceMonitoring object.
 
 .. doctest::
     :hide:

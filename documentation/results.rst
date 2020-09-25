@@ -3,8 +3,10 @@
 Results
 ==========
 
-Pecos can be used to collect quality control test results and performance 
-metrics, and generate HTML reports and dashboards.
+Analysis run using Pecos results in a collection of 
+quality control test results,
+quality control mask, cleaned data, and performance 
+metrics.  This information can be used to generate HTML/LaTeX reports and dashboards.
 
 Quality control test results
 ------------------------------
@@ -145,17 +147,18 @@ The metrics_file.csv file will contain::
 Monitoring reports
 -------------------------------
 
-The :class:`~pecos.io.write_monitoring_report` method is used to generate a HTML monitoring report.
-The monitoring report includes the start and end time for analysis, custom graphics 
+The :class:`~pecos.io.write_monitoring_report` method is used to generate a HTML or LaTeX formatted monitoring report.
+The monitoring report includes the start and end time for the data that was analyzed, custom graphics 
 and performance metrics, a table that includes test results, graphics associated 
 with the test results (highlighting data points that failed a quality control tests), 
 notes on runtime errors and warnings, and the configuration options 
 used in the analysis.
 
 * **Custom Graphics:**
-  Custom graphics can be created for specific applications.  These graphics 
-  are included at the top of the report.
-  Custom graphics can be generated using methods in the :class:`~pecos.graphics` module.
+  Custom graphics are created by the user for their specific application.  
+  Custom graphics can also be generated using methods in the :class:`~pecos.graphics` module.
+  These graphics are included at the top of the report.
+  
 
 * **Performance Metrics:**
   Performance metrics are displayed in a table.
@@ -166,7 +169,7 @@ used in the analysis.
   Test results graphics are generated using the :class:`~pecos.graphics.plot_test_results` method.
   
 * **Notes:**
-  Notes include Pecos runtime errors and warnings.  Notes include:
+  Notes include Pecos runtime errors and warnings. Notes include:
   
   * Empty/missing data
   * Formatting error in the translation dictionary
@@ -206,7 +209,7 @@ For each row and column in the dashboard, the following information can be speci
 
 * Links (i.e. the path to a monitoring report or other file/site for additional information)
 
-Text, graphics, tables, and links can be combined to create custom dashboards.
+The user defined text, graphics, tables, and links create custom dashboards.
 Pecos includes dashboard examples in the `examples/dashboard <https://github.com/sandialabs/pecos/tree/master/examples/dashboard>`_ directory. 
 :numref:`fig-dashboard1`, :numref:`fig-dashboard2`, and  :numref:`fig-dashboard3` show example dashboards generated using Pecos.
 
@@ -255,10 +258,10 @@ These graphics can be included in :ref:`monitoring_reports`.
    Example test results graphic.
 
 Day-of-year vs. time-of-day heatmaps, generated using :class:`~pecos.graphics.plot_doy_heatmap`, 
-can help identify missing data, trends, define filters and define quality control test thresholds when working with large data sets.
+help identify missing data, trends, define filters and define quality control test thresholds when working with large data sets.
 The following figure shows irradiance over a year with the time of sunrise and sunset for each day.
 The white vertical line indicates one day of missing data.
-The method :class:`~pecos.graphics.plot_heatmap` can be used to create simple heatmaps.
+The method :class:`~pecos.graphics.plot_heatmap` creates a simple heatmaps.
 These plots can be included as custom graphics in :ref:`monitoring_reports` and :ref:`dashboards`.
 
 .. _fig-doy-heatmap:

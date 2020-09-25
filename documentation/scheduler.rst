@@ -13,4 +13,4 @@ written to start a Python script which runs Pecos.
 For example, the following batch file runs driver.py::
 
 	cd your_working_directory
-	C:\Python27\python.exe driver.py
+	C:\Users\username\Anaconda3\python.exe driver.py

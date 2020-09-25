@@ -1,7 +1,7 @@
 Installation
 ======================================
 
-Pecos requires Python (tested on 3.6 and 3.7) along with several Python 
+Pecos requires Python (tested on 3.6, 3.7, and 3.8) along with several Python 
 package dependencies.  Information on installing and using Python can be found at 
 https://www.python.org/.  Python distributions, such as Anaconda,
 are recommended to manage the Python interface.  
@@ -28,7 +28,7 @@ The software can then be installed by unzipping the file and running setup.py::
 	unzip pecos-master.zip
 	cd pecos-master
 	python setup.py install
-		
+	
 Required Python package dependencies include:
 
 * Pandas [Mcki13]_: used to analyze and store time series data, 

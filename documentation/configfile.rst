@@ -22,8 +22,9 @@ For some use cases, it is convenient to use strings of Python code in
 a configuration file to define time filters, 
 quality control bounds, and composite signals.
 These strings can be evaluated using :class:`~pecos.utils.evaluate_string`.
-**WARNING this function calls ``eval``. Strings of Python code should be 
-thoroughly tested by the user.**
+**WARNING this function calls** 
+``eval`` 
+**. Strings of Python code should be thoroughly tested by the user.**
 
 For each {keyword} in the string, {keyword} is expanded in the following order:
     

@@ -9,15 +9,17 @@ and generate reports which include performance metrics, test results, and graphi
 The software can be customized for specific applications. 
 Some high-level features include:
 
-* Pecos uses Pandas DataFrames [Mcki13]_ for time series analysis.  This dependency 
+* Pecos uses Pandas DataFrames [Mcki13]_ to store and analyze time series data.  This dependency 
   facilitates a wide range of analysis options and date-time functionality.
 
-* Data columns can be easily reassigned to common names through the use of a
+* Data column names can be easily reassigned to common names through the use of a
   translation dictionary.  Translation dictionaries also allow data columns to
   be grouped for analysis.
 
 * Time filters can be used to eliminate data at specific times from quality 
   control tests (i.e. early evening and late afternoon).  
+
+* Predefined and custom quality control functions can be used to determine if data is anomalous.
 
 * Application specific models can be incorporated into quality control tests 
   to compare measured to modeled data values.
@@ -28,6 +30,6 @@ Some high-level features include:
 * Analysis can be set up to run on an automated schedule (i.e. Pecos can be 
   run each day to analyze data collected on the previous day). 
   
-* HTML formatted reports can be sent via email or hosted on a website.  
+* HTML formatted reports can be sent via email or hosted on a website.  LaTeX formatted reports can also be generated.
 
 * Data acquisition methods can be used to transfer data from sensors to an SQL database. 

@@ -4,7 +4,7 @@ Quality control tests
 Pecos includes several built in quality control tests.
 When a test fails, information is stored in a summary table.  This
 information can be saved to a file, database, or included in reports.
-Quality controls tests fall into seven categories:
+Quality controls tests fall into eight categories:
 
 * Timestamp
 * Missing data
@@ -13,6 +13,7 @@ Quality controls tests fall into seven categories:
 * Delta
 * Increment
 * Outlier
+* Custom
 
 .. note:: 
    Quality control tests can also be called using individual functions, see :ref:`software_framework` for more details.
@@ -205,6 +206,8 @@ Input includes:
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
+* Flag indicating if the outlier test should use streaming analysis (default=False). Note that this is different than merely defining a moving window, see :ref:`static_streaming` for more details.
+
 For example,
 
 .. doctest::
@@ -212,3 +215,43 @@ For example,
     >>> pm.check_outlier([None, 3], window=12*3600)
 
 checks if the normalized data changes by more than 3 standard deviations within a 12 hour moving window.
+
+.. _custom:
+
+Custom tests
+--------------
+The :class:`~pecos.monitoring.PerformanceMonitoring.custom_static` and :class:`~pecos.monitoring.PerformanceMonitoring.custom_streaming` methods
+allow the user to supply a custom function that is used to determine if data is normal or anomalous. 
+See :ref:`static_streaming` for more details.
+
+This feature allows the user to customize the analysis and return custom metadata from the analysis.  
+The custom function is defined outside of Pecos and handed to the custom quality control method as an input argument.  The allows the user to include analysis options that are not currently support in Pecos or are very specific to their application.
+While there are no specifications on what this metadata stores, the metadata commonly includes the raw values that were included in a quality control test.  For example, while the outlier test returns a boolean value that indicates if data is normal or anomalous, the metadata can include the normalized data value that was used to make that determination.
+
+The custom quality control function takes the general form:
+
+.. doctest::
+
+    >>> def custom_qc_function(data):
+    >>>    ... 
+    >>>    return mask, metadata
+	
+The custom function is then used as an input argument to the custom quality control methods, for example:
+
+.. doctest::
+
+    >>> pm.custom_static(custom_qc_function)
+
+For static analysis:
+
+* ``data`` is the entire dataset(pm.data)
+* ``mask`` is a boolean DataFrame of the same size as data
+* ``metadata`` stores additional information about the test (in any format) and is returned by :class:`~pecos.monitoring.PerformanceMonitoring.custom_static`  
+
+For stationary analysis:
+
+* ``data`` includes the current data point and cleaned history
+* ``mask`` is a boolean Series, having one value for each column in data
+* ``metadata`` stores additional information about the quality control test (in any format) for the current data point.  Metadata is collected into a dictionary with one entry per time index and ris eturned by :class:`~pecos.monitoring.PerformanceMonitoring.custom_streaming`  
+
+

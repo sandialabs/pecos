@@ -1,10 +1,10 @@
 Translation dictionary
 -----------------------
 A translation dictionary is an optional feature which allows the user to map original 
-column names into common names that can be more useful for analysis.  
+column names into common names that can be more useful for analysis and reporting. 
 A translation dictionary can also be used to group columns with similar 
 properties into a single variable.  
-Using grouped variables, Pecos can run a signal set of quality control tests on the group.
+Using grouped variables, Pecos can run a single set of quality control tests on the group.
 
 Each entry in a translation dictionary is a key:value pair where 
 'key' is the common name of the data and 'value' is a list of original column names in the DataFrame.  

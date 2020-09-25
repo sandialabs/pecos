@@ -3,11 +3,14 @@
 v0.1.9 (master)
 --------------------------
 
-* Added quality control tests that allow the user to supply a custom function.  The functionality includes a stationary and streaming framework.  
-   * The streaming framework that loops through the data using a moving window to determine if the each single data point is normal or anomalous.  If the data point is deemed anomalous it is omitted from the history and not used to determine the status of subsequent data points.  The outlier test can make use of the streaming framework.
-   * The stationary framework operates on the entire data set, and while it can include operations like moving windows, it does not update the history based on the test results.
+* Added quality control tests that allow the user to supply a custom function.  The functionality includes static and streaming analysis.  
+   * The streaming analysis that loops through the data using a moving window to determine if the each single data point is normal or anomalous.  If the data point is deemed anomalous it is omitted from the history and not used to determine the status of subsequent data points.  The outlier test can make use of streaming analysis.
+   * The static analysis operates on the entire data set, and while it can include operations like moving windows, it does not update the history based on the test results.
+   * Both options allow the user to return metadata that contains information about the quality control test.
 * Added the ability to create monitoring reports using a Latex template. 
+* The input argument window is no longer an optional input to cehck_delta
+* check_outlier, window default changed to None
 * Bug fix in the way masks are generated.  Data points that have Null values were always assigned to False, indicating 
   that a quality control test failed.  Null values are now assumed to be True, unless a specific test fails (e.g. check_missing).
 * Added Python 3.8 tests
-
+* Updated documentation and tests
