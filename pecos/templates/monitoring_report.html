@@ -13,7 +13,7 @@
 <tr>
 <td align="left" valign="center">
 {% if logo %}
-    <H2><img  src="{{ logo }}" alt='Logo' width="{{ im_width_logo }}%"> {{ title }}</H2>
+    <H2><img  src="{{ logo }}" alt='Logo' width="{{ im_width_logo }}"> {{ title }}</H2>
 {% else %}
     <H2>{{ title }}</H2>
 {% endif %}
@@ -32,9 +32,9 @@ Number of test failures: {{ content['num_test_results'] }} <br>
 
 {% for im in content['custom_graphics'] %}
     {% if encode %}
-        <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_custom }}%"><br>
+        <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_custom }}"><br>
     {% else %}
-        <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_custom }}%"><br>
+        <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_custom }}"><br>
     {% endif %}
 {% endfor %}
 
@@ -51,9 +51,9 @@ Number of test failures: {{ content['num_test_results'] }} <br>
 
     {% for im in content['test_results_graphics'] %}
         {% if encode %}
-            <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_test_results }}%"><br>
+            <img src="data:image/png;base64,{{ img_dic[im] }}" alt='Image not loaded' width="{{ im_width_test_results }}"><br>
         {% else %}
-            <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_test_results }}%"><br>
+            <img src="{{ im }}" alt="Image not loaded" width="{{ im_width_test_results }}"><br>
         {% endif %}
     {% endfor %}
 

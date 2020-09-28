@@ -220,7 +220,7 @@ def write_test_results(test_results, filename='test_results.csv'):
 def write_monitoring_report(data, test_results, test_results_graphics=[], 
                             custom_graphics=[], metrics=None, 
                             title='Pecos Monitoring Report', config={}, logo=False, 
-                            im_width_test_results=1, im_width_custom=1, im_width_logo=1,
+                            im_width_test_results=1, im_width_custom=1, im_width_logo=0.1,
                             encode=False, file_format='html',
                             filename='monitoring_report.html'):
     """
@@ -262,7 +262,7 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
         Image width as a fraction of page size, for custom graphics, default = 1
         
     im_width_logo: float, optional
-        Image width as a fraction of page size, for the logo, default = 1
+        Image width as a fraction of page size, for the logo, default = 0.1
         
     encode : boolean, optional
         Encode graphics in the html, default = False
@@ -334,9 +334,9 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
         content['test_results'] = test_results.to_html(justify='left')
         content['notes'] = notes_df.to_html(justify='left', header=False)
         
-        im_width_test_results = im_width_test_results*100
-        im_width_custom = im_width_custom*100
-        im_width_logo = im_width_logo*100
+        im_width_test_results = im_width_test_results*800
+        im_width_custom = im_width_custom*800
+        im_width_logo = im_width_logo*800
         
         file_string = _html_template_monitoring_report(content, title, logo, 
                             im_width_test_results, im_width_custom, im_width_logo, encode)
