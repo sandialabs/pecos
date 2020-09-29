@@ -39,8 +39,10 @@ The following code could be used as a Python driver that runs using a task sched
     >>> import datetime
     >>> import numpy as np
     >>> import os
-	
-    >>> os.remove('monitor.db')
+
+    >>> try: os.remove('monitor.db')
+	... except: pass
+
     >>> engine = create_engine('sqlite:///monitor.db', echo=False)
     >>> date = datetime.date.today()-datetime.timedelta(days=1)
     >>> N = 24*60

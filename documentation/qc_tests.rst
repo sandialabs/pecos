@@ -303,7 +303,8 @@ Input for custom streaming analysis includes:
           metadata : pandas Series
               Metadata stores additional information about the test for the current data point.
               Metadata generally contains one value for each column in pm.data. Metadata is 
-              collected into a pandas DataFrame with one row per time index and is returned 
+              collected into a pandas DataFrame with one row per time index that was included
+              in the quality control test (omits the history window) and is returned 
               by ''check_custom_streaming''.
           """
 		  
