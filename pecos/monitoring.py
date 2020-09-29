@@ -540,17 +540,17 @@ class PerformanceMonitoring(object):
             # the final results include actual data points that caused the failure.
             # This function uses numpy arrays to improve performance and returns
             # a mask DataFrame.
-            mask2 = np.zeros((len(mask1.index), len(mask1.columns)), dtype=bool)
+            mask2 = np.ones((len(mask1.index), len(mask1.columns)), dtype=bool)
             index = mask1.index
             # Loop over t, col in mask1 where condition is True
-            for t,col in list(mask1[mask1 > 0].stack().index):
+            for t,col in list(mask1[mask1 == 0].stack().index):
                 icol = mask1.columns.get_loc(col)
                 it = mask1.index.get_loc(t)
                 t1 = t-pd.Timedelta(window_str)
 
                 if (bound == 'lower') and (direction is None):
                     # set the entire time interval to True
-                    mask2[(index >= t1) & (index <= t),icol] = True
+                    mask2[(index >= t1) & (index <= t),icol] = False
                 
                 else: 
                     # extract the min and max time
@@ -560,20 +560,20 @@ class PerformanceMonitoring(object):
                     if bound == 'lower': # bound = upper, direction = positive or negative
                         # set the entire time interval to True
                         if (direction == 'positive') and (min_time <= max_time):
-                            mask2[(index >= t1) & (index <= t),icol] = True
+                            mask2[(index >= t1) & (index <= t),icol] = False
                         elif (direction == 'negative') and (min_time >= max_time):
-                            mask2[(index >= t1) & (index <= t),icol] = True
+                            mask2[(index >= t1) & (index <= t),icol] = False
                     
                     elif bound == 'upper': # bound = upper, direction = None, positive or negative
                         # set the initially flaged location to False
-                        mask2[it,icol] = False
+                        mask2[it,icol] = True
                         # set the time between max/min or min/max to true
                         if min_time < max_time and (direction is None or direction == 'positive'):
-                            mask2[(index >= min_time) & (index <= max_time),icol] = True
+                            mask2[(index >= min_time) & (index <= max_time),icol] = False
                         elif min_time > max_time and (direction is None or direction == 'negative'):
-                            mask2[(index >= max_time) & (index <= min_time),icol] = True
+                            mask2[(index >= max_time) & (index <= min_time),icol] = False
                         elif min_time == max_time:
-                            mask2[it,icol] = True
+                            mask2[it,icol] = False
                         
             mask2 = pd.DataFrame(mask2, columns=mask1.columns, index=mask1.index)
             return mask2
@@ -585,24 +585,23 @@ class PerformanceMonitoring(object):
         else:
             error_prefix = 'Delta'
         
-        ### mask is defined as False = pass, True = failed ###
         # Lower Bound
         if bound[0] not in none_list:
-            mask = (diff_df < bound[0])
+            mask = ~(diff_df < bound[0])
             error_msg = error_prefix+' < lower bound, '+str(bound[0])
             if not self.tfilter.empty:
-                mask[~self.tfilter] = False
+                mask[~self.tfilter] = True
             mask = update_mask(mask, df, window_str, 'lower', direction) 
-            self._append_test_results(~mask, error_msg, min_failures)
+            self._append_test_results(mask, error_msg, min_failures)
         
         # Upper Bound
         if bound[1] not in none_list:
-            mask = (diff_df > bound[1])
+            mask = ~(diff_df > bound[1])
             error_msg = error_prefix+' > upper bound, '+str(bound[1])
             if not self.tfilter.empty:
-                mask[~self.tfilter] = False
+                mask[~self.tfilter] = True
             mask = update_mask(mask, df, window_str, 'upper', direction) 
-            self._append_test_results(~mask, error_msg, min_failures)
+            self._append_test_results(mask, error_msg, min_failures)
 
 
     def check_outlier(self, bound, key=None, window=None, absolute_value=False, 
