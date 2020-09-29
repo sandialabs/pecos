@@ -1,7 +1,7 @@
 Custom applications
 ====================
 
-While Pecos was developed to monitor photovoltaic systems, it is designed to be used for a wide range of applications. Python facilitates a wide range of analysis options that can be incorporated into Pecos, including application specific models.  The software has been used to monitor energy systems in support of several Department of Energy projects, as described below.
+While Pecos was initially developed to monitor photovoltaic systems, it is designed to be used for a wide range of applications. The ability to run the analysis within the Python environment enables the use of diverse analysis options that can be incorporated into Pecos, including application specific models.  The software has been used to monitor energy systems in support of several Department of Energy projects, as described below.
 
 Photovoltaic systems
 ---------------------
