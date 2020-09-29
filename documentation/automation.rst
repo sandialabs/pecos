@@ -39,10 +39,10 @@ The following code could be used as a Python driver that runs using a task sched
     >>> import datetime
     >>> import numpy as np
     >>> import os
-
+    
     >>> try: os.remove('monitor.db')
-	... except: pass
-
+    ... except: pass
+    
     >>> engine = create_engine('sqlite:///monitor.db', echo=False)
     >>> date = datetime.date.today()-datetime.timedelta(days=1)
     >>> N = 24*60
@@ -51,13 +51,13 @@ The following code could be used as a Python driver that runs using a task sched
     >>> df1 = pd.DataFrame(df1, index=index)
     >>> df1.index.name = 'timestamp'
     >>> df1.to_sql('data', engine, dtype={'timestamp': DateTime(), 'A': Float(), 'B': Float()})
-
+    
     >>> index = pd.date_range(date-datetime.timedelta(days=1), periods=N, freq='Min')
     >>> df2 = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
     >>> df2 = pd.DataFrame(df2, index=index)
     >>> df2.index.name = 'timestamp'
     >>> df2.to_sql('qc_data', engine, dtype={'timestamp': DateTime(), 'A': Float(), 'B': Float()})
-
+    
     >>> #data1 = engine.execute("SELECT * FROM data").fetchall()
     >>> #history1 = engine.execute("SELECT * FROM qc_data").fetchall()
 
