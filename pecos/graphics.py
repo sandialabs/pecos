@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 try:
     import matplotlib.pyplot as plt
+    from matplotlib.dates import DateFormatter
 except:
     pass
 try:
@@ -21,7 +22,9 @@ try:
 except ImportError:
     def _nottest(afunction):
         return afunction
-        
+     
+NoneType = type(None)
+
 logger = logging.getLogger(__name__)
 
 def plot_scatter(x,y,xaxis_min=None, xaxis_max=None, yaxis_min=None, 
@@ -100,13 +103,13 @@ def plot_scatter(x,y,xaxis_min=None, xaxis_max=None, yaxis_min=None,
 
 def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None, 
                     xaxis_max=None, yaxis_min=None, yaxis_max=None, title=None,
-                    figsize=(7.0, 3.0)):
+                    figsize=(7.0, 3.0), date_formatter=None):
     """
     Create a time series plot using each column in the DataFrame.
     
     Parameters
     ----------
-    data : pandas DataFrame
+    data : pandas DataFrame or Series
         Data, indexed by time
         
     tfilter : pandas Series, optional
@@ -133,7 +136,13 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
     
     figsize : tuple, optional
         Figure size, default = (7.0, 3.0)
+        
+    date_formatter : string, optional
+        Date formatter used on the x axis, for example, "%m-%d".  Default = None
     """
+    
+    assert isinstance(data, (pd.Series, pd.DataFrame))
+    assert isinstance(tfilter, (NoneType, pd.Series))
     
     plt.figure(figsize = figsize)
     ax = plt.gca()
@@ -147,7 +156,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
             data.plot(ax=ax, linewidth=1, grid=False, legend=False, 
                       fontsize=8, rot=90, label='Data')
     
-        if tfilter is not None:
+        if isinstance(tfilter, pd.Series):
             # add tfilter        
             temp = np.where(tfilter - tfilter.shift())
             temp = np.append(temp[0],len(tfilter)-1)
@@ -243,6 +252,10 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
     plt.xlabel('Time', fontsize=8)
     box = ax.get_position()
     ax.set_position([box.x0, box.y0+0.15, box.width, box.height*0.75])
+    
+    if date_formatter is not None:
+        date_form = DateFormatter(date_formatter)
+        ax.xaxis.set_major_formatter(date_form)
 
 def plot_interactive_timeseries(data, xaxis_min=None, xaxis_max=None, yaxis_min=None, 
                  yaxis_max=None, title=None, filename=None, auto_open=True):
@@ -412,7 +425,8 @@ def plot_doy_heatmap(data, cmap='nipy_spectral', vmin=None, vmax=None,
     
 @_nottest
 def plot_test_results(data, test_results, tfilter=None, image_format='png', 
-                      dpi=500, figsize=(7.0,3.0), filename_root='test_results'):
+                      dpi=500, figsize=(7.0,3.0), date_formatter=None, 
+                      filename_root='test_results'):
     """
     Create test results graphics which highlight data points that
     failed a quality control test.
@@ -436,6 +450,9 @@ def plot_test_results(data, test_results, tfilter=None, image_format='png',
         
     figsize : tuple, optional
         Figure size, default = (7.0,3.0)
+    
+    date_formatter : string, optional
+        Date formatter used on the x axis, for example, "%m-%d".  Default = None
     
     filename_root : string, optional
         File name root. If the full path is not provided, files are saved into the 
@@ -475,8 +492,10 @@ def plot_test_results(data, test_results, tfilter=None, image_format='png',
     for col_name, test_results_group in grouped:
         logger.info("Creating graphic for " + col_name)
         
+            
         plot_timeseries(data[col_name], tfilter, 
-                        test_results_group=test_results_group, figsize=figsize)
+                        test_results_group=test_results_group, figsize=figsize,
+                        date_formatter=date_formatter)
 
         ax = plt.gca()
         box = ax.get_position()
