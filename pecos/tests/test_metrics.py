@@ -1,5 +1,5 @@
 from nose.tools import *
-from pandas.util.testing import assert_frame_equal
+from pandas.testing import assert_frame_equal
 from os.path import abspath, dirname, join
 import pecos
 import numpy as np
