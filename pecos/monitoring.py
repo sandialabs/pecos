@@ -133,13 +133,13 @@ class PerformanceMonitoring(object):
         
         # Lower Bound
         if bound[0] not in none_list:
-            mask = (df < bound[0])
+            mask = ~(df < bound[0]) # True = passed test
             error_msg = error_prefix+' < lower bound, '+str(bound[0])
             self._append_test_results(mask, error_msg, min_failures)
 
         # Upper Bound
         if bound[1] not in none_list:
-            mask = (df > bound[1])
+            mask = ~(df > bound[1]) # True = passed test
             error_msg = error_prefix+' > upper bound, '+str(bound[1])
             self._append_test_results(mask, error_msg, min_failures)
 
@@ -165,11 +165,11 @@ class PerformanceMonitoring(object):
             test_results. When False, the mask is used in combination with
             pm.data to extract test results. Default = False
         """
+        
         if not self.tfilter.empty:
-            mask[~self.tfilter] = False
-            #mask[self.tfilter.columns].mask(~self.tfilter,False)
+            mask[~self.tfilter] = True
             
-        if mask.sum(axis=1).sum(axis=0) == 0:
+        if mask.sum(axis=1).sum(axis=0) == mask.shape[0]*mask.shape[1]:
             return
 
         if use_mask_only:
@@ -182,7 +182,7 @@ class PerformanceMonitoring(object):
         if order == 'col':
             mask = mask.T
 
-        np_mask = mask.values
+        np_mask = ~mask.values # convert to a np array and reverse True/False values
 
         start_nans_mask = np.hstack(
             (np.resize(np_mask[:,0],(mask.shape[0],1)),
@@ -273,6 +273,8 @@ class PerformanceMonitoring(object):
         ----------
         time_filter : pandas DataFrame with a single column or pandas Series
             Time filter containing boolean values for each time index
+            True = keep time index in the quality control results.
+            False = remove time index from the quality control results.
         """
         assert isinstance(time_filter, (pd.Series, pd.DataFrame)), 'time_filter must be of type pd.Series or pd.DataFrame'
         
@@ -335,9 +337,9 @@ class PerformanceMonitoring(object):
 
         # Check to see if timestamp is monotonic
 #        mask = pd.TimeSeries(self.df.index).diff() < 0
-        mask = pd.Series(self.df.index).diff() < pd.Timedelta('0 days 00:00:00')
+        mask = ~(pd.Series(self.df.index).diff() < pd.Timedelta('0 days 00:00:00'))
         mask.index = self.df.index
-        mask[mask.index[0]] = False
+        mask[mask.index[0]] = True
         mask = pd.DataFrame(mask)
         mask.columns = [0]
 
@@ -351,9 +353,9 @@ class PerformanceMonitoring(object):
 
         # Check for duplicate timestamps
 #        mask = pd.TimeSeries(self.df.index).diff() == 0
-        mask = pd.Series(self.df.index).diff() == pd.Timedelta('0 days 00:00:00')
+        mask = ~(pd.Series(self.df.index).diff() == pd.Timedelta('0 days 00:00:00'))
         mask.index = self.df.index
-        mask[mask.index[0]] = False
+        mask[mask.index[0]] = True
         mask = pd.DataFrame(mask)
         mask.columns = [0]
         mask['TEMP'] = mask.index # remove duplicates in the mask
@@ -376,9 +378,9 @@ class PerformanceMonitoring(object):
             missing = temp.difference(self.df.index).tolist()
             # reindex DataFrame
             self.df = self.df.reindex(index=rng)
-            mask = pd.DataFrame(data=self.df.shape[0]*[False],
+            mask = pd.DataFrame(data=self.df.shape[0]*[True],
                                 index=self.df.index)
-            mask.loc[missing] = True
+            mask.loc[missing] = False
             self._append_test_results(mask, 'Missing timestamp',
                                  use_mask_only=True,
                                  min_failures=min_failures)
@@ -386,7 +388,7 @@ class PerformanceMonitoring(object):
             # uses pandas >= 0.18 resample syntax
             df_index = pd.DataFrame(index=self.df.index)
             df_index[0]=1 # populate with placeholder values
-            mask = df_index.resample(str(int(frequency*1e3))+'ms').count() == 0 # milliseconds
+            mask = ~(df_index.resample(str(int(frequency*1e3))+'ms').count() == 0) # milliseconds
             self._append_test_results(mask, 'Missing timestamp',
                                  use_mask_only=True,
                                  min_failures=min_failures)
@@ -583,6 +585,7 @@ class PerformanceMonitoring(object):
         else:
             error_prefix = 'Delta'
         
+        ### mask is defined as False = pass, True = failed ###
         # Lower Bound
         if bound[0] not in none_list:
             mask = (diff_df < bound[0])
@@ -590,7 +593,7 @@ class PerformanceMonitoring(object):
             if not self.tfilter.empty:
                 mask[~self.tfilter] = False
             mask = update_mask(mask, df, window_str, 'lower', direction) 
-            self._append_test_results(mask, error_msg, min_failures)
+            self._append_test_results(~mask, error_msg, min_failures)
         
         # Upper Bound
         if bound[1] not in none_list:
@@ -599,7 +602,7 @@ class PerformanceMonitoring(object):
             if not self.tfilter.empty:
                 mask[~self.tfilter] = False
             mask = update_mask(mask, df, window_str, 'upper', direction) 
-            self._append_test_results(mask, error_msg, min_failures)
+            self._append_test_results(~mask, error_msg, min_failures)
 
 
     def check_outlier(self, bound, key=None, window=None, absolute_value=False, 
@@ -719,13 +722,13 @@ class PerformanceMonitoring(object):
             return
 
         # Extract missing data
-        mask = pd.isnull(df) # checks for np.nan, np.inf
+        mask = ~pd.isnull(df) # checks for np.nan, np.inf, True = passed test
 
         # Check to see if the missing data was already flagged as a missing timestamp
         missing_timestamps = self.test_results[
                 self.test_results['Error Flag'] == 'Missing timestamp']
         for index, row in missing_timestamps.iterrows():
-            mask.loc[row['Start Time']:row['End Time']] = False
+            mask.loc[row['Start Time']:row['End Time']] = True
 
         self._append_test_results(mask, 'Missing data', min_failures=min_failures)
 
@@ -757,10 +760,10 @@ class PerformanceMonitoring(object):
             return
 
         # Extract corrupt data
-        mask = df.isin(corrupt_values)
+        mask = ~df.isin(corrupt_values) # True = passed test
 
         # Replace corrupt data with NaN
-        self.df[mask] = np.nan
+        self.df[~mask] = np.nan
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
 
@@ -805,7 +808,7 @@ class PerformanceMonitoring(object):
         #if post_process_func is not None:
         #    mask = post_process_func(mask)
         
-        self._append_test_results(~mask, error_message, min_failures)
+        self._append_test_results(mask, error_message, min_failures)
         
         return metadata
     
@@ -877,7 +880,7 @@ class PerformanceMonitoring(object):
             #if post_process_func is not None:
             #    mask = post_process_func(mask)
         
-        self._append_test_results(~mask, error_message)
+        self._append_test_results(mask, error_message)
         
         # Convert metadata to a dataframe
         metadata = pd.DataFrame(metadata).T
