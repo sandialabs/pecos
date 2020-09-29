@@ -1,3 +1,5 @@
+.. _quality_control:
+
 Quality control tests
 ======================
 
@@ -189,6 +191,8 @@ checks if increments are less than 0.0001 for 60 consecutive time steps.
 
 checks if increments decrease by more than 800 in a single time step.
 
+.. _outlier:
+
 Outlier test
 --------------------
 The :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier` method is used to check if normalized data
@@ -206,7 +210,9 @@ Input includes:
 
 * Minimum number of consecutive failures for reporting (default = 1)
 
-* Flag indicating if the outlier test should use streaming analysis (default=False). Note that this is different than merely defining a moving window, see :ref:`static_streaming` for more details.
+* Flag indicating if the outlier test should use streaming analysis (default=False). 
+
+Note that using a streaming analysis is different than merely defining a moving window. In a static analysis, the mean and standard deviation used to normalize the data are computed using a moving window (or using the entire data set if window=None) and upper and lower bounds are used to determine if data points are anomalous.  The results do not impact the moving window statistics. In a streaming analysis, the mean and standard deviation are computed using a moving window after each data points is determined to be normal or anomalous.  Data points that are determined to be anomalous are not used in the normalization.
 
 For example,
 
@@ -220,7 +226,7 @@ checks if the normalized data changes by more than 3 standard deviations within 
 
 Custom tests
 --------------
-The :class:`~pecos.monitoring.PerformanceMonitoring.custom_static` and :class:`~pecos.monitoring.PerformanceMonitoring.custom_streaming` methods
+The :class:`~pecos.monitoring.PerformanceMonitoring.check_custom_static` and :class:`~pecos.monitoring.PerformanceMonitoring.check_custom_streaming` methods
 allow the user to supply a custom function that is used to determine if data is normal or anomalous. 
 See :ref:`static_streaming` for more details.
 
@@ -228,30 +234,94 @@ This feature allows the user to customize the analysis and return custom metadat
 The custom function is defined outside of Pecos and handed to the custom quality control method as an input argument.  The allows the user to include analysis options that are not currently support in Pecos or are very specific to their application.
 While there are no specifications on what this metadata stores, the metadata commonly includes the raw values that were included in a quality control test.  For example, while the outlier test returns a boolean value that indicates if data is normal or anomalous, the metadata can include the normalized data value that was used to make that determination.
 
-The custom quality control function takes the general form:
+The user can also create custom quality control tests by creating a class that inherits from the PerformanceMonitoring class.
 
-.. doctest::
+Custom static analysis
+^^^^^^^^^^^^^^^^^^^^^^^^
 
-    >>> def custom_qc_function(data): # doctest: +SKIP
-    >>>    ... 						  # doctest: +SKIP
-    >>>    return mask, metadata      # doctest: +SKIP
+Input for custom static analysis includes:
+
+* Custom quality control function with the following general form::
+
+      def custom_static_function(data): 
+          """
+          Parameters
+          ----------
+          data : pandas DataFrame
+              The entire dataset stored in pm.data
+		  
+          Returns
+          --------
+          mask : pandas DataFrame
+              Mask contains boolean values and is the same size as data.
+              True = data passed the quality control test, 
+              False = data failed the quality control test.
+			  
+          metadata : pandas DataFrame
+              Metadata stores additional information about the test and is returned by 
+              ''check_custom_static''.  Metadata is generally the same size as data.  
+          """
+		  
+          # User defined custom algorithm
+          ... 		
+		  
+          return mask, metadata      
 	
-The custom function is then used as an input argument to the custom quality control methods, for example:
+* Data column (default = None, which indicates that all columns are used)
+* Minimum number of consecutive failures for reporting (default = 1)
+* Error message (default = None)
+
+Custom static analysis can be run as follows:
 
 .. doctest::
 
-    >>> pm.custom_static(custom_qc_function) # doctest: +SKIP
+    >>> metadata = pm.check_custom_static(custom_static_function) # doctest: +SKIP
+	
+Custom streaming analysis
+^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-For static analysis:
+Input for custom streaming analysis includes:
 
-* ``data`` is the entire dataset(pm.data)
-* ``mask`` is a boolean DataFrame of the same size as data
-* ``metadata`` stores additional information about the test (in any format) and is returned by :class:`~pecos.monitoring.PerformanceMonitoring.custom_static`  
+* Custom quality control function with the following general form::
 
-For stationary analysis:
+      def custom_streaming_function(data): 
+          """
+          Parameters
+          ----------
+          data : pandas DataFrame
+              Data that includes the current data point to be analyzed plus the cleaned 
+              history. The streaming framework appends clean history to the current 
+              data point before the custom quality control function is called.
+		  
+          Returns
+          --------
+          mask : pandas Series
+              Mask contains boolean values (one value for each column in pm.data).
+              True = data passed the quality control test, 
+              False = data failed the quality control test.
+			  
+          metadata : pandas Series
+              Metadata stores additional information about the test for the current data point.
+              Metadata generally contains one value for each column in pm.data. Metadata is 
+              collected into a pandas DataFrame with one row per time index and is returned 
+              by ''check_custom_streaming''.
+          """
+		  
+          # User defined custom algorithm which often starts with the following lines
+          history = data.iloc[:-1,:]
+          data_pt = data.iloc[-1,:]
+          ... 		
+		  
+          return mask, metadata  
 
-* ``data`` includes the current data point and cleaned history
-* ``mask`` is a boolean Series, having one value for each column in data
-* ``metadata`` stores additional information about the quality control test (in any format) for the current data point.  Metadata is collected into a dictionary with one entry per time index and ris eturned by :class:`~pecos.monitoring.PerformanceMonitoring.custom_streaming`  
+* Size of the moving window used to define the cleaned history.
+* Indicator used to rebase the history window. If the user defined fraction of the history window has been deemed anomalous, then the history is reset using raw data.  The ability to rebase the history is useful if data changes to a new normal condition that would otherwise continue to be flagged as anomalous. (default = None, which indicates that rebase is not used)
+* Data column (default = None, which indicates that all columns are used)
+* Error message (default = None)
 
+Custom streaming analysis can be run as follows:
+
+.. doctest::
+
+    >>> metadata = pm.check_custom_streaming(custom_streaming_function, window=3600) # doctest: +SKIP
 

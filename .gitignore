@@ -11,6 +11,7 @@ logfile
 
 pecos/tests/*.csv
 pecos/tests/*.png
+pecos/tests/*.db
 
 examples/**/*.html
 examples/**/*.csv

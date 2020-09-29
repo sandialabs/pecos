@@ -35,13 +35,14 @@ the quality control analysis.  This class stores:
 
 The class is used to call quality control tests, including:
 
-* Check timestamps for missing, duplicate, and non-monotonic indexes
-* Check for missing data
-* Check for corupt data
-* Check for data outside expected range
-* Check for stagnant of abrupt changes in the data
-* Check for outliers
-* Custom quality control tests
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_timestamp`: Check timestamps for missing, duplicate, and non-monotonic indexes
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_missing`: Check for missing data
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_corrupt`: Check for corrupt data
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_range`: Check for data outside expected range
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_delta`: Check for stagnant of abrupt changes in the data
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier`: Check for outliers
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_custom_static`: Custom static quality control test
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_custom_streaming`: Custom streaming quality control test
 
 The class can return the following results:
 
@@ -119,23 +120,38 @@ Pecos supports both static and streaming analysis.
 Static analysis
 ^^^^^^^^^^^^^^^^^^^^^^^
 Most quality control tests in Pecos use static analysis.
-The static analysis operates on the entire data set to determine if all data points are normal or anomalous. Wile this can include operations like moving window statistics, the quality control tests operates on the entire data set at once. 
-This means that results from the quality control test are not dependent results from a previous time step.
+Static analysis operates on the entire data set to determine if all data points are normal or anomalous. Wile this can include operations like moving window statistics, the quality control tests operates on the entire data set at once. 
+This means that results from the quality control test are not dependent on results from a previous time step.
 This approach is appropriate when data at different time steps can be analyzed independently, or moving window statistics used to analyze the data do not need to be updated based on test results.
 
-The static analysis is used in quality control tests that check for missing data, corrupt data, data outside expected range, and stagnant of abrupt changes in the data.  The outlier quality control test can make use of both static and streaming analysis, as described below.  Additionally, custom quality control tests can make use of both static and streaming analysis.
+The following quality control tests use static analysis:
+
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_missing`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_corrupt`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_range`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_delta`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier` :superscript:`1`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_custom_static`
+
+:superscript:`1` The outlier test can make use of both static and streaming analysis.  See :ref:`outlier` for more details.
 
 Streaming analysis
 ^^^^^^^^^^^^^^^^^^^^^^^
 The streaming analysis loops through each data point using a quality control tests that relies on information from "clean data" in a moving window.  If a data point is determined to be anomalous, it is not included in the window for subsequent analysis.
 When using a streaming analysis, Pecos keeps track of the cleaned history that is used in the quality control test at each time step.
-This approach is important to use when the underlying methods in the quality control test could be corrupted by historical data points that were deemed anomalous.  The streaming analysis also allows users to better analyze continuous datasets in a near real-time fashion.  While Pecos could be used to analyze data at a single time step in a real-time fashion (creating a new instance of the PerformanceMonitoring class each time), the methods in Pecos are really designed to analyze data over a time period.  That time period can depend on several factors, including the size of the data and how often the test results and reports should be generated.  In any case, cleaned history can be appended to new datasets as they come available to create a seamless analysis for continuous data.
+This approach is important to use when the underlying methods in the quality control test could be corrupted by historical data points that were deemed anomalous.  The streaming analysis also allows users to better analyze continuous datasets in a near real-time fashion. While Pecos could be used to analyze data at a single time step in a real-time fashion (creating a new instance of the PerformanceMonitoring class each time), the methods in Pecos are really designed to analyze data over a time period.  That time period can depend on several factors, including the size of the data and how often the test results and reports should be generated.  Cleaned history can be appended to new datasets as they come available to create a seamless analysis for continuous data. See :ref:`continuous` for more details. 
 
 The streaming analysis includes an optional parameter which is used to **rebase data in the history window** if a certain fraction of that data has been deemed to be anomalous.  The ability to rebase the history is useful if data changes to a new normal condition that would otherwise continue to be flagged as anomalous. 
 
-The **outlier test can make use of static and streaming analysis** using a moving window.  
-In the static analysis, the mean and standard deviation used to normalize the data are computed using the moving window and upper and lower bounds are used to determine if data points are anomalous.  The results do not impact the moving window statistics.  
-In the streaming analysis, the mean and standard deviation are computed after each data points is determined to be normal or anomalous.  Data points that are determined to be anomalous are not used in the normalization.
+The following quality control tests use streaming analysis:
+
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_timestamp` :superscript:`2`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_outlier` :superscript:`3`
+* :class:`~pecos.monitoring.PerformanceMonitoring.check_custom_streaming`
+
+:superscript:`2` The timestamp test does not loop through data using a moving window, rather timestamp functionality in Pandas is used to determine anomalies in the time index. 
+
+:superscript:`3` The outlier test can make use of both static and streaming analysis.  See :ref:`outlier` for more details.
 
 Custom quality control tests
 ---------------------------------
