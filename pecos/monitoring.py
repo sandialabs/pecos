@@ -167,6 +167,8 @@ class PerformanceMonitoring(object):
         """
         if not self.tfilter.empty:
             mask[~self.tfilter] = False
+            #mask[self.tfilter.columns].mask(~self.tfilter,False)
+            
         if mask.sum(axis=1).sum(axis=0) == 0:
             return
 
@@ -274,11 +276,10 @@ class PerformanceMonitoring(object):
         """
         assert isinstance(time_filter, (pd.Series, pd.DataFrame)), 'time_filter must be of type pd.Series or pd.DataFrame'
         
-        if isinstance(time_filter, pd.DataFrame):
-            self.tfilter = pd.Series(data = time_filter.values[:,0], index = self.df.index)
+        if isinstance(time_filter, pd.DataFrame) and (time_filter.shape[1] == 1):
+            self.tfilter = time_filter.squeeze()
         else:
             self.tfilter = time_filter
-
 
     def check_timestamp(self, frequency, expected_start_time=None,
                         expected_end_time=None, min_failures=1,
@@ -601,7 +602,7 @@ class PerformanceMonitoring(object):
             self._append_test_results(mask, error_msg, min_failures)
 
 
-    def check_outlier(self, bound, key=None, window=None, absolute_value=True, 
+    def check_outlier(self, bound, key=None, window=None, absolute_value=False, 
                       min_failures=1, streaming=False):
         """
         Check for outliers using normalized data within a rolling window
@@ -674,7 +675,7 @@ class PerformanceMonitoring(object):
             error_prefix = 'Outlier'
             
         if streaming:
-            metadata = self.custom_streaming(outlier, window, rebase=0.5, error_message=error_prefix)
+            metadata = self.check_custom_streaming(outlier, window, rebase=0.5, error_message=error_prefix)
         else:
             # Compute normalized data
             if window is not None:
@@ -763,7 +764,7 @@ class PerformanceMonitoring(object):
 
         self._append_test_results(mask, 'Corrupt data', min_failures=min_failures)
 
-    def custom_static(self, quality_control_func, key=None, min_failures=1,
+    def check_custom_static(self, quality_control_func, key=None, min_failures=1,
                            error_message=None):
         """
         Use custom functions that operate on the entire dataset at once to 
@@ -785,7 +786,11 @@ class PerformanceMonitoring(object):
         error_message : str, optional
             Error message
         """
-        
+        assert callable(quality_control_func), 'quality_control_func must be a callable function'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
+        assert isinstance(error_message, (NoneType, str)), 'error_message must be None or of type string'
+
         df = self._setup_data(key)
         if df is None:
             return
@@ -793,6 +798,8 @@ class PerformanceMonitoring(object):
         # Function that operates on the entire dataset and returns a mask and
         # metadata for the entire dataset
         mask, metadata = quality_control_func(self.df) 
+        assert isinstance(mask, pd.DataFrame), 'mask returned by quality_control_func must be of type pd.DataFrame'
+        assert isinstance(metadata, pd.DataFrame), 'metadata returned by quality_control_func must be of type pd.DataFrame'
         
         # Function that modifies the mask
         #if post_process_func is not None:
@@ -802,7 +809,7 @@ class PerformanceMonitoring(object):
         
         return metadata
     
-    def custom_streaming(self, quality_control_func, window, rebase=None, key=None, 
+    def check_custom_streaming(self, quality_control_func, window, rebase=None, key=None, 
                          error_message=None):
         """
         Check for anomolous data using a streaming framework which removes 
@@ -831,23 +838,31 @@ class PerformanceMonitoring(object):
         error_message : str, optional
             Error message
         """
-
+        assert callable(quality_control_func), 'quality_control_func must be a callable function'
+        assert isinstance(window, (int, float)), 'window must be of type int or float'
+        assert isinstance(rebase, (NoneType, int, float)), 'rebase must be None or type int or float'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(error_message, (NoneType, str)), 'error_message must be None or of type string'
+        
         metadata = {} 
         history_window = datetime.timedelta(seconds=window)
-        history = self.df.loc[self.df.index[0]:self.df.index[0]+datetime.timedelta(seconds=window),:]
-        tidx = self.df.index[history.shape[0]:-1]
+        history = self.df.loc[self.df.index[0]:self.df.index[0]+history_window,:]
+        tidx = self.df.index[history.shape[0]::]
         
         # The mask must be the same size as data, which includes history
         mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
         
-        for t in tidx:
+        for i, t in enumerate(tidx):
             # Current data point
             data_t = history.append(self.df.loc[t,:])
             
             # Function that operates on data (with history) and returns a mask
             # and metadata for data at time t
             mask.loc[t,:], metadata[t] = quality_control_func(data_t)
-            
+            if i == 0:
+                assert isinstance(mask.loc[t,:], pd.Series), 'mask returned by quality_control_func must be of type pd.Series'
+                assert isinstance(metadata[t], pd.Series), 'metadata returned by quality_control_func must be of type pd.Series'
+                
             history = history.append(self.df.loc[t,mask.loc[t,:]])
             history = history.loc[t-history_window:t,:]
             
@@ -863,6 +878,9 @@ class PerformanceMonitoring(object):
             #    mask = post_process_func(mask)
         
         self._append_test_results(~mask, error_message)
+        
+        # Convert metadata to a dataframe
+        metadata = pd.DataFrame(metadata).T
         
         return metadata
 
@@ -947,25 +965,25 @@ def check_corrupt(data, corrupt_values, key=None, min_failures=1):
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
 
-@_documented_by(PerformanceMonitoring.custom_static, include_metadata=True)
-def custom_static(data, quality_control_func, key=None, min_failures=1,
+@_documented_by(PerformanceMonitoring.check_custom_static, include_metadata=True)
+def check_custom_static(data, quality_control_func, key=None, min_failures=1,
                            error_message=None):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    metadata = pm.custom_static(quality_control_func, key, min_failures, error_message)
+    metadata = pm.check_custom_static(quality_control_func, key, min_failures, error_message)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results,
             'metadata': metadata}
 
-@_documented_by(PerformanceMonitoring.custom_streaming, include_metadata=True)
-def custom_streaming(data, quality_control_func, window, rebase=None, key=None, 
+@_documented_by(PerformanceMonitoring.check_custom_streaming, include_metadata=True)
+def check_custom_streaming(data, quality_control_func, window, rebase=None, key=None, 
                          error_message=None):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    metadata = pm.custom_streaming(quality_control_func, window, rebase, key, error_message)
+    metadata = pm.check_custom_streaming(quality_control_func, window, rebase, key, error_message)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results,

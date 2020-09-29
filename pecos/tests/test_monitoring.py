@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 import pecos
 import pandas as pd
 from pandas import Timestamp, RangeIndex
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 import numpy as np
 from numpy import array
 
@@ -543,6 +543,73 @@ class Test_check_outlier(unittest.TestCase):
             index=RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
+
+class Test_check_custom(unittest.TestCase):
+
+    @classmethod
+    def setUp(self):
+        N = 7200
+        np.random.seed(92837)
+        index = pd.date_range('1/1/2020', periods=N, freq='S')
+        data = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
+        df = pd.DataFrame(data, index=index)
+        
+        self.pm = pecos.monitoring.PerformanceMonitoring()
+        self.pm.add_dataframe(df)
+        
+    @classmethod
+    def tearDown(self):
+        pass
+    
+    def test_custom_static(self):
+        
+        def custom_func(data):
+            mask = (data**2 > 3**2)
+            metadata = data - data**2
+            return mask, metadata
+
+        metadata = self.pm.check_custom_static(custom_func)
+        #print(metadata)
+        #print(self.pm.test_results)
+        
+        assert_equal(self.pm.data.shape, metadata.shape)
+        assert_equal(38, self.pm.test_results.shape[0])
+    
+    def test_custom_streaming(self):
+        
+        def mvnn(data):
+            from scipy.spatial.distance import cdist 
+            
+            history = data.iloc[:-1,:]
+            data_pt = data.iloc[-1,:]
+            
+            std = history.std()
+            mean = history.mean()
+        
+            zt = np.array((data_pt - mean)/std)
+            z = np.array((history - mean)/std)
+        
+            dist = cdist(np.reshape(zt, (-1, len(data.columns))), z)
+            
+            idx = np.nanargmin(dist)
+        
+            idx_dist = z[idx,:] - zt
+            min_dist = np.nanmin(dist)
+            
+            # True = pass, False = fail
+            mask = pd.Series(min_dist < 3, index=data.columns)
+            
+            metadata = pd.Series(idx_dist, index=data.columns)
+            
+            return mask, metadata
+
+        metadata = self.pm.check_custom_streaming(mvnn, 60)
+        #print(metadata)
+        #print(self.pm.test_results)
+        
+        assert_equal(self.pm.data.shape[0]-61, metadata.shape[0])
+        assert_equal(self.pm.data.shape[1], metadata.shape[1])
+        assert_equal(2, self.pm.test_results.shape[0])
 
 if __name__ == '__main__':
     unittest.main()
