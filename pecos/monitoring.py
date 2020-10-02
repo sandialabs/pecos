@@ -143,7 +143,7 @@ class PerformanceMonitoring(object):
             error_msg = error_prefix+' > upper bound, '+str(bound[1])
             self._append_test_results(mask, error_msg, min_failures)
 
-    def _append_test_results(self, mask, error_msg, min_failures=1, use_mask_only=False):
+    def _append_test_results(self, mask, error_msg, min_failures=1, timestamp_test=False):
         """
         Append QC results to the PerformanceMonitoring object.
 
@@ -159,70 +159,61 @@ class PerformanceMonitoring(object):
             Minimum number of consecutive failures required for reporting,
             default = 1
 
-        use_mask_only : boolean, optional
-            When True, the mask is used directly to determine test
-            results and the variable name is not included in the
-            test_results. When False, the mask is used in combination with
-            pm.data to extract test results. Default = False
+        timestamp_test : boolean, optional
+            When True, the mask comes from a timestamp test, and the variable 
+            name should not be included in the test results
         """
-        
+
         if not self.tfilter.empty:
             mask[~self.tfilter] = True
             
         if mask.sum(axis=1).sum(axis=0) == mask.shape[0]*mask.shape[1]:
             return
-
-        if use_mask_only:
-            sub_df = mask
-        else:
-            sub_df = self.df[mask.columns]
-
-        # Find blocks
-        order = 'col'
-        if order == 'col':
-            mask = mask.T
-
-        np_mask = ~mask.values # convert to a np array and reverse True/False values
+        
+        # The mask is translated and then converted to an np array to improve performace.
+        # Values are reversed (T/F) to find blocks where quality control tests failed.
+        np_mask = ~mask.T.values 
 
         start_nans_mask = np.hstack(
-            (np.resize(np_mask[:,0],(mask.shape[0],1)),
+            (np.resize(np_mask[:,0],(mask.shape[1],1)),
              np.logical_and(np.logical_not(np_mask[:,:-1]), np_mask[:,1:])))
         stop_nans_mask = np.hstack(
             (np.logical_and(np_mask[:,:-1], np.logical_not(np_mask[:,1:])),
-             np.resize(np_mask[:,-1], (mask.shape[0],1))))
-
-        start_row_idx,start_col_idx = np.where(start_nans_mask)
-        stop_row_idx,stop_col_idx = np.where(stop_nans_mask)
-
-        if order == 'col':
-            temp = start_row_idx; start_row_idx = start_col_idx; start_col_idx = temp
-            temp = stop_row_idx; stop_row_idx = stop_col_idx; stop_col_idx = temp
-            #mask = mask.T
+             np.resize(np_mask[:,-1], (mask.shape[1],1))))
+        
+        start_col_idx, start_row_idx = np.where(start_nans_mask)
+        stop_col_idx, stop_row_idx = np.where(stop_nans_mask)
 
         block = {'Start Row': list(start_row_idx),
-                 'Start Col': list(start_col_idx),
-                 'Stop Row': list(stop_row_idx),
-                 'Stop Col': list(stop_col_idx)}
+                  'Start Col': list(start_col_idx),
+                  'Stop Row': list(stop_row_idx),
+                  'Stop Col': list(stop_col_idx)}
 
-        #if sub_df is None:
-        #    sub_df = self.df
-
+        # Extract test results from each block
+        counter=0
+        test_results = {}
         for i in range(len(block['Start Col'])):
-            length = block['Stop Row'][i] - block['Start Row'][i] + 1
-            if length >= min_failures:
-                if use_mask_only:
+            
+            timesteps = block['Stop Row'][i] - block['Start Row'][i] + 1
+            if timesteps >= min_failures:
+                if timestamp_test:
                     var_name = ''
                 else:
-                    var_name = sub_df.iloc[:,block['Start Col'][i]].name #sub_df.icol(block['Start Col'][i]).name
-
-                frame = pd.DataFrame([var_name,
-                    sub_df.index[block['Start Row'][i]],
-                    sub_df.index[block['Stop Row'][i]],
-                    length, error_msg],
-                    index=['Variable Name', 'Start Time',
-                    'End Time', 'Timesteps', 'Error Flag'])
-                self.test_results = self.test_results.append(frame.T, ignore_index=True)
-
+                    var_name = mask.iloc[:,block['Start Col'][i]].name 
+                
+                start_time = mask.index[block['Start Row'][i]]
+                end_time = mask.index[block['Stop Row'][i]]
+                    
+                test_results[counter] = {'Variable Name': var_name,
+                            'Start Time': start_time,
+                            'End Time': end_time,
+                            'Timesteps': timesteps, 
+                            'Error Flag': error_msg}
+                counter = counter + 1
+    
+        test_results = pd.DataFrame(test_results).T
+        self.test_results = self.test_results.append(test_results, ignore_index=True)
+        
     def add_dataframe(self, data):
         """
         Add data to the PerformanceMonitoring object
@@ -344,7 +335,7 @@ class PerformanceMonitoring(object):
         mask.columns = [0]
 
         self._append_test_results(mask, 'Nonmonotonic timestamp',
-                                 use_mask_only=True,
+                                 timestamp_test=True,
                                  min_failures=min_failures)
 
         # If not monotonic, sort df by timestamp
@@ -369,7 +360,7 @@ class PerformanceMonitoring(object):
         self.df.drop_duplicates(subset='TEMP', keep='first', inplace=True)
 
         self._append_test_results(mask, 'Duplicate timestamp',
-                                 use_mask_only=True,
+                                 timestamp_test=True,
                                  min_failures=min_failures)
         del self.df['TEMP']
 
@@ -382,7 +373,7 @@ class PerformanceMonitoring(object):
                                 index=self.df.index)
             mask.loc[missing] = False
             self._append_test_results(mask, 'Missing timestamp',
-                                 use_mask_only=True,
+                                 timestamp_test=True,
                                  min_failures=min_failures)
         else:
             # uses pandas >= 0.18 resample syntax
@@ -390,7 +381,7 @@ class PerformanceMonitoring(object):
             df_index[0]=1 # populate with placeholder values
             mask = ~(df_index.resample(str(int(frequency*1e3))+'ms').count() == 0) # milliseconds
             self._append_test_results(mask, 'Missing timestamp',
-                                 use_mask_only=True,
+                                 timestamp_test=True,
                                  min_failures=min_failures)
 
     def check_range(self, bound, key=None, min_failures=1):
@@ -646,11 +637,11 @@ class PerformanceMonitoring(object):
         assert isinstance(min_failures, int), 'min_failures must be type int'
         assert self.df.index.is_monotonic, 'index must be monotonic'
         
-        def outlier(data):
+        def outlier(data_pt, history):
 
-            mean = data.iloc[:-1,:].mean()
-            std = data.iloc[:-1,:].std()
-            zt = (data.iloc[-1,:] - mean)/std
+            mean = history.mean()
+            std = history.std()
+            zt = (data_pt - mean)/std
             zt.replace([np.inf, -np.inf], np.nan, inplace=True)
             
             # True = pass, False = fail
@@ -812,7 +803,7 @@ class PerformanceMonitoring(object):
         return metadata
     
     def check_custom_streaming(self, quality_control_func, window, rebase=None, key=None, 
-                         error_message=None):
+                         min_failures = 1, error_message=None):
         """
         Check for anomolous data using a streaming framework which removes 
         anomolous data from the history after each timestamp.  A custom quality 
@@ -836,7 +827,11 @@ class PerformanceMonitoring(object):
         key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
-
+        
+        min_failures : int, optional
+            Minimum number of consecutive failures required for reporting,
+            default = 1
+            
         error_message : str, optional
             Error message
         """
@@ -845,47 +840,56 @@ class PerformanceMonitoring(object):
         assert isinstance(rebase, (NoneType, int, float)), 'rebase must be None or type int or float'
         assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert isinstance(error_message, (NoneType, str)), 'error_message must be None or of type string'
+
+        df = self._setup_data(key)
+        if df is None:
+            return
         
         metadata = {} 
+        rebase_count = 0
         history_window = datetime.timedelta(seconds=window)
-        history = self.df.loc[self.df.index[0]:self.df.index[0]+history_window,:]
-        tidx = self.df.index[history.shape[0]::]
         
-        # The mask must be the same size as data, which includes history
-        mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns)
+        # The mask must be the same size as data
+        # The streaming framework uses numpy arrays to improve performance but
+        # still expects pandas DataFrames and Series in the user defined quality 
+        # control function to keep data types consitent on the user side.
+        np_mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns).values
+        np_data = df.values
+    
+        ti = df.index.get_loc(df.index[0]+history_window)
         
-        for i, t in enumerate(tidx):
-            # Current data point
-            data_t = history.append(self.df.loc[t,:])
+        for i, t in enumerate(np.arange(ti,np_data.shape[0],1)):
             
-            # Function that operates on data (with history) and returns a mask
-            # and metadata for data at time t
-            mask.loc[t,:], metadata[t] = quality_control_func(data_t)
+            t_start = df.index.get_loc(df.index[t]-history_window)
+            
+            data_pt = pd.Series(np_data[t], index=df.columns)
+            history = pd.DataFrame(np_data[t_start:t], index=range(t-t_start), columns=df.columns)
+
+            mask_t, metadata[t] = quality_control_func(data_pt, history)
             if i == 0:
-                assert isinstance(mask.loc[t,:], pd.Series), 'mask returned by quality_control_func must be of type pd.Series'
+                assert isinstance(mask_t, pd.Series), 'mask returned by quality_control_func must be of type pd.Series'
                 assert isinstance(metadata[t], pd.Series), 'metadata returned by quality_control_func must be of type pd.Series'
-                
-            history = history.append(self.df.loc[t,mask.loc[t,:]])
-            history = history.loc[t-history_window:t,:]
-            
+
+            np_mask[t] = mask_t.values
+            np_data[~np_mask] = np.NAN
+       
             # rebase
             if rebase is not None:
-                check_rebase = history.loc[:,history.isna().sum()/history.shape[0] > rebase]
-                if check_rebase.shape[1] > 0:
-                    columns = check_rebase.columns.to_list()
-                    history.loc[t, columns] = self.df.loc[t, columns]
-
-            # Function that modifies the mask
-            #if post_process_func is not None:
-            #    mask = post_process_func(mask)
+                data_history = np_data[t_start:t+1] # +1 so it includes history and current data point
+                check_rebase = np.isnan(data_history).sum(axis=0)/data_history.shape[0] > rebase
+                if sum(check_rebase) > 0:
+                    np_data[t][check_rebase] = df.iloc[t][check_rebase]
+                    rebase_count = rebase_count + sum(check_rebase)
         
-        self._append_test_results(mask, error_message)
+        mask = pd.DataFrame(np_mask, index=self.df.index, columns=self.df.columns)
+        self._append_test_results(mask, error_message, min_failures)
         
         # Convert metadata to a dataframe
         metadata = pd.DataFrame(metadata).T
         
         return metadata
 
+        
 ### Functional approach
 @_documented_by(PerformanceMonitoring.check_timestamp)
 def check_timestamp(data, frequency, expected_start_time=None,

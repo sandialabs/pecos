@@ -548,7 +548,7 @@ class Test_check_custom(unittest.TestCase):
 
     @classmethod
     def setUp(self):
-        N = 7200
+        N = 1000
         np.random.seed(92837)
         index = pd.date_range('1/1/2020', periods=N, freq='S')
         data = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
@@ -564,52 +564,63 @@ class Test_check_custom(unittest.TestCase):
     def test_custom_static(self):
         
         def custom_func(data):
-            mask = (data**2 > 3**2)
-            metadata = data - data**2
+            mask = (data.abs() < 2)
+            metadata = data
             return mask, metadata
 
         metadata = self.pm.check_custom_static(custom_func)
-        #print(metadata)
-        #print(self.pm.test_results)
         
-        assert_equal(self.pm.data.shape, metadata.shape)
-        assert_equal(38, self.pm.test_results.shape[0])
+        print(self.pm.test_results)
+        N = self.pm.df.shape[0]*self.pm.df.shape[1]
+        percent = 1-self.pm.test_results['Timesteps'].sum()/N
+        
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
     
     def test_custom_streaming(self):
         
-        def mvnn(data):
-            from scipy.spatial.distance import cdist 
-            
-            history = data.iloc[:-1,:]
-            data_pt = data.iloc[-1,:]
-            
-            std = history.std()
-            mean = history.mean()
-        
-            zt = np.array((data_pt - mean)/std)
-            z = np.array((history - mean)/std)
-        
-            dist = cdist(np.reshape(zt, (-1, len(data.columns))), z)
-            
-            idx = np.nanargmin(dist)
-        
-            idx_dist = z[idx,:] - zt
-            min_dist = np.nanmin(dist)
-            
-            # True = pass, False = fail
-            mask = pd.Series(min_dist < 3, index=data.columns)
-            
-            metadata = pd.Series(idx_dist, index=data.columns)
-            
+        def custom_func(data_pt, history):
+            mask = (data_pt.abs() < 2)
+            metadata = data_pt
             return mask, metadata
 
-        metadata = self.pm.check_custom_streaming(mvnn, 60)
-        #print(metadata)
-        #print(self.pm.test_results)
+        metadata = self.pm.check_custom_streaming(custom_func, 50)
         
-        assert_equal(self.pm.data.shape[0]-61, metadata.shape[0])
-        assert_equal(self.pm.data.shape[1], metadata.shape[1])
-        assert_equal(2, self.pm.test_results.shape[0])
+        print(self.pm.test_results)
+        N = self.pm.df.shape[0]*self.pm.df.shape[1]
+        percent = 1-self.pm.test_results['Timesteps'].sum()/N
+        
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+
+class Test_append_test_results(unittest.TestCase):
+
+    @classmethod
+    def setUp(self):
+        self.pm = pecos.monitoring.PerformanceMonitoring()
+        
+    @classmethod
+    def tearDown(self):
+        pass
+
+    def test_append_test_results(self):
+        mask = pd.DataFrame(True, columns=['A', 'B', 'C', 'D', 'E'], index=range(10))
+        mask.loc[0:3,'A'] = False # start of time series
+        mask.loc[5,'A'] = False # single time
+        mask.loc[7:9,'B'] = False # end of a column
+        mask.loc[0:5,'C'] = False # wrap False across two columns
+        mask.loc[8:9,'E'] = False # end of time series
+        
+        self.pm._append_test_results(mask, 'None')
+        
+        expected = pd.DataFrame(
+                array([['A', 0, 3, 4, 'None'],
+                       ['A', 5, 5, 1, 'None'],
+                       ['B', 7, 9, 3, 'None'],
+                       ['C', 0, 5, 6, 'None'],
+                       ['E', 8, 9, 2, 'None']], dtype=object),
+                columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
+                index=range(5))
+        assert_frame_equal(expected, self.pm.test_results)
+        
 
 if __name__ == '__main__':
     unittest.main()

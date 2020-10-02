@@ -239,7 +239,7 @@ The user can also create custom quality control tests by creating a class that i
 Custom static analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^
 
-Input for custom static analysis includes:
+Static analysis operates on the entire data set to determine if all data points are normal or anomalous. Input for custom static analysis includes:
 
 * Custom quality control function with the following general form::
 
@@ -248,7 +248,7 @@ Input for custom static analysis includes:
           Parameters
           ----------
           data : pandas DataFrame
-              The entire dataset stored in pm.data
+              Data to be analyzed.
 		  
           Returns
           --------
@@ -280,37 +280,37 @@ Custom static analysis can be run as follows:
 Custom streaming analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Input for custom streaming analysis includes:
+The streaming analysis loops through each data point using a quality control tests that relies on information from "clean data" in a moving window. Input for custom streaming analysis includes:
 
 * Custom quality control function with the following general form::
 
-      def custom_streaming_function(data): 
+      def custom_streaming_function(data_pt, history): 
           """
           Parameters
           ----------
-          data : pandas DataFrame
-              Data that includes the current data point to be analyzed plus the cleaned 
-              history. The streaming framework appends clean history to the current 
-              data point before the custom quality control function is called.
+          data_pt : pandas Series
+              The current data point to be analyzed.
 		  
+		  history : pandas DataFrame
+              Historical data used in the analysis. The streaming analysis omits 
+              data points that were previously flagged as anomalous in the history.
+			  
           Returns
           --------
           mask : pandas Series
-              Mask contains boolean values (one value for each column in pm.data).
+              Mask contains boolean values (one value for each row in data_pt).
               True = data passed the quality control test, 
               False = data failed the quality control test.
 			  
           metadata : pandas Series
               Metadata stores additional information about the test for the current data point.
-              Metadata generally contains one value for each column in pm.data. Metadata is 
+              Metadata generally contains one value for row in data_pt. Metadata is 
               collected into a pandas DataFrame with one row per time index that was included
               in the quality control test (omits the history window) and is returned 
               by ''check_custom_streaming''.
           """
 		  
-          # User defined custom algorithm which often starts with the following lines
-          history = data.iloc[:-1,:]
-          data_pt = data.iloc[-1,:]
+          # User defined custom algorithm
           ... 		
 		  
           return mask, metadata  
