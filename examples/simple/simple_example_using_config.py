@@ -29,7 +29,7 @@ pm.add_translation_dictionary(config['Translation'])
 pm.check_timestamp(config['Specifications']['Frequency'])
  
 # Generate a time filter to exclude data points early and late in the day
-time_filter = pecos.utils.evaluate_string(config['Time Filter'], df)
+time_filter = pecos.utils.evaluate_string(config['Time Filter'], pm.data)
 pm.add_time_filter(time_filter)
 
 # Check for missing data
@@ -63,7 +63,7 @@ mask = pm.mask[['A','B','C','D']]
 QCI = pecos.metrics.qci(mask, pm.tfilter)
 
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results)
+test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results, pm.tfilter)
 df.plot(ylim=[-1.5,1.5], figsize=(7.0,3.5))
 plt.savefig('custom.png', format='png', dpi=500)
 

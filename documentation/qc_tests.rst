@@ -291,7 +291,7 @@ The streaming analysis loops through each data point using a quality control tes
           data_pt : pandas Series
               The current data point to be analyzed.
 		  
-		  history : pandas DataFrame
+          history : pandas DataFrame
               Historical data used in the analysis. The streaming analysis omits 
               data points that were previously flagged as anomalous in the history.
 			  
