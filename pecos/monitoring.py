@@ -469,7 +469,7 @@ class PerformanceMonitoring(object):
         self._generate_test_results(df, bound, min_failures, error_prefix)
     
 
-    def check_delta(self, bound, window, key=None,  direction=None, 
+    def check_delta(self, bound, window, key=None, direction=None, 
                     min_failures=1):
         """
         Check for stagnant data and/or abrupt changes in the data using the 
@@ -503,8 +503,8 @@ class PerformanceMonitoring(object):
             default = 1
         """
         assert isinstance(bound, list), 'bound must be of type list'
-        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert isinstance(window, (int, float)), 'window must be of type int or float'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert direction in [None, 'positive', 'negative'], "direction must None or the string 'positive' or 'negative'"
         assert isinstance(min_failures, int), 'min_failures must be of type int'
         assert self.df.index.is_monotonic, 'index must be monotonic'
@@ -593,8 +593,8 @@ class PerformanceMonitoring(object):
             self._append_test_results(mask, error_msg, min_failures)
 
 
-    def check_outlier(self, bound, key=None, window=None, absolute_value=False, 
-                      min_failures=1, streaming=False):
+    def check_outlier(self, bound, window=None, key=None, absolute_value=False, streaming=False, 
+                      min_failures=1):
         """
         Check for outliers using normalized data within a rolling window
         
@@ -607,31 +607,31 @@ class PerformanceMonitoring(object):
             [lower bound, upper bound], None can be used in place of a lower
             or upper bound
 
-        key : string, optional
-            Data column name or translation dictionary key. If not specified, 
-            all columns are used in the test.
-
         window : int or float, optional
             Size of the rolling window (in seconds) used to normalize data,
             If window is set to None, data is normalized using
             the entire data sets mean and standard deviation (column by column).
             default = None.
-
+        
+        key : string, optional
+            Data column name or translation dictionary key. If not specified, 
+            all columns are used in the test.
+            
         absolute_value : boolean, optional
             Use the absolute value the normalized data, default = True
-
-        min_failures : int, optional
-            Minimum number of consecutive failures required for reporting,
-            default = 1
-            
+        
         streaming : boolean, optional
             Indicates if streaming analysis should be used, default = False
             
+        min_failures : int, optional
+            Minimum number of consecutive failures required for reporting,
+            default = 1
         """
         assert isinstance(bound, list), 'bound must be of type list'
-        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert isinstance(window, (NoneType, int, float)), 'window must be None or of type int or float'
+        assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
+        assert isinstance(streaming, bool), 'streaming must be of type bool'
         assert isinstance(min_failures, int), 'min_failures must be type int'
         assert self.df.index.is_monotonic, 'index must be monotonic'
         
@@ -800,8 +800,8 @@ class PerformanceMonitoring(object):
         
         return metadata
     
-    def check_custom_streaming(self, quality_control_func, window, rebase=None, key=None, 
-                         min_failures = 1, error_message=None):
+    def check_custom_streaming(self, quality_control_func, window, key=None, 
+                               rebase=None, min_failures=1, error_message=None):
         """
         Check for anomolous data using a streaming framework which removes 
         anomolous data from the history after each timestamp.  A custom quality 
@@ -818,14 +818,14 @@ class PerformanceMonitoring(object):
             If window is set to None, data is normalized using
             the entire data sets mean and standard deviation (column by column).
         
-        rebase : int, float, or None
-            Value between 0 and 1 that indicates the fraction of 
-            default = None.
-            
         key : string, optional
             Data column name or translation dictionary key. If not specified, 
             all columns are used in the test.
         
+        rebase : int, float, or None
+            Value between 0 and 1 that indicates the fraction of 
+            default = None.
+
         min_failures : int, optional
             Minimum number of consecutive failures required for reporting,
             default = 1
@@ -835,8 +835,9 @@ class PerformanceMonitoring(object):
         """
         assert callable(quality_control_func), 'quality_control_func must be a callable function'
         assert isinstance(window, (int, float)), 'window must be of type int or float'
-        assert isinstance(rebase, (NoneType, int, float)), 'rebase must be None or type int or float'
         assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
+        assert isinstance(rebase, (NoneType, int, float)), 'rebase must be None or type int or float'
+        assert isinstance(min_failures, int), 'min_failures must be type int'
         assert isinstance(error_message, (NoneType, str)), 'error_message must be None or of type string'
 
         df = self._setup_data(key)
@@ -937,12 +938,12 @@ def check_delta(data, bound, window, key=None, direction=None, min_failures=1):
 
 
 @_documented_by(PerformanceMonitoring.check_outlier)
-def check_outlier(data, bound, key=None, window=None, absolute_value=True, 
-                  min_failures=1, streaming=False):
+def check_outlier(data, bound, window=None, key=None, absolute_value=False, 
+                  streaming=False, min_failures=1):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    pm.check_outlier(bound, key, window, absolute_value, min_failures, streaming)
+    pm.check_outlier(bound, window, key, absolute_value, streaming, min_failures)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results}
@@ -982,12 +983,12 @@ def check_custom_static(data, quality_control_func, key=None, min_failures=1,
             'metadata': metadata}
 
 @_documented_by(PerformanceMonitoring.check_custom_streaming, include_metadata=True)
-def check_custom_streaming(data, quality_control_func, window, rebase=None, key=None, 
-                         min_failures = 1, error_message=None):
+def check_custom_streaming(data, quality_control_func, window, key=None, rebase=None,
+                         min_failures=1, error_message=None):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    metadata = pm.check_custom_streaming(quality_control_func, window, rebase, key, min_failures, error_message)
+    metadata = pm.check_custom_streaming(quality_control_func, window, key, rebase, min_failures, error_message)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results,

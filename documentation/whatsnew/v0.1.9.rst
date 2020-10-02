@@ -3,20 +3,23 @@
 v0.1.9 (master)
 --------------------------
 
-* Added the ability to use custom quality control tests which include static or streaming analysis.  The methods, ``check_custom_static`` and ``check_custom_streaming``, allow the user to supply a custom function that is used to determine if data is anomalous. The custom tests also allow the user to return metadata that contains information about the quality control test.
+* Added the ability to add custom quality control tests which use static or streaming analysis.  The methods, ``check_custom_static`` and ``check_custom_streaming``, allow the user to supply a custom function that is used to determine if data is anomalous. The custom tests also allow the user to return metadata that contains information about the quality control test.
 
   * The streaming analysis loops through the data using a moving window to determine if data point is normal or anomalous.  If the data point is deemed anomalous it is omitted from the history and not used to determine the status of subsequent data points.  
   * The static analysis operates on the entire data set, and while it can include operations like moving windows, it does not update the history based on the test results.
    
 * The following input arguments were changed or added:
 
-  * In ``check_outlier``, the input argument `window` was changed to None (not used), `absolute value` was changed to False, and an input argument `streaming` was added to use streaming analysis (default value is False)
+  * In ``check_outlier``, the input argument `window` was changed to None (not used), `absolute value` was changed to False, and an input argument `streaming` was added to use streaming analysis (default value is False).  Changed the order of `key` and `window` to be more consistent with other quality control tests.
   * In ``check_delta``, the input argument `window` is no longer optional
-
+  * The order of the optional input argument `key` was moved in several quality control tests to ensure that arguments pertaining to the functionality of the method are listed first.
+  
 * Added property ``data`` to the PerformanceMonitoring class.  pm.data is equivalent to pm.df (pm.df was retained for backward compatibility)
-* Added the ability to create monitoring reports using a Latex template. 
+* Added the ability to create monitoring reports using a LaTeX template. Small changes in the HTML template.
 * Added the option to specify a date format string to timeseries plots.
 * Fixed a bug in the way masks are generated.  Data points that have Null values were being assigned to False, indicating 
   that a quality control test failed.  Null values are now assumed to be True, unless a specific test fails (e.g. check_missing).
+* Updated the boolean mask used in the code to have a consistent definition (True = data point pass all tests, False = data point did not pass at least one test.)
 * Added Python 3.8 tests
+* Added an example in the docs to illustrate analysis of continuous data
 * Updated documentation and tests
