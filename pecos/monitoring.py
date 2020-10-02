@@ -116,12 +116,12 @@ class PerformanceMonitoring(object):
         # Isolate subset if key is not None
         if key is not None:
             try:
-                df = self.df[self.trans[key]]
+                df = self.df[self.trans[key]] #  copy is not needed
             except:
                 logger.warning("Undefined key: " + key)
                 return
         else:
-            df = self.df
+            df = self.df.copy()
 
         return df
 
@@ -226,16 +226,14 @@ class PerformanceMonitoring(object):
         assert isinstance(data, pd.DataFrame), 'data must be of type pd.DataFrame'
         assert isinstance(data.index, pd.core.indexes.datetimes.DatetimeIndex), 'data.index must be a DatetimeIndex'
         
-        temp = data.copy()
-
         if self.df is not None:
             self.df = data.combine_first(self.df)
         else:
-            self.df = temp
+            self.df = data.copy()
 
         # Add identity 1:1 translation dictionary
         trans = {}
-        for col in temp.columns:
+        for col in data.columns:
             trans[col] = [col]
 
         self.add_translation_dictionary(trans)
@@ -985,11 +983,11 @@ def check_custom_static(data, quality_control_func, key=None, min_failures=1,
 
 @_documented_by(PerformanceMonitoring.check_custom_streaming, include_metadata=True)
 def check_custom_streaming(data, quality_control_func, window, rebase=None, key=None, 
-                         error_message=None):
+                         min_failures = 1, error_message=None):
 
     pm = PerformanceMonitoring()
     pm.add_dataframe(data)
-    metadata = pm.check_custom_streaming(quality_control_func, window, rebase, key, error_message)
+    metadata = pm.check_custom_streaming(quality_control_func, window, rebase, key, min_failures, error_message)
     mask = pm.mask
 
     return {'cleaned_data': data[mask], 'mask': mask, 'test_results': pm.test_results,

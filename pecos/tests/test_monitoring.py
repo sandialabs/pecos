@@ -543,6 +543,23 @@ class Test_check_outlier(unittest.TestCase):
             index=RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
+        
+        # Functional tests
+        results = pecos.monitoring.check_outlier(self.pm.data, [None, 1.9], window=None, absolute_value=True )
+        test_results = results['test_results']
+        expected = pd.DataFrame(
+            array([['A', Timestamp('2017-01-01 06:00:00'), Timestamp('2017-01-01 06:00:00'), 1, '|Outlier| > upper bound, 1.9'],
+                   ['A', Timestamp('2017-01-01 19:00:00'), Timestamp('2017-01-01 19:00:00'), 1, '|Outlier| > upper bound, 1.9']], dtype=object),
+            columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
+            index=RangeIndex(start=0, stop=2, step=1)
+            )
+        assert_frame_equal(test_results, expected, 
+                           check_dtype=False)
+        
+        
+    def test_outlier_streaming(self):
+        # outlier if stdev > 1.9
+        pass
 
 class Test_check_custom(unittest.TestCase):
 
@@ -568,14 +585,16 @@ class Test_check_custom(unittest.TestCase):
             metadata = data
             return mask, metadata
 
-        metadata = self.pm.check_custom_static(custom_func)
-        
-        print(self.pm.test_results)
+        metadata = self.pm.check_custom_static(custom_func, error_message='Static')
         N = self.pm.df.shape[0]*self.pm.df.shape[1]
         percent = 1-self.pm.test_results['Timesteps'].sum()/N
-        
         assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
-    
+        
+        # Functional tests
+        results = pecos.monitoring.check_custom_static(self.pm.data, custom_func, error_message='Static')
+        percent = 1-results['test_results']['Timesteps'].sum()/N
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        
     def test_custom_streaming(self):
         
         def custom_func(data_pt, history):
@@ -583,14 +602,16 @@ class Test_check_custom(unittest.TestCase):
             metadata = data_pt
             return mask, metadata
 
-        metadata = self.pm.check_custom_streaming(custom_func, 50)
-        
-        print(self.pm.test_results)
+        metadata = self.pm.check_custom_streaming(custom_func, 50, error_message='Streaming')
         N = self.pm.df.shape[0]*self.pm.df.shape[1]
         percent = 1-self.pm.test_results['Timesteps'].sum()/N
-        
         assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
-
+        
+        # Functional tests
+        results = pecos.monitoring.check_custom_streaming(self.pm.data, custom_func, 50, error_message='Streaming')
+        percent = 1-results['test_results']['Timesteps'].sum()/N
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+    
 class Test_append_test_results(unittest.TestCase):
 
     @classmethod
