@@ -53,7 +53,6 @@ Contents
    results
    automation
    applications
-   daq
    license
    whatsnew
    developers
