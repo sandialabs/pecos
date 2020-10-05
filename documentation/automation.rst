@@ -76,15 +76,13 @@ The following code could be used as a Python driver that runs using a task sched
 	
     >>> # Load data and recent history from the database
     >>> data = pd.read_sql("SELECT * FROM data WHERE timestamp BETWEEN '" + str(date) + \
-    ...                    " 00:00:00' AND '" + str(date) + " 23:59:59';" , engine)
-    >>> data.set_index('timestamp', inplace=True)
-    >>> data.index = pd.to_datetime(data.index)
+    ...                    " 00:00:00' AND '" + str(date) + " 23:59:59';" , engine, 
+    ...                    parse_dates='timestamp', index_col='timestamp')
 
     >>> history = pd.read_sql("SELECT * FROM qc_data WHERE timestamp BETWEEN '" + \
     ...                       str(date-datetime.timedelta(days=1)) + " 23:00:00' AND '" + \
-    ...                       str(date-datetime.timedelta(days=1)) + " 23:59:59';" , engine)
-    >>> history.set_index('timestamp', inplace=True)
-    >>> history.index = pd.to_datetime(history.index)
+    ...                       str(date-datetime.timedelta(days=1)) + " 23:59:59';" , engine, 
+    ...                       parse_dates='timestamp', index_col='timestamp')
 	
     >>> # Setup the PerformanceMonitoring with data and history and run a streaming outlier test
     >>> pm = pecos.monitoring.PerformanceMonitoring()
