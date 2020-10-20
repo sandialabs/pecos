@@ -853,21 +853,22 @@ class PerformanceMonitoring(object):
         # still expects pandas DataFrames and Series in the user defined quality 
         # control function to keep data types consitent on the user side.
         np_mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns).values
-        np_data = df.values
+        np_data = df.values.astype('Float64')
     
         ti = df.index.get_loc(df.index[0]+history_window)
         
         for i, t in enumerate(np.arange(ti,np_data.shape[0],1)):
-            
-            t_start = df.index.get_loc(df.index[t]-history_window)
+
+            t_start = df.index.get_loc(df.index[t]-history_window, method='nearest')
+            t_timestamp = df.index[t]
             
             data_pt = pd.Series(np_data[t], index=df.columns)
             history = pd.DataFrame(np_data[t_start:t], index=range(t-t_start), columns=df.columns)
 
-            mask_t, metadata[t] = quality_control_func(data_pt, history)
+            mask_t, metadata[t_timestamp] = quality_control_func(data_pt, history)
             if i == 0:
                 assert isinstance(mask_t, pd.Series), 'mask returned by quality_control_func must be of type pd.Series'
-                assert isinstance(metadata[t], pd.Series), 'metadata returned by quality_control_func must be of type pd.Series'
+                assert isinstance(metadata[t_timestamp], pd.Series), 'metadata returned by quality_control_func must be of type pd.Series'
 
             np_mask[t] = mask_t.values
             np_data[~np_mask] = np.NAN
