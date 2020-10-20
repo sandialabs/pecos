@@ -363,10 +363,8 @@ This is similar to the multivariate nearest neighbor algorithm used in CANARY [H
 	
     >>> def nearest_neighbor(data_pt, history):
     ...     # Normalize the current data point and history using the history window
-    ...     mean = history.mean()
-    ...     std = history.std()
-    ...     zt = (data_pt - mean)/std
-    ...     z = (history - mean)/std
+    ...     zt = (data_pt - history.mean())/history.std()
+    ...     z = (history - history.mean())/history.std()
     ...     # Compute the distance from the current data point to data in the history window
     ...     zt_reshape = zt.to_frame().T
     ...     dist = cdist(zt_reshape, z)
@@ -375,8 +373,8 @@ This is similar to the multivariate nearest neighbor algorithm used in CANARY [H
     ...     # Extract the index for the min distance and the distance components
     ...     idx = np.nanargmin(dist)
     ...     metadata = z.loc[idx,:] - zt
-    ...     # Determine if the min distance is less than 3, assign value to each column 
-    ...     mask = pd.Series(min_dist <= 3, index=history.columns)
+    ...     # Determine if the min distance is less than 3, assign value (T/F) to the mask
+    ...     mask = pd.Series(min_dist <= 3, index=data_pt.index)
     ...     return mask, metadata
 	
     >>> metadata = pm.check_custom_streaming(nearest_neighbor, window=600) 
