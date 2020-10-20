@@ -374,10 +374,9 @@ This is similar to the multivariate nearest neighbor algorithm used in CANARY [H
     ...     min_dist = np.nanmin(dist)
     ...     # Extract the index for the min distance and the distance components
     ...     idx = np.nanargmin(dist)
-    ...     min_dist_components = z.loc[idx,:] - zt
-    ...     # Determine if min_dist is less than 3 and create the mask and metadata
+    ...     metadata = z.loc[idx,:] - zt
+    ...     # Determine if the min distance is less than 3, assign value to each column 
     ...     mask = pd.Series(min_dist <= 3, index=history.columns)
-    ...     metadata = pd.Series(min_dist_components, index=history.columns)
     ...     return mask, metadata
 	
     >>> metadata = pm.check_custom_streaming(nearest_neighbor, window=600) 
