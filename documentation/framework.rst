@@ -120,7 +120,7 @@ Pecos supports both static and streaming analysis.
 Static analysis
 ^^^^^^^^^^^^^^^^^^^^^^^
 Most quality control tests in Pecos use static analysis.
-Static analysis operates on the entire data set to determine if all data points are normal or anomalous. Wile this can include operations like moving window statistics, the quality control tests operates on the entire data set at once. 
+Static analysis operates on the entire data set to determine if all data points are normal or anomalous. While this can include operations like moving window statistics, the quality control tests operates on the entire data set at once. 
 This means that results from the quality control test are not dependent on results from a previous time step.
 This approach is appropriate when data at different time steps can be analyzed independently, or moving window statistics used to analyze the data do not need to be updated based on test results.
 

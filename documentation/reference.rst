@@ -12,6 +12,8 @@ References
 	
 	If the 6 digits match another citation, add a lower case letter (a, b, ...)
 
+.. [HMKC07] Hart, D., McKenna, S.A., Klise, K., Cruz, V., & Wilson, M. (2007) Water quality event detection systems for drinking water contamination warning systems: Development testing and application of CANARY, World Environmental and Water Resources Congress (EWRI), Tampa, FL, May 15-19.
+
 .. [Hunt07] Hunter, J.D. (2007). Matplotlib: A 2D graphics environment. Computing in Science & Engineering, 3(9), 90-95.
 
 .. [KlSt16a] Klise, K.A., Stein, J.S. (2016). Performance Monitoring using Pecos, Technical Report SAND2016-3583, Sandia National Laboratories.

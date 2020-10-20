@@ -48,7 +48,7 @@ For example,
     >>> import pandas as pd
     >>> import pecos
     >>> pm = pecos.monitoring.PerformanceMonitoring()
-    >>> index = pd.date_range('1/1/2016', periods=3, freq='s')
+    >>> index = pd.date_range('1/1/2016', periods=3, freq='60s')
     >>> data = [[1,2,3],[4,5,6],[7,8,9]]
     >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
     >>> pm.add_dataframe(df)
@@ -212,7 +212,15 @@ Input includes:
 
 * Flag indicating if the outlier test should use streaming analysis (default=False). 
 
-Note that using a streaming analysis is different than merely defining a moving window. In a static analysis, the mean and standard deviation used to normalize the data are computed using a moving window (or using the entire data set if window=None) and upper and lower bounds are used to determine if data points are anomalous.  The results do not impact the moving window statistics. In a streaming analysis, the mean and standard deviation are computed using a moving window after each data points is determined to be normal or anomalous.  Data points that are determined to be anomalous are not used in the normalization.
+Note that using a streaming analysis is different than merely defining a moving window. 
+Streaming analysis omits anomalous values from subsequent normalization calculations, where as a static analysis with a moving window does not.
+
+In a static analysis, the mean and standard deviation used to normalize the data are computed 
+using a moving window (or using the entire data set if window=None) and upper and lower 
+bounds are used to determine if data points are anomalous.  The results do not impact the 
+moving window statistics. In a streaming analysis, the mean and standard deviation are 
+computed using a moving window after each data points is determined to be normal or anomalous.  
+Data points that are determined to be anomalous are not used in the normalization.
 
 For example,
 
@@ -271,17 +279,27 @@ Static analysis operates on the entire data set to determine if all data points 
 * Minimum number of consecutive failures for reporting (default = 1)
 * Error message (default = None)
 
-Custom static analysis can be run as follows:
+Custom static analysis can be run using the following example.  
+The custom function below, ``sine_function``, determines if sin(data) is greater than 0.5 and returns the value of sin(data) as metadata.
 
 .. doctest::
 
-    >>> metadata = pm.check_custom_static(custom_static_function) # doctest: +SKIP
+    >>> import numpy as np
+	
+    >>> def sine_function(data):
+    ...     # Create metadata and mask using sin(data)
+    ...     metadata = np.sin(data)
+    ...     mask = metadata > 0.5
+    ...     return mask, metadata
+
+    >>> metadata = pm.check_custom_static(sine_function)
+
 	
 Custom streaming analysis
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 The streaming analysis loops through each data point using a quality control tests that relies on information from "clean data" in a moving window. Input for custom streaming analysis includes:
-
+	
 * Custom quality control function with the following general form::
 
       def custom_streaming_function(data_pt, history): 
@@ -320,9 +338,47 @@ The streaming analysis loops through each data point using a quality control tes
 * Data column (default = None, which indicates that all columns are used)
 * Error message (default = None)
 
-Custom streaming analysis can be run as follows:
+Custom streaming analysis can be run using the following example.  
+The custom function below, ``nearest_neighbor``, determines if the current data point is within 3 standard 
+deviations of data in a 10 minute history window.  
+In this case, metadata returns the distance from each column in the current data point to its nearest neighbor in the history.
+This is similar to the multivariate nearest neighbor algorithm used in CANARY [HMKC07]_.
 
 .. doctest::
+    :hide:
 
-    >>> metadata = pm.check_custom_streaming(custom_streaming_function, window=3600) # doctest: +SKIP
+    >>> import pandas as pd
+    >>> import pecos
+    >>> pm = pecos.monitoring.PerformanceMonitoring()
+    >>> index = pd.date_range('1/1/2016', periods=100, freq='60s')
+    >>> data = np.random.normal(size=(100,3))
+    >>> df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
+    >>> pm.add_dataframe(df)
+	
+.. doctest::
+
+    >>> import numpy as np
+    >>> import pandas as pd
+    >>> from scipy.spatial.distance import cdist 
+	
+    >>> def nearest_neighbor(data_pt, history):
+    ...     # Normalize the current data point and history using the history window
+    ...     mean = history.mean()
+    ...     std = history.std()
+    ...     zt = (data_pt - mean)/std
+    ...     z = (history - mean)/std
+    ...     # Compute the distance from the current data point to data in the history window
+    ...     zt_reshape = zt.to_frame().T
+    ...     dist = cdist(zt_reshape, z)
+    ...     # Extract the minimum distance
+    ...     min_dist = np.nanmin(dist)
+    ...     # Extract the index for the min distance and the distance components
+    ...     idx = np.nanargmin(dist)
+    ...     min_dist_components = z.loc[idx,:] - zt
+    ...     # Determine if min_dist is less than 3 and create the mask and metadata
+    ...     mask = pd.Series(min_dist <= 3, index=history.columns)
+    ...     metadata = pd.Series(min_dist_components, index=history.columns)
+    ...     return mask, metadata
+	
+    >>> metadata = pm.check_custom_streaming(nearest_neighbor, window=600) 
 
