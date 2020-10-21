@@ -4,7 +4,7 @@ from os.path import abspath, dirname, join
 import pecos
 import pandas as pd
 from pandas import Timestamp, RangeIndex
-from pandas.util.testing import assert_frame_equal, assert_series_equal
+from pandas.testing import assert_frame_equal, assert_series_equal
 import numpy as np
 from numpy import array
 
@@ -52,9 +52,9 @@ def simple_example_run_analysis(df):
     pm.check_range([None, 0.25], 'Wave Error')
     
     # Check for stagnant data within a 1 hour moving window
-    pm.check_delta([0.0001, None], 'A', 3600) 
-    pm.check_delta([0.0001, None], 'B', 3600) 
-    pm.check_delta([0.0001, None], 'Wave', 3600) 
+    pm.check_delta([0.0001, None], 3600, 'A') 
+    pm.check_delta([0.0001, None], 3600, 'B') 
+    pm.check_delta([0.0001, None], 3600, 'Wave') 
         
     # Check for abrupt changes between consecutive time steps
     pm.check_increment([None, 0.6], 'Wave') 
@@ -221,8 +221,8 @@ class Test_simple_example(unittest.TestCase):
         
         # Object-oriented test
         self.pm.check_corrupt([-999])
-        self.pm.check_delta([0.0001, None], window=2*3600)
-        self.pm.check_delta([None, 0.6], 'Wave', window=900)
+        self.pm.check_delta([0.0001, None], 2*3600)
+        self.pm.check_delta([None, 0.6], 900, 'Wave')
         test_results = self.pm.test_results[['Delta' in ef for ef in self.pm.test_results['Error Flag']]]
         
         #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_check_delta')
@@ -543,6 +543,105 @@ class Test_check_outlier(unittest.TestCase):
             index=RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
+        
+        # Functional tests
+        results = pecos.monitoring.check_outlier(self.pm.data, [None, 1.9], window=None, absolute_value=True )
+        test_results = results['test_results']
+        expected = pd.DataFrame(
+            array([['A', Timestamp('2017-01-01 06:00:00'), Timestamp('2017-01-01 06:00:00'), 1, '|Outlier| > upper bound, 1.9'],
+                   ['A', Timestamp('2017-01-01 19:00:00'), Timestamp('2017-01-01 19:00:00'), 1, '|Outlier| > upper bound, 1.9']], dtype=object),
+            columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
+            index=RangeIndex(start=0, stop=2, step=1)
+            )
+        assert_frame_equal(test_results, expected, 
+                           check_dtype=False)
+        
+        
+    def test_outlier_streaming(self):
+        # outlier if stdev > 1.9
+        pass
+
+class Test_check_custom(unittest.TestCase):
+
+    @classmethod
+    def setUp(self):
+        N = 1000
+        np.random.seed(92837)
+        index = pd.date_range('1/1/2020', periods=N, freq='S')
+        data = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
+        df = pd.DataFrame(data, index=index)
+        
+        self.pm = pecos.monitoring.PerformanceMonitoring()
+        self.pm.add_dataframe(df)
+        
+    @classmethod
+    def tearDown(self):
+        pass
+    
+    def test_custom_static(self):
+        
+        def custom_func(data):
+            mask = (data.abs() < 2)
+            metadata = data
+            return mask, metadata
+
+        metadata = self.pm.check_custom_static(custom_func, error_message='Static')
+        N = self.pm.df.shape[0]*self.pm.df.shape[1]
+        percent = 1-self.pm.test_results['Timesteps'].sum()/N
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        
+        # Functional tests
+        results = pecos.monitoring.check_custom_static(self.pm.data, custom_func, error_message='Static')
+        percent = 1-results['test_results']['Timesteps'].sum()/N
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        
+    def test_custom_streaming(self):
+        
+        def custom_func(data_pt, history):
+            mask = (data_pt.abs() < 2)
+            metadata = data_pt
+            return mask, metadata
+
+        metadata = self.pm.check_custom_streaming(custom_func, 50, error_message='Streaming')
+        N = self.pm.df.shape[0]*self.pm.df.shape[1]
+        percent = 1-self.pm.test_results['Timesteps'].sum()/N
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        
+        # Functional tests
+        results = pecos.monitoring.check_custom_streaming(self.pm.data, custom_func, 50, error_message='Streaming')
+        percent = 1-results['test_results']['Timesteps'].sum()/N
+        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+    
+class Test_append_test_results(unittest.TestCase):
+
+    @classmethod
+    def setUp(self):
+        self.pm = pecos.monitoring.PerformanceMonitoring()
+        
+    @classmethod
+    def tearDown(self):
+        pass
+
+    def test_append_test_results(self):
+        mask = pd.DataFrame(True, columns=['A', 'B', 'C', 'D', 'E'], index=range(10))
+        mask.loc[0:3,'A'] = False # start of time series
+        mask.loc[5,'A'] = False # single time
+        mask.loc[7:9,'B'] = False # end of a column
+        mask.loc[0:5,'C'] = False # wrap False across two columns
+        mask.loc[8:9,'E'] = False # end of time series
+        
+        self.pm._append_test_results(mask, 'None')
+        
+        expected = pd.DataFrame(
+                array([['A', 0, 3, 4, 'None'],
+                       ['A', 5, 5, 1, 'None'],
+                       ['B', 7, 9, 3, 'None'],
+                       ['C', 0, 5, 6, 'None'],
+                       ['E', 8, 9, 2, 'None']], dtype=object),
+                columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
+                index=range(5))
+        assert_frame_equal(expected, self.pm.test_results)
+        
 
 if __name__ == '__main__':
     unittest.main()

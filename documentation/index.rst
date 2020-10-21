@@ -50,11 +50,9 @@ Contents
    qc_tests
    metrics
    composite_signal
-   configfile
-   scheduler
    results
+   automation
    applications
-   daq
    license
    whatsnew
    developers

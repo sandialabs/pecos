@@ -25,7 +25,7 @@ def qci(mask, tfilter=None):
     mask : pandas DataFrame
         Test results mask, returned from pm.mask
     
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Time filter containing boolean values for each time index
         
     Returns
@@ -60,7 +60,7 @@ def rmse(data1, data2, tfilter=None):
     data2 : pandas DataFrame
         Data. Note, the column names in data1 must equal the column names in data2
          
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Time filter containing boolean values for each time index
         
     Returns
@@ -103,7 +103,7 @@ def time_integral(data, tfilter=None):
     data : pandas DataFrame
         Data
          
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Time filter containing boolean values for each time index
         
     Returns
@@ -147,7 +147,7 @@ def time_derivative(data, tfilter=None):
     data : pandas DataFrame
         Data
          
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Filter containing boolean values for each time index
         
     Returns
@@ -189,7 +189,7 @@ def probability_of_detection(observed, actual, tfilter=None):
         Actual conditions, (True = background, False = anomalous).
         Note, the column names in observed must equal the column names in actual
     
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Filter containing boolean values for each time index
         
     Returns
@@ -247,7 +247,7 @@ def false_alarm_rate(observed, actual, tfilter=None):
         Actual conditions, (True = background, False = anomalous).
         Note, the column names in observed must equal the column names in actual.
     
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Filter containing boolean values for each time index
         
     Returns

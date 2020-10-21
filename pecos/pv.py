@@ -24,7 +24,7 @@ def insolation(G, tfilter=None):
     G : pandas DataFrame
         Irradiance time series
         
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Time filter containing boolean values for each time index
         
     Returns
@@ -54,7 +54,7 @@ def energy(P, tfilter=None):
     P : pandas DataFrame
         Power time series
          
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Time filter containing boolean values for each time index
         
     Returns
@@ -90,7 +90,7 @@ def performance_ratio(E, H_poa, P_ref, G_ref=1000):
     P_ref : float
         DC power rating at STC conditions
         
-    G_ref : float (optional)
+    G_ref : float, optional
         Reference irradiance, default = 1000
         
     Returns
@@ -129,7 +129,7 @@ def normalized_current(I, G_poa, I_sco, G_ref=1000):
     I_sco : float
         Short circuit current at STC conditions
         
-    G_ref : float (optional)
+    G_ref : float, optional
         Reference irradiance, default = 1000
         
     Returns
@@ -168,7 +168,7 @@ def normalized_efficiency(P, G_poa, P_ref, G_ref=1000):
     P_ref : float
         DC power rating at STC conditions
         
-    G_ref : float (optional)
+    G_ref : float, optional
         Reference irradiance, default = 1000
         
     Returns

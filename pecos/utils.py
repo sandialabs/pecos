@@ -18,7 +18,7 @@ def index_to_datetime(index, unit='s', origin='unix'):
     index : pandas Index
         DataFrame index in int or float 
     
-    unit : str (optional)
+    unit : str, optional
         Units of the original index
     
     origin : str
@@ -111,7 +111,7 @@ def round_index(index, frequency, how='nearest'):
     frequency : int
         Expected time series frequency, in seconds
     
-    how : string (optional)
+    how : string, optional
         Method for rounding, default = 'nearest'.  Options include:
         
         * nearest = round the index to the nearest frequency
@@ -168,13 +168,17 @@ def evaluate_string(string_to_eval, data=None, trans=None, specs=None, col_name=
     string_to_eval : string
         String to evaluate, the string can included multiple keywords and 
         numpy (np.*) and pandas (pd.*) functions
-    data : pandas DataFrame (optional)
+		
+    data : pandas DataFrame, optional
         Data, indexed by datetime
-    trans: dictionary (optional)
+		
+    trans: dictionary, optional
         Translation dictionary
-    specs : dictionary (optional)
+		
+    specs : dictionary, optional
         Keyword:value pairs used to define constants
-    col_name : string (optional)
+		
+    col_name : string, optional
         Column name used in the returned DataFrame.  If the DataFrame has more 
         than one column, columns are named col_name 0, col_name 1, ...
         

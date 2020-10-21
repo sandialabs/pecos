@@ -6,6 +6,10 @@ compute quantities that might be of use in the analysis.
 Many of these metrics aggregates over time and can be saved to track long 
 term performance and system health.
 
+While Pecos typically runs a series of quality control tests on raw data, quality control tests can also be run on metrics generated from these analyses to track long term performance and system health.  For example, daily quality control analysis can generate summary metrics that can later be used to generate a yearly summary report.
+Pecos includes a performance metrics example (based on one year of PV metrics)
+in the `examples/metrics <https://github.com/sandialabs/pecos/tree/master/examples/metrics>`_ directory.
+
 Quality control index
 -------------------------
 The quality control index (QCI) is a general metric which indicates the 

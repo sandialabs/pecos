@@ -25,7 +25,7 @@ def sapm(pm, sapm_parameters, location):
                                                   location['Longitude'])
     
     # Compute cell temperature
-    celltemp = pvlib.pvsystem.sapm_celltemp(poa, wind, temperature)
+    celltemp = pvlib.temperature.sapm_cell(poa, wind, temperature, -3.47, -0.0594, 3)
 
     # Compute absolute airmass
     airmass_relative  = pvlib.atmosphere.get_relative_airmass(solarposition['zenith'])
@@ -40,7 +40,7 @@ def sapm(pm, sapm_parameters, location):
                                                   aoi, sapm_parameters)
     
     # Run SAPM
-    sapm_model = pvlib.pvsystem.sapm(Ee, celltemp['temp_cell'], sapm_parameters)
+    sapm_model = pvlib.pvsystem.sapm(Ee, celltemp, sapm_parameters)
     
     # Compute the relative error between observed and predicted DC Power.  
     # Add the composite signal and run a range test
@@ -75,7 +75,7 @@ def sapm(pm, sapm_parameters, location):
     # Compute clearness index
     dni_insolation = pecos.pv.insolation(dni, tfilter=pm.tfilter)
     dni_insolation = dni_insolation.values[0]
-    ea = pvlib.irradiance.extraradiation(index.dayofyear)
+    ea = pvlib.irradiance.get_extra_radiation(index.dayofyear)
     ea = pd.Series(index=index, data=ea)
     ea_insolation = pecos.pv.insolation(ea, tfilter=pm.tfilter)
     ea_insolation = ea_insolation.values[0]

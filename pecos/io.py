@@ -41,10 +41,10 @@ def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
     filename : string
         File name
 
-    index_col : string (optional)
+    index_col : string, optional
         Index column name, default = 'TIMESTAMP'
 
-    encoding : string (optional)
+    encoding : string, optional
         Character encoding (i.e. utf-16)
     
     Returns
@@ -93,16 +93,16 @@ def send_email(subject, body, recipient, sender, attachment=None,
     sender : string
         Sender email address
         
-    attachment : string (optional)
+    attachment : string, optional
         Name of file to attach
         
-    host : string (optional)
+    host : string, optional
         Name of email host (or host:port), default = 'localhost'
     
-    username : string (optional)
+    username : string, optional
         Email username for authentication
     
-    password : string (optional)
+    password : string, optional
         Email password for authentication
     """
     
@@ -153,7 +153,7 @@ def write_metrics(metrics, filename='metrics.csv'):
     metrics : pandas DataFrame
         Data to add to the metrics file
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'metrics.csv'
     
@@ -192,7 +192,7 @@ def write_test_results(test_results, filename='test_results.csv'):
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'test_results.csv'
     
@@ -220,7 +220,8 @@ def write_test_results(test_results, filename='test_results.csv'):
 def write_monitoring_report(data, test_results, test_results_graphics=[], 
                             custom_graphics=[], metrics=None, 
                             title='Pecos Monitoring Report', config={}, logo=False, 
-                            im_width_test_results=700, im_width_custom=700, encode=False,
+                            im_width_test_results=1, im_width_custom=1, im_width_logo=0.1,
+                            encode=False, file_format='html',
                             filename='monitoring_report.html'):
     """
     Generate a monitoring report.  
@@ -230,40 +231,43 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     Parameters
     ----------
     data : pandas DataFrame
-        Data, indexed by time (pm.df)
+        Data, indexed by time (pm.data)
         
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
         
-    test_results_graphics : list of strings (optional)
+    test_results_graphics : list of strings, optional
         Graphics files, with full path.  These graphics highlight data points 
         that failed a quality control test, created using pecos.graphics.plot_test_results()
         
-    custom_graphics : list of strings (optional)
+    custom_graphics : list of strings, optional
         Custom files, with full path.  Created by the user.
     
-    metrics : pandas Series or DataFrame (optional)
+    metrics : pandas Series or DataFrame, optional
         Performance metrics to add as a table to the monitoring report
     
-    title : string (optional)
+    title : string, optional
         Monitoring report title, default = 'Pecos Monitoring Report'
         
-    config : dictionary (optional)
+    config : dictionary, optional
         Configuration options, to be printed at the end of the report
     
-    logo : string (optional)
+    logo : string, optional
         Graphic to be added to the report header
     
-    im_width_test_results=700 : float (optional)
-        Image width for test results graphics in the HTML report, default = 700
+    im_width_test_results : float, optional
+        Image width as a fraction of page size, for test results graphics, default = 1
     
-    im_width_custom=700 : float (optional)
-        Image width for custom graphics in the HTML report, default = 700
+    im_width_custom : float, optional
+        Image width as a fraction of page size, for custom graphics, default = 1
         
-    encode : boolean (optional)
+    im_width_logo: float, optional
+        Image width as a fraction of page size, for the logo, default = 0.1
+        
+    encode : boolean, optional
         Encode graphics in the html, default = False
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'monitoring_report.html'
         
@@ -283,7 +287,7 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
         end_time = data.index[-1]
     
     # Set pandas display option     
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', 40)
     
     # Collect notes (from the logger file)
@@ -303,38 +307,63 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     # Convert to html format
     if metrics is None:
         metrics = pd.DataFrame()
-    if isinstance(metrics, pd.Series):
-        metrics_html = metrics.to_frame().to_html(header=False)
-    if isinstance(metrics, pd.DataFrame):  
-        metrics_html = metrics.to_html(justify='left')
-        
-    test_results_html = test_results.to_html(justify='left')
-    notes_html = notes_df.to_html(justify='left', header=False)
+    
+    pecos_logo = join(dirname(pecos.__file__), '..', 'documentation', 'figures', 'logo.png')
     
     content = {'start_time': str(start_time), 
-                'end_time': str(end_time), 
-                'num_notes': str(notes_df.shape[0]),
-                'notes': notes_html, 
-                'num_test_results': str(test_results.shape[0]),
-                'test_results': test_results_html,
-                'test_results_graphics': test_results_graphics,
-                'custom_graphics': custom_graphics,
-                'num_metrics': str(metrics.shape[0]),
-                'metrics': metrics_html,
-                'config': config}
+               'end_time': str(end_time), 
+               'num_notes': str(notes_df.shape[0]),
+               'num_data_columns': str(data.shape[1]),
+               'num_test_results': str(test_results.shape[0]),
+               'num_metrics': str(metrics.shape[0]),
+               'config': config}
                 
     title = os.path.basename(title)
     
-    html_string = _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, encode)
+    if file_format == 'html':
+        content['test_results_graphics'] = test_results_graphics
+        content['custom_graphics'] = custom_graphics
+        content['pecos_logo'] = pecos_logo
+        
+        if isinstance(metrics, pd.Series):
+            metrics_html = metrics.to_frame().to_html(header=False)
+        if isinstance(metrics, pd.DataFrame):  
+            metrics_html = metrics.to_html(justify='left')
+            
+        content['metrics'] = metrics_html    
+        content['test_results'] = test_results.to_html(justify='left')
+        content['notes'] = notes_df.to_html(justify='left', header=False)
+        
+        im_width_test_results = im_width_test_results*800
+        im_width_custom = im_width_custom*800
+        im_width_logo = im_width_logo*800
+        
+        file_string = _html_template_monitoring_report(content, title, logo, 
+                            im_width_test_results, im_width_custom, im_width_logo, encode)
+    else:
+        test_results_graphics = [g.replace('\\', '/') for g in test_results_graphics]
+        custom_graphics = [g.replace('\\', '/') for g in custom_graphics]
+        pecos_logo = pecos_logo.replace('\\', '/')
+        
+        content['test_results_graphics'] = test_results_graphics
+        content['custom_graphics'] = custom_graphics
+        content['pecos_logo'] = pecos_logo
+        
+        content['metrics'] = metrics.to_latex(longtable=True)
+        content['test_results'] = test_results.to_latex(longtable=True)
+        content['notes'] = notes_df.to_latex(longtable=True)
+        
+        file_string = _latex_template_monitoring_report(content, title, logo, 
+                            im_width_test_results, im_width_custom, im_width_logo)
     
-    # Write html file
+    # Write file
     if os.path.dirname(filename) == '':
         full_filename = os.path.join(os.getcwd(), filename)
     else:
         full_filename = filename
-    html_file = open(full_filename,"w")
-    html_file.write(html_string)
-    html_file.close()
+    fid = open(full_filename,"w")
+    fid.write(file_string)
+    fid.close()
     
     logger.info("")
     
@@ -377,25 +406,25 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
                 'table': df.to_html(), 
                 'link': {'Link to monitoring report': 'C:\\\\pecos\\\\results\\\\monitoring_report.html'}}
         
-    title : string (optional)
+    title : string, optional
         Dashboard title, default = 'Pecos Dashboard'
     
-    footnote : string (optional)
+    footnote : string, optional
         Text to be added to the end of the report
     
-    logo : string (optional)
+    logo : string, optional
         Graphic to be added to the report header
     
-    im_width : float (optional)
+    im_width : float, optional
         Image width in the HTML report, default = 250
         
-    datatables : boolean (optional)
+    datatables : boolean, optional
         Use datatables.net to format the dashboard, default = False.  See https://datatables.net/ for more information.
     
-    encode : boolean (optional)
+    encode : boolean, optional
         Encode graphics in the html, default = False
     
-    filename : string (optional)
+    filename : string, optional
         File name.  If the full path is not provided, the file is saved into the 
         current working directory. By default, the file is named 'dashboard.html'
     
@@ -426,7 +455,18 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
 
     return full_filename
 
-def _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, encode):
+def _latex_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, im_width_logo):
+    
+    template = env.get_template('monitoring_report.tex')
+
+    date = datetime.datetime.now()
+    datestr = date.strftime('%m/%d/%Y')
+    
+    version = pecos.__version__
+    
+    return template.render(**locals())
+
+def _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, im_width_logo, encode):
     
     # if encode == True, encode the images
     img_dic = {}
@@ -437,6 +477,9 @@ def _html_template_monitoring_report(content, title, logo, im_width_test_results
         for im in content['test_results_graphics']:
             img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
             img_dic[im] = img_encode
+        im = content['pecos_logo']
+        img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
+        img_dic[im] = img_encode
 
     template = env.get_template('monitoring_report.html')
 

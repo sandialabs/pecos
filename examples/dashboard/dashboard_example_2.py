@@ -54,7 +54,7 @@ for location_name in locations:
         report_file =  os.path.join(results_subdirectory, 'monitoring_report.html')
         
         # Generate graphics
-        test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results,
+        test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results,
                                        pm.tfilter, filename_root=graphics_file_rootname)
         pecos.graphics.plot_heatmap(QCI, vmin=0, vmax=1)
         plt.savefig(colorblock_graphics_file, dpi=90, bbox_inches='tight', pad_inches = 0)
@@ -64,7 +64,7 @@ for location_name in locations:
 
         # Write test results and report files
         pecos.io.write_test_results(pm.test_results, test_results_file)
-        pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+        pecos.io.write_monitoring_report(pm.data, pm.test_results, test_results_graphics, 
                                          [custom_graphics_file], QCI, filename=report_file)
         
         # Store content to be displayed in the dashboard

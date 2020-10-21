@@ -8,6 +8,7 @@ logfile
 *.html
 *.csv
 *.png
+*.db
 
 pecos/tests/*.csv
 pecos/tests/*.png

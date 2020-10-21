@@ -31,9 +31,9 @@ pm.add_translation_dictionary({'Wave': ['C','D']}) # group C and D
 pm.check_timestamp(900)
  
 # Generate a time filter to exclude data points early and late in the day
-clock_time = pecos.utils.datetime_to_clocktime(pm.df.index)
+clock_time = pecos.utils.datetime_to_clocktime(pm.data.index)
 time_filter = pd.Series((clock_time > 3*3600) & (clock_time < 21*3600), 
-                        index=pm.df.index)
+                        index=pm.data.index)
 pm.add_time_filter(time_filter)
 
 # Check for missing data
@@ -44,7 +44,7 @@ pm.check_corrupt([-999])
 
 # Add a composite signal which compares measurements to a model
 wave_model = np.array(np.sin(10*clock_time/86400))
-wave_measurments = pm.df[pm.trans['Wave']]
+wave_measurments = pm.data[pm.trans['Wave']]
 wave_error = np.abs(wave_measurments.subtract(wave_model,axis=0))
 wave_error.columns=['Wave Error C', 'Wave Error D']
 pm.add_dataframe(wave_error)
@@ -56,9 +56,9 @@ pm.check_range([-1, 1], 'Wave')
 pm.check_range([None, 0.25], 'Wave Error')
 
 # Check for stagnant data within a 1 hour moving window
-pm.check_delta([0.0001, None], 'A', 3600) 
-pm.check_delta([0.0001, None], 'B', 3600) 
-pm.check_delta([0.0001, None], 'Wave', 3600) 
+pm.check_delta([0.0001, None], 3600, 'A') 
+pm.check_delta([0.0001, None], 3600, 'B') 
+pm.check_delta([0.0001, None], 3600, 'Wave') 
     
 # Check for abrupt changes between consecutive time steps
 pm.check_increment([None, 0.6], 'Wave') 
@@ -68,12 +68,12 @@ mask = pm.mask[['A','B','C','D']]
 QCI = pecos.metrics.qci(mask, pm.tfilter)
 
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results)
+test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results, pm.tfilter)
 df.plot(ylim=[-1.5,1.5], figsize=(7.0,3.5))
 plt.savefig('custom.png', format='png', dpi=500)
 
 # Write test results and report files
 pecos.io.write_test_results(pm.test_results)
-pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+pecos.io.write_monitoring_report(pm.data, pm.test_results, test_results_graphics, 
                                  ['custom.png'], QCI)
                                  

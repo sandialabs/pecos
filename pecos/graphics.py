@@ -6,6 +6,7 @@ import pandas as pd
 import numpy as np
 try:
     import matplotlib.pyplot as plt
+    from matplotlib.dates import DateFormatter
 except:
     pass
 try:
@@ -21,7 +22,9 @@ try:
 except ImportError:
     def _nottest(afunction):
         return afunction
-        
+     
+NoneType = type(None)
+
 logger = logging.getLogger(__name__)
 
 def plot_scatter(x,y,xaxis_min=None, xaxis_max=None, yaxis_min=None, 
@@ -40,22 +43,22 @@ def plot_scatter(x,y,xaxis_min=None, xaxis_max=None, yaxis_min=None,
     y : pandas DataFrame
         Y data
     
-    xaxis_min : float (optional)
+    xaxis_min : float, optional
         X-axis minimum, default = None (autoscale)       
         
-    xaxis_max : float (optional)
+    xaxis_max : float, optional
         X-axis maximum, default = None (autoscale)
         
-    yaxis_min : float (optional)
+    yaxis_min : float, optional
         Y-axis minimum, default = None (autoscale)     
         
-    yaxis_max : float (optional)
+    yaxis_max : float, optional
         Y-axis maximum, default = None (autoscale)        
     
-    title : string (optional)
+    title : string, optional
         Title, default = None
     
-    figsize : tuple (optional)
+    figsize : tuple, optional
         Figure size, default = (7.0, 3.0)
     """
     
@@ -100,40 +103,46 @@ def plot_scatter(x,y,xaxis_min=None, xaxis_max=None, yaxis_min=None,
 
 def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None, 
                     xaxis_max=None, yaxis_min=None, yaxis_max=None, title=None,
-                    figsize=(7.0, 3.0)):
+                    figsize=(7.0, 3.0), date_formatter=None):
     """
     Create a time series plot using each column in the DataFrame.
     
     Parameters
     ----------
-    data : pandas DataFrame
+    data : pandas DataFrame or Series
         Data, indexed by time
         
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Boolean values used to include time filter in the plot, default = None 
         
-    test_results_group : pandas DataFrame (optional)
-        Test results for a particular variable.
+    test_results_group : pandas DataFrame, optional
+        Test results for the data
         default = None 
     
-    xaxis_min : float (optional)
+    xaxis_min : float, optional
         X-axis minimum, default = None (autoscale)        
         
-    xaxis_max : float (optional)
+    xaxis_max : float, optional
         X-axis maximum, default = None (autoscale)    
         
-    yaxis_min : float (optional)
+    yaxis_min : float, optional
         Y-axis minimum, default = None (autoscale)            
         
-    yaxis_max : float (optional)
+    yaxis_max : float, optional
         Y-axis maximum, default = None (autoscale)
         
-    title : string (optional)
+    title : string, optional
         Title, default = None
     
-    figsize : tuple (optional)
+    figsize : tuple, optional
         Figure size, default = (7.0, 3.0)
+        
+    date_formatter : string, optional
+        Date formatter used on the x axis, for example, "%m-%d".  Default = None
     """
+    
+    assert isinstance(data, (pd.Series, pd.DataFrame))
+    assert isinstance(tfilter, (NoneType, pd.Series))
     
     plt.figure(figsize = figsize)
     ax = plt.gca()
@@ -147,7 +156,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
             data.plot(ax=ax, linewidth=1, grid=False, legend=False, 
                       fontsize=8, rot=90, label='Data')
     
-        if tfilter is not None:
+        if isinstance(tfilter, pd.Series):
             # add tfilter        
             temp = np.where(tfilter - tfilter.shift())
             temp = np.append(temp[0],len(tfilter)-1)
@@ -169,7 +178,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
         except:
             pass
         if test_results_group is not None:
-            key2 = test_results_group['Error Flag']
+            key2 = test_results_group['Error Flag'].fillna('')
             grouped2 = test_results_group.groupby(key2)
             
             for error_flag in key2.unique():
@@ -243,6 +252,10 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
     plt.xlabel('Time', fontsize=8)
     box = ax.get_position()
     ax.set_position([box.x0, box.y0+0.15, box.width, box.height*0.75])
+    
+    if date_formatter is not None:
+        date_form = DateFormatter(date_formatter)
+        ax.xaxis.set_major_formatter(date_form)
 
 def plot_interactive_timeseries(data, xaxis_min=None, xaxis_max=None, yaxis_min=None, 
                  yaxis_max=None, title=None, filename=None, auto_open=True):
@@ -255,25 +268,25 @@ def plot_interactive_timeseries(data, xaxis_min=None, xaxis_max=None, yaxis_min=
     data : pandas DataFrame
         Data, indexed by time
     
-    xaxis_min : float (optional)
+    xaxis_min : float, optional
         X-axis minimum, default = None (autoscale)       
         
-    xaxis_max : float (optional)
+    xaxis_max : float, optional
         X-axis maximum, default = None (autoscale)
         
-    yaxis_min : float (optional)
+    yaxis_min : float, optional
         Y-axis minimum, default = None (autoscale)     
         
-    yaxis_max : float (optional)
+    yaxis_max : float, optional
         Y-axis maximum, default = None (autoscale)        
     
-    title : string (optional)
+    title : string, optional
         Title, default = None
         
     filename : string, optional
         HTML file name, default = None (file will be named temp-plot.html)
     
-    auto_open : boolean (optional)
+    auto_open : boolean, optional
         Flag indicating if HTML graphic is opened, default = True
     """
     
@@ -306,27 +319,27 @@ def plot_heatmap(data, colors=[(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75,
     data : pandas DataFrame, pandas Series, or numpy array
         Data
     
-    colors : list (optional)
+    colors : list, optional
         List of colors, colors can be specified in any way understandable by 
         matplotlib.colors.ColorConverter.to_rgb().
         Default is red to yellow to green.
     
-    num_colors : int (optional)
+    num_colors : int, optional
         Number of colors in the colormap, default = 12
         
-    cmap : string (optional)
+    cmap : string, optional
         Colormap, default = None. Overrides colors and num_colors listed above.
         
-    vmin : float (optional)
+    vmin : float, optional
         Colomap minimum, default = None (autoscale) 
     
-    vmax : float (optional)
+    vmax : float, optional
         Colomap maximum, default = None (autoscale) 
     
-    title : string (optional)
+    title : string, optional
         Title, default = None
     
-    figsize : tuple (optional)
+    figsize : tuple, optional
         Figure size, default = (5.0, 5.0)
     """
     if isinstance(data, (pd.DataFrame, pd.Series)):
@@ -358,24 +371,24 @@ def plot_doy_heatmap(data, cmap='nipy_spectral', vmin=None, vmax=None,
     data : pandas DataFrame or pandas Series
         Data (single column), indexed by time
         
-    cmap : string (optional)
+    cmap : string, optional
         Colomap, default = nipy_spectral
         
-    vmin : float (optional)
+    vmin : float, optional
         Colomap minimum, default = None (autoscale)
     
-    vmax : float (optional)
+    vmax : float, optional
         Colomap maximum, default = None (autoscale)
         
-    overlay : pandas DataFrame (optional)
+    overlay : pandas DataFrame, optional
         Data to overlay on the heatmap.  
         Time index should be in day-of-year (X-axis) 
         Values should be in time-of-day in minutes (Y-axis)
     
-    title : string (optional)
+    title : string, optional
         Title, default = None
         
-    figsize : tuple (optional)
+    figsize : tuple, optional
         Figure size, default = (7.0, 3.0)
     """
     
@@ -412,7 +425,8 @@ def plot_doy_heatmap(data, cmap='nipy_spectral', vmin=None, vmax=None,
     
 @_nottest
 def plot_test_results(data, test_results, tfilter=None, image_format='png', 
-                      dpi=500, figsize=(7.0,3.0), filename_root='test_results'):
+                      dpi=500, figsize=(7.0,3.0), date_formatter=None, 
+                      filename_root='test_results'):
     """
     Create test results graphics which highlight data points that
     failed a quality control test.
@@ -420,24 +434,27 @@ def plot_test_results(data, test_results, tfilter=None, image_format='png',
     Parameters
     ----------
     data : pandas DataFrame
-        Data, indexed by time (pm.df)
+        Data, indexed by time (pm.data)
         
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
     
-    tfilter : pandas Series (optional)
+    tfilter : pandas Series, optional
         Boolean values used to include time filter in the plot, default = None 
         
-    image_format : string  (optional)
+    image_format : string , optional
         Image format, default = 'png'
     
-    dpi : int (optional)
+    dpi : int, optional
         DPI resolution, default = 500
         
-    figsize : tuple (optional)
+    figsize : tuple, optional
         Figure size, default = (7.0,3.0)
     
-    filename_root : string (optional)
+    date_formatter : string, optional
+        Date formatter used on the x axis, for example, "%m-%d".  Default = None
+    
+    filename_root : string, optional
         File name root. If the full path is not provided, files are saved into the 
         current working directory. Each graphic filename is appended with an integer.
         For example, filename_root = 'test' will generate a files named 'test0.png', 
@@ -475,8 +492,10 @@ def plot_test_results(data, test_results, tfilter=None, image_format='png',
     for col_name, test_results_group in grouped:
         logger.info("Creating graphic for " + col_name)
         
+            
         plot_timeseries(data[col_name], tfilter, 
-                        test_results_group=test_results_group, figsize=figsize)
+                        test_results_group=test_results_group, figsize=figsize,
+                        date_formatter=date_formatter)
 
         ax = plt.gca()
         box = ax.get_position()

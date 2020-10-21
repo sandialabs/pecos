@@ -6,9 +6,9 @@ from pecos import logger
 from pecos import utils
 from pecos import pv
 
-__version__ = '0.1.8.1'
+__version__ = '0.1.9'
 
-__copyright__ = """Copyright 2016-2020 National Technology & Engineering 
+__copyright__ = """Copyright 2016 National Technology & Engineering 
     Solutions of Sandia, LLC (NTESS). Under the terms of Contract 
 	DE-NA0003525 with NTESS, the U.S. Government retains certain rights 
 	in this software."""

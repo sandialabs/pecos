@@ -23,15 +23,15 @@ The following example defines a time filter between 3 AM and 9 PM,
 	
 .. doctest::
 
-    >>> clocktime = pecos.utils.datetime_to_clocktime(pm.df.index)
+    >>> clocktime = pecos.utils.datetime_to_clocktime(pm.data.index)
     >>> time_filter = pd.Series((clocktime > 3*3600) & (clocktime < 21*3600), 
-    ...                         index=pm.df.index)
+    ...                         index=pm.data.index)
 
 The time filter can also be defined based on properties of the DataFrame, for example,
 
 .. doctest::
 
-    >>> time_filter = pm.df['A'] > 0.5
+    >>> time_filter = pm.data['A'] > 0.5
 	
 For some applications, it is useful to define the time filter based on sun position, 
 as demonstrated in **pv_example.py** in the 

@@ -4,14 +4,15 @@ channels:
     - http://conda.anaconda.org/pvlib
 dependencies:
     - python=3.6
-    - numpy
     - pandas
+    - numpy
+    - jinja2
+    - matplotlib
     - nose
     - pvlib
-    - matplotlib
     - plotly
     - ephem
-    - jinja2
     - xlrd
+    - sqlalchemy
     - pip:
         - coveralls

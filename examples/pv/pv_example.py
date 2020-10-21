@@ -58,7 +58,7 @@ pm.add_translation_dictionary(MET_translation_dictionary)
 pm.check_timestamp(60) 
     
 # Generate a time filter based on sun position
-solarposition = pvlib.solarposition.ephemeris(pm.df.index, location['Latitude'], 
+solarposition = pvlib.solarposition.ephemeris(pm.data.index, location['Latitude'], 
                                               location['Longitude'])
 time_filter = solarposition['apparent_elevation'] > 10 
 pm.add_time_filter(time_filter)
@@ -72,7 +72,7 @@ pm.check_corrupt(corrupt_values)
 # Add composite signals
 for composite_signal in composite_signals:
     for key,value in composite_signal.items():
-        signal = pecos.utils.evaluate_string(value, data=pm.df, 
+        signal = pecos.utils.evaluate_string(value, data=pm.data, 
                                              trans=pm.trans, col_name=key)
         pm.add_dataframe(signal)
         pm.add_translation_dictionary({key: list(signal.columns)})
@@ -100,13 +100,13 @@ metrics['QCI'] = QCI.mean()
 metrics = pd.Series(metrics)
 
 # Generate graphics
-test_results_graphics = pecos.graphics.plot_test_results(pm.df, pm.test_results, pm.tfilter)
-pm.df[pm.trans['DC Power']].plot(figsize=(7,3.5))
+test_results_graphics = pecos.graphics.plot_test_results(pm.data, pm.test_results, pm.tfilter)
+pm.data[pm.trans['DC Power']].plot(figsize=(7,3.5))
 plt.savefig('custom1.png', format='png', dpi=500)
-pm.df[['Diffuse_Wm2_Avg', 'Direct_Wm2_Avg', 'Global_Wm2_Avg']].plot(figsize=(7,3.5))
+pm.data[['Diffuse_Wm2_Avg', 'Direct_Wm2_Avg', 'Global_Wm2_Avg']].plot(figsize=(7,3.5))
 plt.savefig('custom2.png', format='png', dpi=500)
 
 # Write test results and report files
 pecos.io.write_test_results(pm.test_results)
-pecos.io.write_monitoring_report(pm.df, pm.test_results, test_results_graphics, 
+pecos.io.write_monitoring_report(pm.data, pm.test_results, test_results_graphics, 
                                  ['custom1.png', 'custom2.png'], metrics)
