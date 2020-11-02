@@ -1,6 +1,6 @@
 .. _whatsnew_019:
 
-v0.1.9 (master)
+v0.1.9 (November 2, 2020)
 --------------------------
 
 * Added the ability to use custom quality control test functions in static or streaming analysis.  The methods, ``check_custom_static`` and ``check_custom_streaming``, allow the user to supply a custom function that is used to determine if data is anomalous. The custom tests also allow the user to return metadata that contains information about the quality control test.
