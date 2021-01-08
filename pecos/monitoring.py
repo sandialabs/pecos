@@ -666,7 +666,7 @@ class PerformanceMonitoring(object):
             error_prefix = 'Outlier'
             
         if streaming:
-            metadata = self.check_custom_streaming(outlier, window, rebase=0.5, error_message=error_prefix)
+            metadata = self.check_custom_streaming(outlier, window, rebase=0.5, min_failures=min_failures, error_message=error_prefix)
         else:
             # Compute normalized data
             if window is not None:
