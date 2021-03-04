@@ -21,11 +21,9 @@ def initialize():
     ch = logging.StreamHandler()
     ch.setLevel(logging.INFO)
     
-    formatter = logging.Formatter('%(message)s')
+    formatter = logging.Formatter("%(asctime)s : %(message)s", "%Y-%m-%d %H:%M:%S")
     fh.setFormatter(formatter)
     ch.setFormatter(formatter)
     if not len(pecos_logger.handlers):
         pecos_logger.addHandler(fh)
         pecos_logger.addHandler(ch)
-    
-    
