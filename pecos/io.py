@@ -308,8 +308,6 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     if metrics is None:
         metrics = pd.DataFrame()
     
-    pecos_logo = join(dirname(pecos.__file__), '..', 'documentation', 'figures', 'logo.png')
-    
     content = {'start_time': str(start_time), 
                'end_time': str(end_time), 
                'num_notes': str(notes_df.shape[0]),
@@ -323,7 +321,6 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     if file_format == 'html':
         content['test_results_graphics'] = test_results_graphics
         content['custom_graphics'] = custom_graphics
-        content['pecos_logo'] = pecos_logo
         
         if isinstance(metrics, pd.Series):
             metrics_html = metrics.to_frame().to_html(header=False)
@@ -343,11 +340,9 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     else:
         test_results_graphics = [g.replace('\\', '/') for g in test_results_graphics]
         custom_graphics = [g.replace('\\', '/') for g in custom_graphics]
-        pecos_logo = pecos_logo.replace('\\', '/')
         
         content['test_results_graphics'] = test_results_graphics
         content['custom_graphics'] = custom_graphics
-        content['pecos_logo'] = pecos_logo
         
         content['metrics'] = metrics.to_latex(longtable=True)
         content['test_results'] = test_results.to_latex(longtable=True)
@@ -477,9 +472,6 @@ def _html_template_monitoring_report(content, title, logo, im_width_test_results
         for im in content['test_results_graphics']:
             img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
             img_dic[im] = img_encode
-        im = content['pecos_logo']
-        img_encode = base64.b64encode(open(im, "rb").read()).decode("utf-8")
-        img_dic[im] = img_encode
 
     template = env.get_template('monitoring_report.html')
 
