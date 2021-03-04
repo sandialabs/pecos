@@ -1,0 +1,9 @@
+.. _whatsnew_020:
+
+v0.2.0 (master)
+--------------------------
+
+* Removed the use of Excel files in examples which were causing test failures
+* Added min_failures in the streaming outlier test
+* Removed pecos logo from monitoring reports
+* Updated documentation and tests
