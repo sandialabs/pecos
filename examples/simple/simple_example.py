@@ -1,14 +1,14 @@
 """
 In this example, simple time series data is used to demonstrate basic functions
 in pecos.  
-* Data is loaded from an excel file which contains four columns of values that 
+* Data is loaded from a CSV file which contains four columns of values that 
   are expected to follow linear, random, and sine models.
 * A translation dictionary is defined to map and group the raw data into 
   common names for analysis
 * A time filter is established to screen out data between 3 AM and 9 PM
 * The data is loaded into a pecos PerformanceMonitoring object and a series of 
   quality control tests are run, including range tests and increment tests 
-* The results are printed to csv and html reports
+* The results are printed to CSV and HTML reports
 """
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -22,8 +22,8 @@ pecos.logger.initialize()
 pm = pecos.monitoring.PerformanceMonitoring()
 
 # Populate the object with a DataFrame and translation dictionary
-data_file = 'simple.xlsx'
-df = pd.read_excel(data_file, index_col=0)
+data_file = 'simple.csv'
+df = pd.read_csv(data_file, index_col=0, parse_dates=True)
 pm.add_dataframe(df)
 pm.add_translation_dictionary({'Wave': ['C','D']}) # group C and D
 

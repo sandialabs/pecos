@@ -20,8 +20,8 @@ fid.close()
 pm = pecos.monitoring.PerformanceMonitoring()
 
 # Populate the object with a DataFrame and translation dictionary
-data_file = 'simple.xlsx'
-df = pd.read_excel(data_file, index_col=0)
+data_file = 'simple.csv'
+df = pd.read_csv(data_file, index_col=0, parse_dates=True)
 pm.add_dataframe(df)
 pm.add_translation_dictionary(config['Translation'])
 
