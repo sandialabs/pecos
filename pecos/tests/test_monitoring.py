@@ -106,6 +106,8 @@ class Test_simple_example(unittest.TestCase):
         # Object-oriented test
         test_results = self.pm.test_results
         print()
+        print(self.pm.data)
+        print()
         print(test_results)
         print()
         print(expected)
