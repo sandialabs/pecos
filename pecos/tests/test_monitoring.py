@@ -105,6 +105,10 @@ class Test_simple_example(unittest.TestCase):
         
         # Object-oriented test
         test_results = self.pm.test_results
+        print()
+        print(test_results)
+        print()
+        print(expected)
         assert_frame_equal(test_results, expected, check_dtype=False)
         
         # Functional test
@@ -121,6 +125,10 @@ class Test_simple_example(unittest.TestCase):
         # Object-oriented test
         self.pm.check_missing()
         test_results = self.pm.test_results[self.pm.test_results['Error Flag'] == 'Missing data']
+        print()
+        print(self.pm.test_results)
+        print()
+        print(expected)
         assert_frame_equal(test_results.reset_index(drop=True), expected, check_dtype=False)
         
         # Functional test
