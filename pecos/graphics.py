@@ -305,9 +305,8 @@ def plot_interactive_timeseries(data, xaxis_min=None, xaxis_max=None, yaxis_min=
     else:
         plotly.offline.plot(fig, auto_open=auto_open)  
         
-def plot_heatmap(data, colors=[(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75, 0.15)], 
-                               nColors=12, cmap=None, vmin=None, vmax=None, 
-                               show_axis=False, title=None, figsize=(5.0, 5.0)): 
+def plot_heatmap(data, colors=None, nColors=12, cmap=None, vmin=None, vmax=None, 
+                 show_axis=False, title=None, figsize=(5.0, 5.0)): 
     """ 
     Create a heatmap.  Default color scheme is red to yellow to green with 12 
     colors.  This function can be used to generate dashboards with simple color 
@@ -319,10 +318,10 @@ def plot_heatmap(data, colors=[(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75,
     data : pandas DataFrame, pandas Series, or numpy array
         Data
     
-    colors : list, optional
+    colors : list or None, optional
         List of colors, colors can be specified in any way understandable by 
         matplotlib.colors.ColorConverter.to_rgb().
-        Default is red to yellow to green.
+        If None, colors transitions from red to yellow to green.
     
     num_colors : int, optional
         Number of colors in the colormap, default = 12
@@ -342,8 +341,11 @@ def plot_heatmap(data, colors=[(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75,
     figsize : tuple, optional
         Figure size, default = (5.0, 5.0)
     """
+    if colors is None:
+        colors = [(0.75, 0.15, 0.15), (1, 0.75, 0.15), (0.15, 0.75, 0.15)]
+        
     if isinstance(data, (pd.DataFrame, pd.Series)):
-            data = data.values
+        data = data.values
     if len(data.shape) == 1:
         data = np.expand_dims(data, axis=0)
         

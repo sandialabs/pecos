@@ -217,9 +217,9 @@ def write_test_results(test_results, filename='test_results.csv'):
     
     return full_filename
 
-def write_monitoring_report(data, test_results, test_results_graphics=[], 
-                            custom_graphics=[], metrics=None, 
-                            title='Pecos Monitoring Report', config={}, logo=False, 
+def write_monitoring_report(data, test_results, test_results_graphics=None, 
+                            custom_graphics=None, metrics=None, 
+                            title='Pecos Monitoring Report', config=None, logo=False, 
                             im_width_test_results=1, im_width_custom=1, im_width_logo=0.1,
                             encode=False, file_format='html',
                             filename='monitoring_report.html'):
@@ -236,12 +236,14 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     test_results : pandas DataFrame
         Summary of the quality control test results (pm.test_results)
         
-    test_results_graphics : list of strings, optional
+    test_results_graphics : list of strings or None, optional
         Graphics files, with full path.  These graphics highlight data points 
-        that failed a quality control test, created using pecos.graphics.plot_test_results()
+        that failed a quality control test, created using pecos.graphics.plot_test_results().
+        If None, test results graphics are not included in the report.
         
-    custom_graphics : list of strings, optional
+    custom_graphics : list of strings or None, optional
         Custom files, with full path.  Created by the user.
+        If None, custom graphics are not included in the report.
     
     metrics : pandas Series or DataFrame, optional
         Performance metrics to add as a table to the monitoring report
@@ -249,8 +251,9 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     title : string, optional
         Monitoring report title, default = 'Pecos Monitoring Report'
         
-    config : dictionary, optional
-        Configuration options, to be printed at the end of the report
+    config : dictionary or None, optional
+        Configuration options, to be printed at the end of the report.
+        If None, configuration options are not included in the report.
     
     logo : string, optional
         Graphic to be added to the report header
@@ -278,6 +281,13 @@ def write_monitoring_report(data, test_results, test_results_graphics=[],
     """
     logger.info("Writing HTML report")
     
+    if test_results_graphics is None:
+        test_results_graphics = []
+    if custom_graphics is None:
+        custom_graphics = []
+    if config is None:
+        config = {}
+        
     if data.empty:
         logger.warning("Empty database")
         start_time = 'NaN'
