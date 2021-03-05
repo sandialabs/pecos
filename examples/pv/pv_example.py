@@ -12,7 +12,7 @@ between pecos and pvlib.
 * A performance model is computed using pvlib, additional quality control tests
   are run to compare observed to predicted power output
 * PV performance metrics are computed
-* The results are written to an html report
+* The results are written to an HTML report
 """
 import yaml
 import pandas as pd

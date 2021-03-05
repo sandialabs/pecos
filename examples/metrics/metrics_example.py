@@ -1,11 +1,11 @@
 """
 In this example, performance metrics from a pv system are analyzed to determine 
 long term system health
-* Daily performance metrics for 2015 are loaded from a csv file
+* Daily performance metrics for 2015 are loaded from a CSV file
 * The files contain performance ratio and system availability.
 * The metrics are loaded into a pecos PerformanceMonitoring 
   object and a series of quality control tests are run
-* The results are printed to csv and html reports
+* The results are printed to CSV and HTML reports
 """
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,8 +18,8 @@ pecos.logger.initialize()
 pm = pecos.monitoring.PerformanceMonitoring()
 
 # Populate the object with a dataframe and translation dictionary
-data_file = 'System1_2015_performance_metrics.xlsx'
-df = pd.read_excel(data_file, index_col=0)
+data_file = 'System1_2015_performance_metrics.csv'
+df = pd.read_csv(data_file, index_col=0, parse_dates=True)
 pm.add_dataframe(df)
 
 # Check timestamp

@@ -1,5 +1,5 @@
 ![Pecos](documentation/figures/logo.png)
-=======================================
+=========================================
 
 [![TravisCI](https://travis-ci.org/sandialabs/pecos.svg?branch=master)](https://travis-ci.org/sandialabs/pecos)
 [![Coverage Status](https://coveralls.io/repos/github/sandialabs/pecos/badge.svg?branch=master)](https://coveralls.io/github/sandialabs/pecos?branch=master)

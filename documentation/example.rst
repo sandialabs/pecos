@@ -4,7 +4,7 @@ Simple example
 ================
 
 A simple example is included in the `examples/simple <https://github.com/sandialabs/pecos/tree/master/examples/simple>`_ directory.  
-This example uses data from an excel file, **simple.xlsx**, which 
+This example uses data from a CSV file, **simple.csv**, which 
 contains 4 columns of data (A through D). 
 
 * A = elapsed time in days
@@ -41,7 +41,7 @@ of expected range, data that doesn't change, and data that changes abruptly, as 
 The script, **simple_example.py** (shown below), is used to run quality control analysis using Pecos.
 The script performs the following steps:
 
-* Load time series data from an excel file
+* Load time series data from a CSV file
 
 * Run quality control tests
 

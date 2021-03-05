@@ -1,0 +1,12 @@
+.. _whatsnew_020:
+
+v0.2.0 (master)
+--------------------------
+
+* Replaced the use of Excel files in examples/tests with CSV files.  The Excel files were causing test failures.
+* Added `min_failures` to the streaming outlier test
+* Replaced mutable default arguments with None
+* Removed pecos logo from monitoring reports
+* Added timestamp to logger
+* Updated documentation and tests
+

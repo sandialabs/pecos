@@ -77,9 +77,9 @@ class Test_simple_example(unittest.TestCase):
             'Random': ['B'],
             'Wave': ['C','D']}
 
-        file_name = join(simpleexampledir,'simple.xlsx')
+        file_name = join(simpleexampledir,'simple.csv')
 
-        self.raw_data = pd.read_excel(file_name, index_col=0)
+        self.raw_data = pd.read_csv(file_name, index_col=0, parse_dates=True)
         self.pm = pecos.monitoring.PerformanceMonitoring()
         self.pm.add_dataframe(self.raw_data)
         self.pm.add_translation_dictionary(trans)
@@ -264,8 +264,8 @@ class Test_simple_example(unittest.TestCase):
         assert_frame_equal(temp, expected, check_dtype=False)
 
     def test_full_example(self):
-        data_file = join(simpleexampledir,'simple.xlsx')
-        df = pd.read_excel(data_file, index_col=0)
+        data_file = join(simpleexampledir,'simple.csv')
+        df = pd.read_csv(data_file, index_col=0, parse_dates=True)
 
         QCI = simple_example_run_analysis(df)
 
@@ -284,8 +284,8 @@ class Test_simple_example(unittest.TestCase):
         assert_frame_equal(actual, expected, check_dtype=False)
     
     def test_millisecond_timestamp(self):
-        data_file = join(simpleexampledir,'simple.xlsx')
-        df = pd.read_excel(data_file, index_col=0)
+        data_file = join(simpleexampledir,'simple.csv')
+        df = pd.read_csv(data_file, index_col=0, parse_dates=True)
         
         index = pecos.utils.datetime_to_elapsedtime(df.index)
         df.index = index/1e5 # millisecond resolution
@@ -308,8 +308,8 @@ class Test_simple_example(unittest.TestCase):
         assert_frame_equal(pm.test_results, expected, check_dtype=False)
 
     def test_full_example_with_timezone(self):
-        data_file = join(simpleexampledir,'simple.xlsx')
-        df = pd.read_excel(data_file, index_col=0)
+        data_file = join(simpleexampledir,'simple.csv')
+        df = pd.read_csv(data_file, index_col=0, parse_dates=True)
         df.index = df.index.tz_localize('MST')
 
         QCI = simple_example_run_analysis(df)
