@@ -1,0 +1,12 @@
+# Required
+pandas
+numpy
+jinja2
+matplotlib
+
+# Optional
+nose
+pvlib
+plotly
+ephem
+sqlalchemy

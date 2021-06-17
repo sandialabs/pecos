@@ -853,7 +853,7 @@ class PerformanceMonitoring(object):
         # still expects pandas DataFrames and Series in the user defined quality 
         # control function to keep data types consitent on the user side.
         np_mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns).values
-        np_data = df.values.astype('Float64')
+        np_data = df.values.astype('float64')
     
         ti = df.index.get_loc(df.index[0]+history_window)
         
