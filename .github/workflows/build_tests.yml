@@ -83,7 +83,7 @@ jobs:
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --traverse-namespace pecos
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --traverse-namespace --doctest-extension=.rst documentation/*.rst pecos
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
@@ -129,7 +129,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.7, 3.8, 3.9]
+        python-version: [3.6, 3.7, 3.8, 3.9]
         os: [ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
@@ -149,7 +149,7 @@ jobs:
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --doctest-extension=.rst --traverse-namespace documentation/*.rst pecos
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --traverse-namespace pecos
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
