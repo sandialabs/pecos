@@ -1,6 +1,6 @@
 .. _whatsnew_021:
 
-v0.2.1 (master)
+v0.2.1 (main)
 --------------------------
 
 * Minor updates for testing and documentation

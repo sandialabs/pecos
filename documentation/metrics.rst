@@ -8,7 +8,7 @@ term performance and system health.
 
 While Pecos typically runs a series of quality control tests on raw data, quality control tests can also be run on metrics generated from these analyses to track long term performance and system health.  For example, daily quality control analysis can generate summary metrics that can later be used to generate a yearly summary report.
 Pecos includes a performance metrics example (based on one year of PV metrics)
-in the `examples/metrics <https://github.com/sandialabs/pecos/tree/master/examples/metrics>`_ directory.
+in the `examples/metrics <https://github.com/sandialabs/pecos/tree/main/examples/metrics>`_ directory.
 
 Quality control index
 -------------------------

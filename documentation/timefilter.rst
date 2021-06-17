@@ -35,7 +35,7 @@ The time filter can also be defined based on properties of the DataFrame, for ex
 	
 For some applications, it is useful to define the time filter based on sun position, 
 as demonstrated in **pv_example.py** in the 
-`examples/pv <https://github.com/sandialabs/pecos/tree/master/examples/pv>`_ directory.
+`examples/pv <https://github.com/sandialabs/pecos/tree/main/examples/pv>`_ directory.
 
 The time filter can then be added to the PerformanceMonitoring object as follows,
 

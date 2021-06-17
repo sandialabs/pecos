@@ -3,7 +3,7 @@
 Simple example
 ================
 
-A simple example is included in the `examples/simple <https://github.com/sandialabs/pecos/tree/master/examples/simple>`_ directory.  
+A simple example is included in the `examples/simple <https://github.com/sandialabs/pecos/tree/main/examples/simple>`_ directory.  
 This example uses data from a CSV file, **simple.csv**, which 
 contains 4 columns of data (A through D). 
 

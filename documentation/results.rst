@@ -210,7 +210,7 @@ For each row and column in the dashboard, the following information can be speci
 * Links (i.e. the path to a monitoring report or other file/site for additional information)
 
 The user defined text, graphics, tables, and links create custom dashboards.
-Pecos includes dashboard examples in the `examples/dashboard <https://github.com/sandialabs/pecos/tree/master/examples/dashboard>`_ directory. 
+Pecos includes dashboard examples in the `examples/dashboard <https://github.com/sandialabs/pecos/tree/main/examples/dashboard>`_ directory. 
 :numref:`fig-dashboard1`, :numref:`fig-dashboard2`, and  :numref:`fig-dashboard3` show example dashboards generated using Pecos.
 
 .. _fig-dashboard1:

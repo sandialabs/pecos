@@ -108,7 +108,7 @@ therefore there are no specific formatting requirements.**
 Configuration files can be useful when using the same Python script 
 to analyze several systems that have slightly different input requirements.
 
-The `examples/simple <https://github.com/sandialabs/pecos/tree/master/examples/simple>`_ directory includes a configuration file, **simple_config.yml**, that defines 
+The `examples/simple <https://github.com/sandialabs/pecos/tree/main/examples/simple>`_ directory includes a configuration file, **simple_config.yml**, that defines 
 system specifications, 
 translation dictionary,
 composite signals,

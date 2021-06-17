@@ -21,12 +21,12 @@ Pecos can be installed using pip, git, or a downloaded zip file.
 
 **zip file**: To install Pecos using a downloaded zip file, go to https://github.com/sandialabs/pecos, 
 select the "Clone or download" button and then select "Download ZIP".
-This downloads a zip file called pecos-master.zip.
+This downloads a zip file called pecos-main.zip.
 To download a specific release, go to https://github.com/sandialabs/pecos/releases and select a zip file.
 The software can then be installed by unzipping the file and running setup.py::
 
-	unzip pecos-master.zip
-	cd pecos-master
+	unzip pecos-main.zip
+	cd pecos-main
 	python setup.py install
 	
 Required Python package dependencies include:

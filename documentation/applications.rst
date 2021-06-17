@@ -20,7 +20,7 @@ The International Electrotechnical Commission (IEC) has developed guidance to me
 and analyze energy production from PV systems. 
 Klise et al. [KlSC17]_ describe an application of IEC 61724-3, using 
 Pecos and PVLIB.
-Pecos includes a PV system example in the `examples/pv <https://github.com/sandialabs/pecos/tree/master/examples/pv>`_ directory.  
+Pecos includes a PV system example in the `examples/pv <https://github.com/sandialabs/pecos/tree/main/examples/pv>`_ directory.  
 
 Marine renewable energy systems
 --------------------------------
