@@ -1,0 +1,8 @@
+.. _whatsnew_021:
+
+v0.2.1 (master)
+--------------------------
+
+* Minor updates for testing and documentation
+* Added GitHub Actions and Python 3.9 tests
+
