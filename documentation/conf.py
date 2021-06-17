@@ -131,7 +131,7 @@ todo_include_todos = True
 #html_theme = 'sphinxdoc'
 
 def setup(app):
-  app.add_stylesheet( "pecos.css" )               
+  app.add_css_file( "pecos.css" )               
 
 on_rtd = os.environ.get('READTHEDOCS', None) == 'True'
 if not on_rtd:  # only import and set the theme if we're building docs locally
