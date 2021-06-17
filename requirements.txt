@@ -1,7 +1,7 @@
 # Required
 pandas
 numpy
-jinja
+jinja2
 matplotlib
 
 # Optional
