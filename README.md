@@ -1,7 +1,7 @@
 ![Pecos](documentation/figures/logo.png)
 =========================================
 
-![build](https://github.com/sandialabs/pecos/workflows/build/badge.svg)
+[![build](https://github.com/sandialabs/pecos/workflows/build/badge.svg)](https://github.com/sandialabs/pecos/actions/workflows/build_tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/sandialabs/pecos/badge.svg?branch=main)](https://coveralls.io/github/sandialabs/pecos?branch=main)
 [![Documentation Status](https://readthedocs.org/projects/pecos/badge/?version=latest)](https://pecos.readthedocs.io/en/stable/?badge=latest)
 [![Downloads](https://pepy.tech/badge/pecos)](https://pepy.tech/project/pecos)
