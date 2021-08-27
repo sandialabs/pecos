@@ -7,19 +7,32 @@ https://www.python.org/.  Python distributions, such as Anaconda,
 are recommended to manage the Python interface.  
 Anaconda Python distributions include the Python packages needed to run Pecos.
 
-Pecos can be installed using pip, git, or a downloaded zip file.  
+Users can install the latest release of Pecos from PyPI or Anaconda using one of the following commands.
 
-**pip:** To install Pecos using pip::
+* PyPI |pypi version|_ |pypi downloads|_ ::
 
 	pip install pecos 
+
+* Anaconda |anaconda version|_ |anaconda downloads|_ ::
+
+	conda install -c conda-forge pecos
 	
-**git**: To install Pecos using git::
+.. |pypi version| image:: https://img.shields.io/pypi/v/pecos.svg?maxAge=3600
+.. _pypi version: https://pypi.org/project/pecos/
+.. |pypi downloads| image:: https://pepy.tech/badge/pecos
+.. _pypi downloads: https://pepy.tech/project/pecos
+.. |anaconda version| image:: https://anaconda.org/conda-forge/pecos/badges/version.svg 
+.. _anaconda version: https://anaconda.org/conda-forge/pecos
+.. |anaconda downloads| image:: https://anaconda.org/conda-forge/pecos/badges/downloads.svg
+.. _anaconda downloads: https://anaconda.org/conda-forge/pecos
+
+Developers can install the main branch of Pecos from the GitHub repository using the following commands::
 
 	git clone https://github.com/sandialabs/pecos
 	cd pecos
 	python setup.py install
 
-**zip file**: To install Pecos using a downloaded zip file, go to https://github.com/sandialabs/pecos, 
+To install Pecos using a downloaded zip file, go to https://github.com/sandialabs/pecos, 
 select the "Clone or download" button and then select "Download ZIP".
 This downloads a zip file called pecos-main.zip.
 To download a specific release, go to https://github.com/sandialabs/pecos/releases and select a zip file.
@@ -28,7 +41,14 @@ The software can then be installed by unzipping the file and running setup.py::
 	unzip pecos-main.zip
 	cd pecos-main
 	python setup.py install
+
+To use Pecos, import the package from a Python console::
+
+	import pecos	
 	
+Dependencies
+------------
+
 Required Python package dependencies include:
 
 * Pandas [Mcki13]_: used to analyze and store time series data, 
@@ -55,6 +75,3 @@ Optional Python packages dependencies include:
 
 All other dependencies are part of the Python Standard Library.
 
-To use Pecos, import the package from a Python console::
-
-	import pecos	
