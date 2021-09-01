@@ -59,24 +59,26 @@ Missing indexes and columns are filled with NaN.  An example is shown below.
     >>> index1 = pd.date_range('1/1/2018', periods=3, freq='D')
     >>> data1 = {'A': np.arange(3), 'B': np.arange(3)+5}
     >>> data1 = pd.DataFrame(data1, index=index1)
+    >>> data1 = data1.astype(float)
     >>> index2 = pd.date_range('1/2/2018', periods=3, freq='D')
     >>> data2 = {'B': np.arange(3), 'C': np.arange(3)+5}
     >>> data2 = pd.DataFrame(data2, index=index2)
+    >>> data2 = data2.astype(float)
     >>> pm = pecos.monitoring.PerformanceMonitoring()
 
 .. doctest::
 
     >>> print(data1)
-                A  B
-    2018-01-01  0  5
-    2018-01-02  1  6
-    2018-01-03  2  7
+                  A    B
+    2018-01-01  0.0  5.0
+    2018-01-02  1.0  6.0
+    2018-01-03  2.0  7.0
 	
     >>> print(data2)
-                B  C
-    2018-01-02  0  5
-    2018-01-03  1  6
-    2018-01-04  2  7
+                  B    C
+    2018-01-02  0.0  5.0
+    2018-01-03  1.0  6.0
+    2018-01-04  2.0  7.0
 	
     >>> pm.add_dataframe(data1)
     >>> pm.add_dataframe(data2)
