@@ -3,6 +3,7 @@
 v0.2.1 (main)
 --------------------------
 
+* Bug fix in custom static and streaming quality control tests to use a specific column
 * Minor updates for testing and documentation
 * Added GitHub Actions and Python 3.9 tests
 
