@@ -590,11 +590,15 @@ class Test_check_custom(unittest.TestCase):
         percent = 1-self.pm.test_results['Timesteps'].sum()/N
         assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
         
+        # using a specific key
+        metadata_A = self.pm.check_custom_static(custom_func, key='A', error_message='Static')
+        assert_frame_equal(metadata[['A']], metadata_A)
+        
         # Functional tests
         results = pecos.monitoring.check_custom_static(self.pm.data, custom_func, error_message='Static')
         percent = 1-results['test_results']['Timesteps'].sum()/N
         assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
-        
+
     def test_custom_streaming(self):
         
         def custom_func(data_pt, history):
@@ -606,6 +610,10 @@ class Test_check_custom(unittest.TestCase):
         N = self.pm.df.shape[0]*self.pm.df.shape[1]
         percent = 1-self.pm.test_results['Timesteps'].sum()/N
         assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        
+        # using a specific key
+        metadata_A = self.pm.check_custom_streaming(custom_func, 50, key='A', error_message='Streaming')
+        assert_frame_equal(metadata[['A']], metadata_A)
         
         # Functional tests
         results = pecos.monitoring.check_custom_streaming(self.pm.data, custom_func, 50, error_message='Streaming')
