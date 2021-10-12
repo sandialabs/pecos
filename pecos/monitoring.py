@@ -788,7 +788,7 @@ class PerformanceMonitoring(object):
         
         # Function that operates on the entire dataset and returns a mask and
         # metadata for the entire dataset
-        mask, metadata = quality_control_func(self.df) 
+        mask, metadata = quality_control_func(df) 
         assert isinstance(mask, pd.DataFrame), 'mask returned by quality_control_func must be of type pd.DataFrame'
         assert isinstance(metadata, pd.DataFrame), 'metadata returned by quality_control_func must be of type pd.DataFrame'
         
@@ -852,7 +852,7 @@ class PerformanceMonitoring(object):
         # The streaming framework uses numpy arrays to improve performance but
         # still expects pandas DataFrames and Series in the user defined quality 
         # control function to keep data types consitent on the user side.
-        np_mask = pd.DataFrame(True, index=self.df.index, columns=self.df.columns).values
+        np_mask = pd.DataFrame(True, index=df.index, columns=df.columns).values
         np_data = df.values.astype('float64')
     
         ti = df.index.get_loc(df.index[0]+history_window)
@@ -881,7 +881,7 @@ class PerformanceMonitoring(object):
                     np_data[t][check_rebase] = df.iloc[t][check_rebase]
                     rebase_count = rebase_count + sum(check_rebase)
         
-        mask = pd.DataFrame(np_mask, index=self.df.index, columns=self.df.columns)
+        mask = pd.DataFrame(np_mask, index=df.index, columns=df.columns)
         self._append_test_results(mask, error_message, min_failures)
         
         # Convert metadata to a dataframe
