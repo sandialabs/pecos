@@ -57,10 +57,14 @@ class PerformanceMonitoring(object):
         """
         self.df = pd.DataFrame()
         self.trans = {}
-        self.tfilter = pd.Series()
+        self.tfilter = pd.Series(dtype='float64')
         self.test_results = pd.DataFrame(columns=['Variable Name',
                                                 'Start Time', 'End Time',
                                                 'Timesteps', 'Error Flag'])
+        self.test_results['Start Time'] = self.test_results['Start Time'].astype('datetime64[ns]')
+        self.test_results['End Time'] = self.test_results['End Time'].astype('datetime64[ns]')
+        self.test_results['Timesteps'] = self.test_results['Timesteps'].astype('int64')
+        
 
     @property
     def data(self):
@@ -212,7 +216,7 @@ class PerformanceMonitoring(object):
                 counter = counter + 1
     
         test_results = pd.DataFrame(test_results).T
-        self.test_results = self.test_results.append(test_results, ignore_index=True)
+        self.test_results = pd.concat([self.test_results, test_results], ignore_index=True)
         
     def add_dataframe(self, data):
         """
@@ -859,7 +863,8 @@ class PerformanceMonitoring(object):
         
         for i, t in enumerate(np.arange(ti,np_data.shape[0],1)):
 
-            t_start = df.index.get_loc(df.index[t]-history_window, method='nearest')
+            #t_start = df.index.get_loc(df.index[t]-history_window, method='nearest')
+            t_start = df.index.get_indexer([df.index[t]-history_window], method='nearest')[0]
             t_timestamp = df.index[t]
             
             data_pt = pd.Series(np_data[t], index=df.columns)
