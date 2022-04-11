@@ -29,7 +29,7 @@ for location_name in locations:
         # Open config file and extract information
         config_file = system_name + '_config.yml'
         fid = open(config_file, 'r')
-        config = yaml.load(fid)
+        config = yaml.safe_load(fid)
         fid.close()
         trans = config['Translation']
         specs = config['Specifications']
