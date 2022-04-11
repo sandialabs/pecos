@@ -395,7 +395,6 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
         
     content : dictionary
         Dashboard content for each cell. 
-        
         Dictionary keys are tuples indicating the row name and column name, 
         i.e. ('row name', 'column name'), where 'row name' is in the list 
         row_names and 'column name' is in the list column_names. 
@@ -405,14 +404,14 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
         Each cell can contain text, graphics, a table, and an html link. These 
         are defined using the following **case sensitive** keys:
         
-        - text (string) =  text at the top of each cell
-        - graphics (list of strings) =  a list of graphics file names.  Each 
+        - **text** (string) =  text at the top of each cell
+        - **graphics** (list of strings) =  a list of graphics file names.  Each 
           file name includes the full path
-        - table (string) = a table in html format, for example a table of 
+        - **table** (string) = a table in html format, for example a table of 
           performance metrics.  DataFrames can be converted to an html string 
           using df.to_html() or df.transpose().to_html().  Values in the table 
           can be color coded using pandas Styler class. 
-        - link (dict) = a dictionary where keys define the name of the link 
+        - **link** (dict) = a dictionary where keys define the name of the link 
           and values define the html link (with full path)
         
         For example::
