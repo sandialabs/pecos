@@ -121,21 +121,21 @@ def test_qci_with_test_results():
     pm.add_dataframe(df)
     pm.add_translation_dictionary(trans)
     
-    test_result = {
+    test_result = pd.DataFrame({
     'Variable Name': 'A', 
     'Start Time': '2016-01-01 01:00:00', 
     'End Time': '2016-01-01 04:00:00', 
     'Timesteps': 4, 
-    'Error Flag': 'Error Flag'}
-    pm.test_results = pm.test_results.append(pd.DataFrame(test_result, index=[1]))
+    'Error Flag': 'Error Flag'}, index=[1])
+    pm.test_results = pd.concat([pm.test_results, test_result])
     
-    test_result = {
+    test_result = pd.DataFrame({
     'Variable Name': 'B', 
     'Start Time': '2016-01-01 01:00:00', 
     'End Time': '2016-01-01 01:00:00', 
     'Timesteps': 1, 
-    'Error Flag': 'Error Flag'}
-    pm.test_results = pm.test_results.append(pd.DataFrame(test_result, index=[2]))
+    'Error Flag': 'Error Flag'}, index=[2])
+    pm.test_results = pd.concat([pm.test_results, test_result])
     mask = pm.mask
     QCI = pecos.metrics.qci(mask)
     
