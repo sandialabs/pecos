@@ -55,7 +55,8 @@ def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
     logger.info("Reading Campbell Scientific CSV file " + filename)
 
     try:
-        df = pd.read_csv(filename, skiprows=1, encoding=encoding, index_col=index_col, parse_dates=True, dtype ='unicode', error_bad_lines=False) #, low_memory=False)
+        df = pd.read_csv(filename, skiprows=1, encoding=encoding, index_col=index_col, 
+                         parse_dates=True, dtype ='unicode', error_bad_lines=False) #, low_memory=False)
         df = df[2:]
         index = pd.to_datetime(df.index)
         Unnamed = df.filter(regex='Unnamed')
@@ -385,23 +386,34 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
     Parameters
     ----------
     column_names : list of strings
-        Column names listed in the order they should appear in the dashboard, i.e. ['location1', 'location2']
+        Column names listed in the order they should appear in the dashboard, 
+        i.e. ['location1', 'location2']
         
     row_names : list of strings
-        Row names listed in the order they should appear in the dashboard, i.e. ['system1', 'system2']
+        Row names listed in the order they should appear in the dashboard, 
+        i.e. ['system1', 'system2']
         
     content : dictionary
         Dashboard content for each cell. 
         
-        Dictionary keys are tuples indicating the row name and column name, i.e. ('row name', 'column name'), where 'row name' is in the list row_names and 'column name' is in the list column_names. 
+        Dictionary keys are tuples indicating the row name and column name, 
+        i.e. ('row name', 'column name'), where 'row name' is in the list 
+        row_names and 'column name' is in the list column_names. 
         
-        For each key, another dictionary is defined that contains the content to be included in each cell of the dashboard.
-        Each cell can contain text, graphics, a table, and an html link.  These are defined using the following keys:
+        For each ('row name', 'column name') key, another dictionary is defined 
+        that contains the content to be included in each cell of the dashboard. 
+        Each cell can contain text, graphics, a table, and an html link. These 
+        are defined using the following **case sensitive** keys:
         
         - text (string) =  text at the top of each cell
-        - graphics (list of strings) =  a list of graphics file names.  Each file name includes the full path
-        - table (string) = a table in html format, for example a table of performance metrics.  DataFrames can be converted to an html string using df.to_html() or df.transpose().to_html().  Values in the table can be color coded using pandas Styler class. 
-        - link (dict) = a dictionary where keys define the name of the link and values define the html link (with full path)
+        - graphics (list of strings) =  a list of graphics file names.  Each 
+          file name includes the full path
+        - table (string) = a table in html format, for example a table of 
+          performance metrics.  DataFrames can be converted to an html string 
+          using df.to_html() or df.transpose().to_html().  Values in the table 
+          can be color coded using pandas Styler class. 
+        - link (dict) = a dictionary where keys define the name of the link 
+          and values define the html link (with full path)
         
         For example::
         
@@ -424,7 +436,8 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
         Image width in the HTML report, default = 250
         
     datatables : boolean, optional
-        Use datatables.net to format the dashboard, default = False.  See https://datatables.net/ for more information.
+        Use datatables.net to format the dashboard, default = False.  
+        See https://datatables.net/ for more information.
     
     encode : boolean, optional
         Encode graphics in the html, default = False
@@ -445,7 +458,9 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
     pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', 40)
     
-    html_string = _html_template_dashboard(column_names, row_names, content, title, footnote, logo, im_width, datatables, encode)
+    html_string = _html_template_dashboard(column_names, row_names, content, 
+                                           title, footnote, logo, im_width, 
+                                           datatables, encode)
     
     # Write html file
     if os.path.dirname(filename) == '':
@@ -460,7 +475,8 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
 
     return full_filename
 
-def _latex_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, im_width_logo):
+def _latex_template_monitoring_report(content, title, logo, im_width_test_results, 
+                                      im_width_custom, im_width_logo):
     
     template = env.get_template('monitoring_report.tex')
 
@@ -471,7 +487,8 @@ def _latex_template_monitoring_report(content, title, logo, im_width_test_result
     
     return template.render(**locals())
 
-def _html_template_monitoring_report(content, title, logo, im_width_test_results, im_width_custom, im_width_logo, encode):
+def _html_template_monitoring_report(content, title, logo, im_width_test_results, 
+                                     im_width_custom, im_width_logo, encode):
     
     # if encode == True, encode the images
     img_dic = {}
@@ -492,7 +509,8 @@ def _html_template_monitoring_report(content, title, logo, im_width_test_results
     
     return template.render(**locals())
 
-def _html_template_dashboard(column_names, row_names, content, title, footnote, logo, im_width, datatables, encode):
+def _html_template_dashboard(column_names, row_names, content, title, footnote, 
+                             logo, im_width, datatables, encode):
     
     # if encode == True, encode the images
     img_dic = {}
@@ -517,9 +535,10 @@ def _html_template_dashboard(column_names, row_names, content, title, footnote, 
 
 def device_to_client(config):
     """
-    Read channels on modbus device, scale and calibrate the values, and store the data in a MySQL database.
-    The inputs are provided by a configuration dictionary that describe general information for
-    data acquisition and the devices.
+    Read channels on modbus device, scale and calibrate the values, and store 
+    the data in a MySQL database. The inputs are provided by a configuration 
+    dictionary that describe general information for data acquisition and the 
+    devices.
     
     Parameters
     ----------
