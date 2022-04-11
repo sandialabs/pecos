@@ -442,7 +442,7 @@ def write_dashboard(column_names, row_names, content, title='Pecos Dashboard',
     logger.info("Writing dashboard")
         
     # Set pandas display option     
-    pd.set_option('display.max_colwidth', -1)
+    pd.set_option('display.max_colwidth', None)
     pd.set_option('display.width', 40)
     
     html_string = _html_template_dashboard(column_names, row_names, content, title, footnote, logo, im_width, datatables, encode)
