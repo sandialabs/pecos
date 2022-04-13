@@ -27,7 +27,7 @@ pecos.logger.initialize()
 # Open config file and extract information
 config_file = 'Baseline_config.yml'
 fid = open(config_file, 'r')
-config = yaml.load(fid)
+config = yaml.safe_load(fid)
 fid.close()
 location = config['Location']
 sapm_parameters = config['SAPM Parameters']

@@ -50,13 +50,13 @@ The following code could be used as a Python driver that runs using a task sched
     >>> df1 = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
     >>> df1 = pd.DataFrame(df1, index=index)
     >>> df1.index.name = 'timestamp'
-    >>> df1.to_sql('data', engine, dtype={'timestamp': DateTime(), 'A': Float(), 'B': Float()})
+    >>> nrows = df1.to_sql('data', engine, dtype={'timestamp': DateTime(), 'A': Float(), 'B': Float()})
     
     >>> index = pd.date_range(date-datetime.timedelta(days=1), periods=N, freq='Min')
     >>> df2 = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
     >>> df2 = pd.DataFrame(df2, index=index)
     >>> df2.index.name = 'timestamp'
-    >>> df2.to_sql('qc_data', engine, dtype={'timestamp': DateTime(), 'A': Float(), 'B': Float()})
+    >>> nrows = df2.to_sql('qc_data', engine, dtype={'timestamp': DateTime(), 'A': Float(), 'B': Float()})
     
     >>> #data1 = engine.execute("SELECT * FROM data").fetchall()
     >>> #history1 = engine.execute("SELECT * FROM qc_data").fetchall()
@@ -91,8 +91,8 @@ The following code could be used as a Python driver that runs using a task sched
     >>> pm.check_outlier([-3, 3], window=3600, streaming=True)
 		
     >>> # Save the cleaned data and test results to the database
-    >>> pm.cleaned_data.to_sql('qc_data', engine, if_exists='append')
-    >>> pm.test_results.to_sql('qc_summary', engine, if_exists='append')
+    >>> nrows = pm.cleaned_data.to_sql('qc_data', engine, if_exists='append')
+    >>> nrows = pm.test_results.to_sql('qc_summary', engine, if_exists='append')
 	
     >>> # Create a monitoring report with test results and graphics
     >>> test_results_graphics = pecos.graphics.plot_test_results(data, pm.test_results)

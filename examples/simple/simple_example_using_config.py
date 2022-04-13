@@ -13,7 +13,7 @@ pecos.logger.initialize()
 # Open configuration file
 config_file = 'simple_config.yml'
 fid = open(config_file, 'r')
-config = yaml.load(fid)
+config = yaml.safe_load(fid)
 fid.close()
    
 # Create a Pecos PerformanceMonitoring data object
