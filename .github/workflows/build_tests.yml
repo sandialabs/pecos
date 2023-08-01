@@ -59,7 +59,7 @@ jobs:
     - name: Install pecos
       run: |
         python -m pip install --upgrade pip
-        pip install wheel numpy pandas jinja2 matplotlib
+        pip install wheel numpy pandas jinja2 matplotlib pytest
         pip install --no-index --pre --find-links=. pecos
     - name: Usage of pecos
       run: |
