@@ -21,12 +21,8 @@ try:
     import minimalmodbus 
 except:
     pass
+import pytest
 
-try:
-    from nose.tools import nottest as _nottest
-except ImportError:
-    def _nottest(afunction):
-        return afunction
         
 logger = logging.getLogger(__name__)
 
@@ -56,11 +52,12 @@ def read_campbell_scientific(filename, index_col='TIMESTAMP', encoding=None):
 
     try:
         df = pd.read_csv(filename, skiprows=1, encoding=encoding, index_col=index_col, 
-                         parse_dates=True, dtype ='unicode', error_bad_lines=False) #, low_memory=False)
+                         parse_dates=True, dtype ='unicode', on_bad_lines="skip") #, low_memory=False)
         df = df[2:]
         index = pd.to_datetime(df.index)
         Unnamed = df.filter(regex='Unnamed')
-        df = df.drop(Unnamed.columns, 1)
+        if Unnamed.columns.shape[0] > 0:
+            df = df.drop(Unnamed.columns, 1)
         df = pd.DataFrame(data = df.values, index = index, columns = df.columns, dtype='float64')
     except:
         logger.warning("Cannot extract database, CSV file reader failed " + filename)
@@ -166,11 +163,11 @@ def write_metrics(metrics, filename='metrics.csv'):
     logger.info("Write metrics file")
 
     try:
-        previous_metrics = pd.read_csv(filename, index_col='TIMESTEP') #, parse_dates=True)
+        previous_metrics = pd.read_csv(filename, index_col='TIMESTEP', parse_dates=True)
     except:
         previous_metrics = pd.DataFrame()
         
-    metrics.index = metrics.index.to_native_types() # this is necessary when using time zones
+    #metrics.index = metrics.index.to_native_types() # no longer needed when using time zones
     metrics = metrics.combine_first(previous_metrics) 
     
     if os.path.dirname(filename) == '':
@@ -183,7 +180,7 @@ def write_metrics(metrics, filename='metrics.csv'):
     
     return full_filename
 
-@_nottest
+@pytest.mark.skip()
 def write_test_results(test_results, filename='test_results.csv'):
     """
     Write test results file.
