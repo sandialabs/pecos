@@ -53,8 +53,8 @@ A subset of quality control test results from the :ref:`simple_example` are show
     >>> pd.set_option('display.expand_frame_repr', False)
     >>> from os.path import abspath, dirname, join
     >>> import pecos
-    >>> docdir = dirname(abspath(__file__))
-    >>> datadir = join(docdir,'..','pecos', 'tests', 'data')
+    >>> packagedir = dirname(abspath(pecos.__file__))
+    >>> datadir = join(packagedir, 'tests', 'data')
 	>>> pm = pecos.monitoring.PerformanceMonitoring()
     >>> test_results = pd.read_csv(join(datadir,'Simple_test_results.csv'), index_col=0) # This file is tested against output from the Simple example
     >>> pm.test_results = test_results.loc[0:7,:]	

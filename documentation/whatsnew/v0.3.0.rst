@@ -5,7 +5,6 @@ v0.3.0 (main)
 
 * Bug fix in custom static and streaming quality control tests to use a specific column
 * Minor updates to address pandas and yaml depreciation warnings
-* Minor updates for testing and documentation
-* Replaced the use of nose with pytest
+* Updated test to use pytest instead of nose
 * Added GitHub Actions 
 * Added Python 3.9 and 3.10 tests, dropped 3.6 tests
