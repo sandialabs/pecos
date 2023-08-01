@@ -7,4 +7,4 @@ v0.3.0 (main)
 * Minor updates to address pandas and yaml depreciation warnings
 * Updated test to use pytest instead of nose
 * Added GitHub Actions 
-* Added Python 3.9 and 3.10 tests, dropped 3.6 tests
+* Added Python 3.9 and 3.10 tests, dropped 3.6 and 3.7 tests
