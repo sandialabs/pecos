@@ -8,9 +8,9 @@ The following services are used for software quality assurance:
 * Test coverage statistics are collected using Coveralls at https://coveralls.io/github/sandialabs/pecos.
 * The current release is hosted on PyPI at https://pypi.python.org/pypi/pecos.
 
-Tests can be run locally using nosetests::
+Tests can be run locally using pytest::
 
-	nosetests -v --with-coverage --cover-package=pecos pecos
+	pytest pecos
 
 Software developers are expected to follow standard practices to document and test new code. 
 Pull requests will be reviewed by the core development team.
