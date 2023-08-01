@@ -59,9 +59,9 @@ jobs:
     - name: Install pecos
       run: |
         python -m pip install --upgrade pip
-        pip install wheel
-        pip install --find-links=. pecos
-    - name: Import test
+        pip install wheel numpy pandas jinja2 matplotlib
+        pip install --no-index --pre --find-links=. pecos
+    - name: Usage of pecos
       run: |
         python -c "import pecos"
 
@@ -86,7 +86,8 @@ jobs:
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m pytest -v --nologcapture --with-doctest --traverse-namespace pecos
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m pytest --doctest-modules --doctest-glob="*.rst" pecos
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation                                                                                                                                                                                                                                       
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
