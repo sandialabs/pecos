@@ -1,8 +1,14 @@
-from nose.tools import *
-import pandas as pd
+import unittest
 import pecos
 
-def test_initialize():
-    pecos.logger.initialize()
-    
-    assert_equals(0, 0)
+
+class TestLogger(unittest.TestCase):
+
+    def test_initialize(self):
+        pecos.logger.initialize()
+        
+        self.assertEqual(0, 0)
+
+
+if __name__ == '__main__':
+    unittest.main()
