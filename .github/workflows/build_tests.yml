@@ -1,4 +1,4 @@
-# This workflow will install Python dependencies, run tests and lint with a single version of Python
+# This workflow will install Python dependencies, run tests and coverage
 # For more information see: https://help.github.com/actions/language-and-framework-guides/using-python-with-github-actions
 
 name: build
@@ -12,13 +12,17 @@ on:
 jobs:
 
   build:
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        python-version: ['3.8', '3.9', '3.10']
+        os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
-        python-version: 3.9
+        python-version: ${{ matrix.python-version }}
     - name: Install dependencies
       run: |
         python --version
@@ -30,47 +34,47 @@ jobs:
         python setup.py bdist_wheel
         ls dist/*
     - name: Save wheel
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v3
       with:
-        name: wheel
-        path: dist/pecos*.whl
+        name: pecos_${{ matrix.python-version }}_${{ matrix.os }}.whl
+        path: dist/pecos*
 
   test:
-    name: Import test
+    name: Test install and usage of pecos
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: ['3.8', '3.9', '3.10']
         os: [windows-latest, macOS-latest, ubuntu-latest]    
     steps:
     - name: Set up Python 
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Download wheel
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v3
       with:
-        name: wheel
+        name: pecos_${{ matrix.python-version }}_${{ matrix.os }}.whl
     - name: Install pecos
       run: |
         python -m pip install --upgrade pip
-        pip install wheel
-        pip install --find-links=. pecos
-    - name: Import test
+        pip install wheel numpy pandas jinja2 matplotlib pytest
+        pip install --no-index --pre --find-links=. pecos
+    - name: Usage of pecos
       run: |
         python -c "import pecos"
 
-  windows:
+  create_coverage_reports:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        os: [windows-latest]
+        python-version: ['3.8', '3.9', '3.10']
+        os: [windows-latest, macOS-latest, ubuntu-latest]
     steps:
     - uses: actions/checkout@v2
     - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies
@@ -78,93 +82,26 @@ jobs:
         python --version
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install coveralls
-        python setup.py develop
+        python -m pip install -e .
     - name: Run Tests
       run: |
         coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --traverse-namespace pecos
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m pytest --doctest-modules --doctest-glob="*.rst" pecos
+        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation                                                                                                                                                                                                                                       
       env:
         COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
     - name: Save coverage
       uses: actions/upload-artifact@v2
-      # if: ${{ matrix.os != 'windows-latest' }}
       with:
         name: coverage
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
-  macOS:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        os: [macOS-latest]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        python --version
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install coveralls
-        python setup.py develop
-    - name: Run Tests
-      run: |
-        coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --traverse-namespace --doctest-extension=.rst documentation/*.rst pecos
-      env:
-        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-    - name: Save coverage
-      uses: actions/upload-artifact@v2
-      # if: ${{ matrix.os != 'windows-latest' }}
-      with:
-        name: coverage
-        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-
-  linux:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
-        os: [ubuntu-latest]
-    steps:
-    - uses: actions/checkout@v2
-    - name: Setup conda
-      uses: s-weigand/setup-conda@v1
-      with:
-        update-conda: true
-        python-version: ${{ matrix.python-version }}
-    - name: Install dependencies
-      run: |
-        conda config --set always_yes yes --set changeps1 no
-        python --version
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-        pip install coveralls                                             
-        python setup.py develop
-    - name: Run Tests
-      run: |
-        coverage erase
-        coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m nose -v --nologcapture --with-doctest --traverse-namespace pecos
-      env:
-        COVERAGE_FILE: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-    - name: Save coverage
-      uses: actions/upload-artifact@v2
-      # if: ${{ matrix.os != 'windows-latest' }}
-      with:
-        name: coverage
-        path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
-
-  coverage:
-    needs: [ windows, macOS, linux ]
-    runs-on: windows-latest
+  combine_reports:
+    needs: [ create_coverage_reports ]
+    runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
     - uses: actions/checkout@v2
@@ -172,8 +109,7 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
-        pip install coveralls
-        python setup.py develop
+        python -m pip install -e .
     - name: Download coverage artifacts from test matrix
       uses: actions/download-artifact@v2
       with:
@@ -204,13 +140,13 @@ jobs:
         name: coverage
         path: htmlcov
 
-  coveralls:
-    needs: [ windows, macOS, linux ]
+  combine_reports_upload_coveralls:
+    needs: [ create_coverage_reports ]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
     - name: Set up Python 
-      uses: actions/setup-python@v2
+      uses: actions/setup-python@v4
       with:
         python-version: 3.9
     - uses: actions/checkout@v2
@@ -219,7 +155,7 @@ jobs:
         python -m pip install --upgrade pip
         pip install coveralls
         pip install -r requirements.txt
-        python setup.py develop
+        python -m pip install -e .
     - name: Download coverage artifacts from test matrix
       uses: actions/download-artifact@v2
       with:

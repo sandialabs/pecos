@@ -16,13 +16,8 @@ except:
 import textwrap
 import os
 import logging
+import pytest
 
-try:
-    from nose.tools import nottest as _nottest
-except ImportError:
-    def _nottest(afunction):
-        return afunction
-     
 NoneType = type(None)
 
 logger = logging.getLogger(__name__)
@@ -425,7 +420,7 @@ def plot_doy_heatmap(data, cmap='nipy_spectral', vmin=None, vmax=None,
     ax.set_ylabel("Time of day (minutes)")
     plt.tight_layout()
     
-@_nottest
+@pytest.mark.skip()
 def plot_test_results(data, test_results, tfilter=None, image_format='png', 
                       dpi=500, figsize=(7.0,3.0), date_formatter=None, 
                       filename_root='test_results'):
@@ -489,7 +484,7 @@ def plot_test_results(data, test_results, tfilter=None, image_format='png',
                           'Missing timestamp', 
                           'Nonmonotonic timestamp']
     test_results = test_results[-test_results['Error Flag'].isin(remove_error_flags)]
-    grouped = test_results.groupby(['Variable Name'])
+    grouped = test_results.groupby('Variable Name')
 
     for col_name, test_results_group in grouped:
         logger.info("Creating graphic for " + col_name)

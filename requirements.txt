@@ -5,8 +5,15 @@ jinja2
 matplotlib
 
 # Optional
-nose
 pvlib
 plotly
 ephem
 sqlalchemy
+
+# Documentation
+sphinx
+sphinx_rtd_theme
+
+# Testing
+pytest
+coverage

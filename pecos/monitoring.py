@@ -340,8 +340,8 @@ class PerformanceMonitoring(object):
                                  timestamp_test=True,
                                  min_failures=min_failures)
 
-        # If not monotonic, sort df by timestamp
-        if not self.df.index.is_monotonic:
+        # If not monotonically increasing, sort df by timestamp
+        if not self.df.index.is_monotonic_increasing:
             self.df = self.df.sort_index()
 
         # Check for duplicate timestamps
@@ -511,7 +511,7 @@ class PerformanceMonitoring(object):
         assert isinstance(key, (NoneType, str)), 'key must be None or of type string'
         assert direction in [None, 'positive', 'negative'], "direction must None or the string 'positive' or 'negative'"
         assert isinstance(min_failures, int), 'min_failures must be of type int'
-        assert self.df.index.is_monotonic, 'index must be monotonic'
+        assert self.df.index.is_monotonic_increasing, 'index must be monotonically increasing'
         
         logger.info("Check for stagant data and/or abrupt changes using delta (max-min) within a rolling window")
         
@@ -637,7 +637,7 @@ class PerformanceMonitoring(object):
         assert isinstance(absolute_value, bool), 'absolute_value must be of type bool'
         assert isinstance(streaming, bool), 'streaming must be of type bool'
         assert isinstance(min_failures, int), 'min_failures must be type int'
-        assert self.df.index.is_monotonic, 'index must be monotonic'
+        assert self.df.index.is_monotonic_increasing, 'index must be monotonically increasing'
         
         def outlier(data_pt, history):
 

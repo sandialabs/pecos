@@ -1,18 +1,17 @@
 import unittest
-from nose.tools import *
-from os.path import abspath, dirname, join
-import pecos
-import pandas as pd
-from pandas import Timestamp, RangeIndex
 from pandas.testing import assert_frame_equal, assert_series_equal
+from os.path import abspath, dirname, join
+import pandas as pd
 import numpy as np
-from numpy import array
+
+import pecos
 
 #pd.set_option('expand_frame_repr', False)
 
 testdir = dirname(abspath(__file__))
 datadir = join(testdir,'data')
 simpleexampledir = join(testdir,'..', '..', 'examples','simple')
+
 
 def simple_example_run_analysis(df):
 
@@ -68,6 +67,7 @@ def simple_example_run_analysis(df):
 
     return QCI
 
+
 class Test_simple_example(unittest.TestCase):
 
     @classmethod
@@ -88,11 +88,11 @@ class Test_simple_example(unittest.TestCase):
         time_filter = (clocktime > 3*3600) & (clocktime < 21*3600)
         self.time_filter = pd.Series(time_filter, index=self.pm.df.index)
         self.pm.add_time_filter(self.time_filter)
-        
+
     @classmethod
     def tearDown(self):
         pass
-        
+
     def test_check_timestamp(self):
         #Missing timestamp at 5:00
         #Duplicate timestamp 17:00
@@ -261,7 +261,7 @@ class Test_simple_example(unittest.TestCase):
             [('Wave Error C',pd.Timestamp('2015-01-01 13:00:00'),pd.Timestamp('2015-01-01 14:45:00'),8.0,'Data > upper bound, 0.25')],
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'])
 
-        assert_frame_equal(temp, expected, check_dtype=False)
+        assert_frame_equal(temp, expected, check_dtype=False, check_index_type=False)
 
     def test_full_example(self):
         data_file = join(simpleexampledir,'simple.csv')
@@ -269,7 +269,7 @@ class Test_simple_example(unittest.TestCase):
 
         QCI = simple_example_run_analysis(df)
 
-        assert_almost_equal(QCI.mean(),0.852113,6)
+        self.assertAlmostEqual(QCI.mean(),0.852113,6)
 
         actual = pd.read_csv('test_results.csv', index_col=0)
         # Convert back to datetime just so that they are in the same format
@@ -314,11 +314,12 @@ class Test_simple_example(unittest.TestCase):
 
         QCI = simple_example_run_analysis(df)
 
-        assert_almost_equal(QCI.mean(),0.852113,6)
+        self.assertAlmostEqual(QCI.mean(),0.852113,6)
 
         actual = pd.read_csv('test_results.csv', index_col=0)
         expected = pd.read_csv(join(datadir,'Simple_test_results_with_timezone.csv'), index_col=0)
         assert_frame_equal(actual, expected, check_dtype=False)
+
 
 class Test_check_timestamp(unittest.TestCase):
 
@@ -341,36 +342,37 @@ class Test_check_timestamp(unittest.TestCase):
     def test_check_exact_times_true(self):
         self.pm.check_timestamp(3600, exact_times=True)
         expected = pd.DataFrame(
-            array([['', Timestamp('2016-10-17 02:05:00'),
-                   Timestamp('2016-10-17 03:05:00'), 2,
+            np.array([['', pd.Timestamp('2016-10-17 02:05:00'),
+                   pd.Timestamp('2016-10-17 03:05:00'), 2,
                    'Missing timestamp']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=1, step=1)
+            index=pd.RangeIndex(start=0, stop=1, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
 
     def test_check_exact_times_false(self):
         self.pm.check_timestamp(3600, exact_times=False)
         expected = pd.DataFrame(
-            array([['', Timestamp('2016-10-17 02:00:00'),
-                    Timestamp('2016-10-17 02:00:00'), 1, 'Missing timestamp']], dtype=object),
+            np.array([['', pd.Timestamp('2016-10-17 02:00:00'),
+                    pd.Timestamp('2016-10-17 02:00:00'), 1, 'Missing timestamp']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=1, step=1)
+            index=pd.RangeIndex(start=0, stop=1, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
 
     def test_check_exact_times_true_with_start_time(self):
-        self.pm.check_timestamp(3600, expected_start_time=Timestamp('2016-10-17 01:00:00'), exact_times=True)
+        self.pm.check_timestamp(3600, expected_start_time=pd.Timestamp('2016-10-17 01:00:00'), 
+                                exact_times=True)
         expected = pd.DataFrame(
-            array([['', Timestamp('2016-10-17 01:00:00'),
-                   Timestamp('2016-10-17 03:00:00'), 3,
+            np.array([['', pd.Timestamp('2016-10-17 01:00:00'),
+                   pd.Timestamp('2016-10-17 03:00:00'), 3,
                    'Missing timestamp']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=1, step=1)
+            index=pd.RangeIndex(start=0, stop=1, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
 
-    
+
 class Test_check_delta(unittest.TestCase):
 
     @classmethod
@@ -393,10 +395,10 @@ class Test_check_delta(unittest.TestCase):
         # dead sensor = < 1 in 5 hours
         self.pm.check_delta([1, None], window=5*3600)
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 01:00:00'), Timestamp('2017-01-01 08:00:00'), 8, 'Delta < lower bound, 1'],
-                   ['A', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 23:00:00'), 8, 'Delta < lower bound, 1']], dtype=object),
+            np.array([['A', pd.Timestamp('2017-01-01 01:00:00'), pd.Timestamp('2017-01-01 08:00:00'), 8, 'Delta < lower bound, 1'],
+                   ['A', pd.Timestamp('2017-01-01 16:00:00'), pd.Timestamp('2017-01-01 23:00:00'), 8, 'Delta < lower bound, 1']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=2, step=1)
+            index=pd.RangeIndex(start=0, stop=2, step=1)
             )
         #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_deadsensor')
         assert_frame_equal(expected, self.pm.test_results)
@@ -404,17 +406,17 @@ class Test_check_delta(unittest.TestCase):
     def test_increment_deadsensor(self):
         # As expected, check_increment does not produce the same results as check_delta
         self.pm.check_increment([1, None], 'A', increment=5)
-        assert_equal(10, self.pm.test_results['Timesteps'].sum())
+        self.assertEqual(10, self.pm.test_results['Timesteps'].sum())
         
     def test_abrupt_change(self):
         # abrupt change = > 7 in 3 hours
         self.pm.check_delta([None, 7], window=3*3600)
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 13:00:00'), Timestamp('2017-01-01 16:00:00'), 4, 'Delta > upper bound, 7'],
-                   ['B', Timestamp('2017-01-01 10:00:00'), Timestamp('2017-01-01 12:00:00'), 3, 'Delta > upper bound, 7'],
-                   ['B', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 19:00:00'), 4, 'Delta > upper bound, 7']], dtype=object),
+            np.array([['A', pd.Timestamp('2017-01-01 13:00:00'), pd.Timestamp('2017-01-01 16:00:00'), 4, 'Delta > upper bound, 7'],
+                   ['B', pd.Timestamp('2017-01-01 10:00:00'), pd.Timestamp('2017-01-01 12:00:00'), 3, 'Delta > upper bound, 7'],
+                   ['B', pd.Timestamp('2017-01-01 16:00:00'), pd.Timestamp('2017-01-01 19:00:00'), 4, 'Delta > upper bound, 7']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=3, step=1)
+            index=pd.RangeIndex(start=0, stop=3, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
 
@@ -422,10 +424,10 @@ class Test_check_delta(unittest.TestCase):
         # abrupt positive change = > 7 in 3 hours
         self.pm.check_delta([None, 7], window=3*3600, direction='positive')
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 13:00:00'), Timestamp('2017-01-01 16:00:00'), 4, 'Delta (+) > upper bound, 7'],
-                   ['B', Timestamp('2017-01-01 16:00:00'), Timestamp('2017-01-01 19:00:00'), 4, 'Delta (+) > upper bound, 7']], dtype=object),
+            np.array([['A', pd.Timestamp('2017-01-01 13:00:00'), pd.Timestamp('2017-01-01 16:00:00'), 4, 'Delta (+) > upper bound, 7'],
+                   ['B', pd.Timestamp('2017-01-01 16:00:00'), pd.Timestamp('2017-01-01 19:00:00'), 4, 'Delta (+) > upper bound, 7']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=2, step=1)
+            index=pd.RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
         
@@ -433,9 +435,9 @@ class Test_check_delta(unittest.TestCase):
         # abrupt negative change = < 7 in 3 hours
         self.pm.check_delta([None, 7], window=3*3600, direction='negative')
         expected = pd.DataFrame(
-            array([['B', Timestamp('2017-01-01 10:00:00'), Timestamp('2017-01-01 12:00:00'), 3, 'Delta (-) > upper bound, 7']], dtype=object),
+            np.array([['B', pd.Timestamp('2017-01-01 10:00:00'), pd.Timestamp('2017-01-01 12:00:00'), 3, 'Delta (-) > upper bound, 7']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=1, step=1)
+            index=pd.RangeIndex(start=0, stop=1, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
 
@@ -514,7 +516,8 @@ class Test_check_delta(unittest.TestCase):
         # test to make sure the results don't change
         expected = pd.read_csv(join(datadir,'delta_summary_100.csv'), index_col=0)
         assert_series_equal(summary['Number'], expected['Number'], check_dtype=False)
-        
+
+
 class Test_check_outlier(unittest.TestCase):
 
     @classmethod
@@ -537,10 +540,10 @@ class Test_check_outlier(unittest.TestCase):
         # outlier if stdev > 1.9
         self.pm.check_outlier([-1.9, 1.9], window=None, absolute_value=False)
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 19:00:00'), Timestamp('2017-01-01 19:00:00'), 1, 'Outlier < lower bound, -1.9'],
-                   ['A', Timestamp('2017-01-01 06:00:00'), Timestamp('2017-01-01 06:00:00'), 1, 'Outlier > upper bound, 1.9']], dtype=object),
+            np.array([['A', pd.Timestamp('2017-01-01 19:00:00'), pd.Timestamp('2017-01-01 19:00:00'), 1, 'Outlier < lower bound, -1.9'],
+                   ['A', pd.Timestamp('2017-01-01 06:00:00'), pd.Timestamp('2017-01-01 06:00:00'), 1, 'Outlier > upper bound, 1.9']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=2, step=1)
+            index=pd.RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(expected, self.pm.test_results)
         
@@ -548,18 +551,18 @@ class Test_check_outlier(unittest.TestCase):
         results = pecos.monitoring.check_outlier(self.pm.data, [None, 1.9], window=None, absolute_value=True )
         test_results = results['test_results']
         expected = pd.DataFrame(
-            array([['A', Timestamp('2017-01-01 06:00:00'), Timestamp('2017-01-01 06:00:00'), 1, '|Outlier| > upper bound, 1.9'],
-                   ['A', Timestamp('2017-01-01 19:00:00'), Timestamp('2017-01-01 19:00:00'), 1, '|Outlier| > upper bound, 1.9']], dtype=object),
+            np.array([['A', pd.Timestamp('2017-01-01 06:00:00'), pd.Timestamp('2017-01-01 06:00:00'), 1, '|Outlier| > upper bound, 1.9'],
+                   ['A', pd.Timestamp('2017-01-01 19:00:00'), pd.Timestamp('2017-01-01 19:00:00'), 1, '|Outlier| > upper bound, 1.9']], dtype=object),
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
-            index=RangeIndex(start=0, stop=2, step=1)
+            index=pd.RangeIndex(start=0, stop=2, step=1)
             )
         assert_frame_equal(test_results, expected, 
                            check_dtype=False)
         
-        
     def test_outlier_streaming(self):
         # outlier if stdev > 1.9
         pass
+
 
 class Test_check_custom(unittest.TestCase):
 
@@ -588,7 +591,7 @@ class Test_check_custom(unittest.TestCase):
         metadata = self.pm.check_custom_static(custom_func, error_message='Static')
         N = self.pm.df.shape[0]*self.pm.df.shape[1]
         percent = 1-self.pm.test_results['Timesteps'].sum()/N
-        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        self.assertAlmostEqual(percent, 0.95, 2) # 95% within 2 std
         
         # using a specific key
         metadata_A = self.pm.check_custom_static(custom_func, key='A', error_message='Static')
@@ -597,7 +600,7 @@ class Test_check_custom(unittest.TestCase):
         # Functional tests
         results = pecos.monitoring.check_custom_static(self.pm.data, custom_func, error_message='Static')
         percent = 1-results['test_results']['Timesteps'].sum()/N
-        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        self.assertAlmostEqual(percent, 0.95, 2) # 95% within 2 std
 
     def test_custom_streaming(self):
         
@@ -609,7 +612,7 @@ class Test_check_custom(unittest.TestCase):
         metadata = self.pm.check_custom_streaming(custom_func, 50, error_message='Streaming')
         N = self.pm.df.shape[0]*self.pm.df.shape[1]
         percent = 1-self.pm.test_results['Timesteps'].sum()/N
-        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
+        self.assertAlmostEqual(percent, 0.95, 2) # 95% within 2 std
         
         # using a specific key
         metadata_A = self.pm.check_custom_streaming(custom_func, 50, key='A', error_message='Streaming')
@@ -618,14 +621,15 @@ class Test_check_custom(unittest.TestCase):
         # Functional tests
         results = pecos.monitoring.check_custom_streaming(self.pm.data, custom_func, 50, error_message='Streaming')
         percent = 1-results['test_results']['Timesteps'].sum()/N
-        assert_almost_equal(percent, 0.95, 2) # 95% within 2 std
-    
+        self.assertAlmostEqual(percent, 0.95, 2) # 95% within 2 std
+
+
 class Test_append_test_results(unittest.TestCase):
 
     @classmethod
     def setUp(self):
         self.pm = pecos.monitoring.PerformanceMonitoring()
-        
+
     @classmethod
     def tearDown(self):
         pass
@@ -641,7 +645,7 @@ class Test_append_test_results(unittest.TestCase):
         self.pm._append_test_results(mask, 'None')
         
         expected = pd.DataFrame(
-                array([['A', 0, 3, 4, 'None'],
+                np.array([['A', 0, 3, 4, 'None'],
                        ['A', 5, 5, 1, 'None'],
                        ['B', 7, 9, 3, 'None'],
                        ['C', 0, 5, 6, 'None'],
@@ -649,7 +653,7 @@ class Test_append_test_results(unittest.TestCase):
                 columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
                 index=range(5))
         assert_frame_equal(expected, self.pm.test_results)
-        
+
 
 if __name__ == '__main__':
     unittest.main()
