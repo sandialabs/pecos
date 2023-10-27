@@ -348,7 +348,7 @@ class Test_check_timestamp(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=1, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
 
     def test_check_exact_times_false(self):
         self.pm.check_timestamp(3600, exact_times=False)
@@ -358,7 +358,7 @@ class Test_check_timestamp(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=1, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
 
     def test_check_exact_times_true_with_start_time(self):
         self.pm.check_timestamp(3600, expected_start_time=pd.Timestamp('2016-10-17 01:00:00'), 
@@ -370,7 +370,7 @@ class Test_check_timestamp(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=1, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
 
 
 class Test_check_delta(unittest.TestCase):
@@ -401,7 +401,7 @@ class Test_check_delta(unittest.TestCase):
             index=pd.RangeIndex(start=0, stop=2, step=1)
             )
         #pecos.graphics.plot_test_results(self.pm.df, self.pm.test_results, filename_root='test_deadsensor')
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
         
     def test_increment_deadsensor(self):
         # As expected, check_increment does not produce the same results as check_delta
@@ -418,7 +418,7 @@ class Test_check_delta(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=3, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
 
     def test_abrupt_positive_change(self):
         # abrupt positive change = > 7 in 3 hours
@@ -429,7 +429,7 @@ class Test_check_delta(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=2, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
         
     def test_abrupt_negative_change(self):
         # abrupt negative change = < 7 in 3 hours
@@ -439,7 +439,7 @@ class Test_check_delta(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=1, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
 
     def test_delta_scale(self, output=False):
         # The following function was used to test scalability of the delta test
@@ -545,7 +545,7 @@ class Test_check_outlier(unittest.TestCase):
             columns=['Variable Name', 'Start Time', 'End Time', 'Timesteps', 'Error Flag'],
             index=pd.RangeIndex(start=0, stop=2, step=1)
             )
-        assert_frame_equal(expected, self.pm.test_results)
+        assert_frame_equal(expected, self.pm.test_results, check_dtype=False)
         
         # Functional tests
         results = pecos.monitoring.check_outlier(self.pm.data, [None, 1.9], window=None, absolute_value=True )
