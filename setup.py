@@ -17,7 +17,8 @@ setuptools_kwargs = {
     'install_requires': ['numpy >= 1.10.4',
                          'pandas >= 0.18.0',
                          'matplotlib',
-                         'jinja2'],
+                         'jinja2'
+                         'pytest'],
     'scripts': [],
     'include_package_data': True
 }
