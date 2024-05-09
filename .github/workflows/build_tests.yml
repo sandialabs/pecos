@@ -98,7 +98,7 @@ jobs:
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   combine_reports:
-    needs: [ create_coverage_reports ]
+    needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     steps:
     - name: Set up Python 
@@ -142,7 +142,7 @@ jobs:
         path: htmlcov
 
   coveralls:
-    needs: [ create_coverage_reports ]
+    needs: [ pytest_coverage ]
     runs-on: ubuntu-latest
     continue-on-error: true
     steps:
