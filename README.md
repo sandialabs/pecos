@@ -3,7 +3,7 @@
 
 [![build](https://github.com/sandialabs/pecos/workflows/build/badge.svg)](https://github.com/sandialabs/pecos/actions/workflows/build_tests.yml)
 [![Coverage Status](https://coveralls.io/repos/github/sandialabs/pecos/badge.svg?branch=main)](https://coveralls.io/github/sandialabs/pecos?branch=main)
-[![Documentation Status](https://readthedocs.org/projects/pecos/badge/?version=latest)](https://pecos.readthedocs.io/en/stable/?badge=latest)
+[![Documentation Status](https://github.com/sandialabs/pecos/actions/workflows/build_docs.yml/badge.svg)](https://github.com/sandialabs/pecos/actions/workflows/build_docs.yml)
 [![Downloads](https://pepy.tech/badge/pecos)](https://pepy.tech/project/pecos)
 
 Advances in sensor technology have rapidly increased our ability to monitor 
@@ -21,7 +21,7 @@ which include performance metrics, test results, and graphics. The software was
 developed specifically for solar photovoltaic system monitoring, but is 
 designed to be used for a wide range of applications. 
 
-For more information, go to http://pecos.readthedocs.io
+For more information, go to https://sandialabs.github.io/pecos/
 
 Citing Pecos
 --------------
@@ -42,7 +42,6 @@ Directories
   * pecos - Python package
   * documentation - User manual
   * examples - Examples
-  * ci - Software requirements
 
 Contact
 -------
