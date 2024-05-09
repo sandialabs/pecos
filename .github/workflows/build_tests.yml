@@ -41,8 +41,7 @@ jobs:
         name: pecos_${{ matrix.python-version }}_${{ matrix.os }}.whl
         path: dist/pecos*
 
-  test:
-    name: Test install and usage of pecos
+  install_import:
     needs: build
     runs-on: ${{ matrix.os }}
     strategy:
@@ -67,7 +66,7 @@ jobs:
       run: |
         python -c "import pecos"
 
-  create_coverage_reports:
+  pytest_coverage:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -142,7 +141,7 @@ jobs:
         name: coverage
         path: htmlcov
 
-  combine_reports_upload_coveralls:
+  coveralls:
     needs: [ create_coverage_reports ]
     runs-on: ubuntu-latest
     continue-on-error: true
