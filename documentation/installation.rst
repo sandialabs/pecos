@@ -59,6 +59,7 @@ Required Python package dependencies include:
   http://jinja.pocoo.org/
 * Matplotlib [Hunt07]_: used to produce figures, 
   http://matplotlib.org/
+* Setuptools: used to install the pecos package, https://setuptools.pypa.io/
 
 Optional Python packages dependencies include:
 

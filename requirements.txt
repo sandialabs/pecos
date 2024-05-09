@@ -3,7 +3,7 @@ pandas
 numpy
 jinja2
 matplotlib
-
+setuptools
 
 # Optional
 pvlib
