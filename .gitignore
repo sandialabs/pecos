@@ -4,6 +4,8 @@
 _build/
 pecos.egg-info/*
 logfile
+build/
+dist/
 
 *.html
 *.csv
