@@ -54,7 +54,7 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
     - name: Download wheel
-      uses: actions/download-artifact@v3
+      uses: actions/download-artifact@v4.1.7
       with:
         name: pecos_${{ matrix.python-version }}_${{ matrix.os }}.whl
     - name: Install pecos
@@ -112,7 +112,7 @@ jobs:
         pip install -r requirements.txt
         python -m pip install -e .
     - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: coverage
     - name: Setup coverage and combine reports
@@ -158,7 +158,7 @@ jobs:
         pip install -r requirements.txt
         python -m pip install -e .
     - name: Download coverage artifacts from test matrix
-      uses: actions/download-artifact@v2
+      uses: actions/download-artifact@v4.1.7
       with:
         name: coverage
     - name: Setup coverage and combine reports
