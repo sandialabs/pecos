@@ -377,7 +377,7 @@ class Test_check_delta(unittest.TestCase):
 
     @classmethod
     def setUp(self):
-        index = pd.date_range('1/1/2017', periods=24, freq='H')
+        index = pd.date_range('1/1/2017', periods=24, freq='h')
         data = {'A': [0.5,-0.3,0.2,0,0.5,-0.45,0.35,-0.4,0.5,1.5,0.5,-0.5,0.5,-0.5,5,6,10,10.5,10,10.3,10,10.8,10,9.9], 
                 'B': [0,1,2.2,3,3.8,5,6,7.1,8,9,10,5,-2,1,0,0.5,0,5,3,9.5,8.2,7,np.nan,5]}
         df = pd.DataFrame(data, index=index)
@@ -522,7 +522,7 @@ class Test_check_outlier(unittest.TestCase):
 
     @classmethod
     def setUp(self):
-        index = pd.date_range('1/1/2017', periods=24, freq='H')
+        index = pd.date_range('1/1/2017', periods=24, freq='h')
         data = {'A': [112,114,113,132,134,127,150,120,117,112,107,99,140,
                       98,88,98,106,110,107,79,102,115,np.nan,91]}
         df = pd.DataFrame(data, index=index)
@@ -570,7 +570,7 @@ class Test_check_custom(unittest.TestCase):
     def setUp(self):
         N = 1000
         np.random.seed(92837)
-        index = pd.date_range('1/1/2020', periods=N, freq='S')
+        index = pd.date_range('1/1/2020', periods=N, freq='s')
         data = {'A': np.random.normal(size=N),'B': np.random.normal(size=N)}
         df = pd.DataFrame(data, index=index)
         

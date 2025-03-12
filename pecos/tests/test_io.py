@@ -54,7 +54,7 @@ class TestIO(unittest.TestCase):
             
         pm = pecos.monitoring.PerformanceMonitoring()
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
         tfilter = pd.Series(data = (df.index < index[3]), index = df.index)
@@ -95,7 +95,7 @@ class TestIO(unittest.TestCase):
         
         pm = pecos.monitoring.PerformanceMonitoring()
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
         tfilter = pd.Series(data = (df.index < index[3]), index = df.index)

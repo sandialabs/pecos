@@ -40,7 +40,7 @@ for location_name in locations:
         
         # Populate the object with a dataframe and translation dictionary
         # In this example, fake data is generated using a sin wave function
-        index = pd.date_range(analysis_date, periods=24, freq='H')
+        index = pd.date_range(analysis_date, periods=24, freq='h')
         data=np.sin(np.random.rand(3,1)*np.arange(0,24,1))
         df = pd.DataFrame(data=data.transpose(), index=index, columns=['A', 'B', 'C'])
         pm.add_dataframe(df)

@@ -144,7 +144,7 @@ class TestEvaluateString(unittest.TestCase):
 
     @classmethod
     def setUp(self):
-        index = pd.date_range('1/1/2020', periods=72, freq='H')
+        index = pd.date_range('1/1/2020', periods=72, freq='h')
         data = {'A': np.random.rand(72),
                 'B': np.random.rand(72)}
         self.df = pd.DataFrame(data, index=index)
