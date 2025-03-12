@@ -8,7 +8,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def insolation(G, tfilter=None):
-    """
+    r"""
     Compute insolation defined as:
     
     :math:`H=\int{Gdt}`
@@ -38,7 +38,7 @@ def insolation(G, tfilter=None):
     return H
     
 def energy(P, tfilter=None):
-    """
+    r"""
     Convert energy defined as:
     
     :math:`E=\int{Pdt}`
@@ -68,7 +68,7 @@ def energy(P, tfilter=None):
     return E
 
 def performance_ratio(E, H_poa, P_ref, G_ref=1000):
-    """
+    r"""
     Compute performance ratio defined as:
 
     :math:`PR=\dfrac{Y_{f}}{Yr} = \dfrac{\dfrac{E}{P_{ref}}}{\dfrac{H_{poa}}{G_{ref}}}`
@@ -107,7 +107,7 @@ def performance_ratio(E, H_poa, P_ref, G_ref=1000):
     return PR
 
 def normalized_current(I, G_poa, I_sco, G_ref=1000):
-    """
+    r"""
     Compute normalized current defined as:
 
     :math:`NI = \dfrac{\dfrac{I}{I_{sco}}}{\dfrac{G_{poa}}{G_{ref}}}`
@@ -146,7 +146,7 @@ def normalized_current(I, G_poa, I_sco, G_ref=1000):
     return NI
     
 def normalized_efficiency(P, G_poa, P_ref, G_ref=1000):
-    """
+    r"""
     Compute normalized efficiency defined as:
 
     :math:`NE = \dfrac{\dfrac{P}{P_{ref}}}{\dfrac{G_{poa}}{G_{ref}}}`
@@ -185,7 +185,7 @@ def normalized_efficiency(P, G_poa, P_ref, G_ref=1000):
     return NE
     
 def performance_index(E, E_predicted):
-    """
+    r"""
     Compute performance index defined as:
     
     :math:`PI=\dfrac{E}{\hat{E}}`
@@ -220,7 +220,7 @@ def performance_index(E, E_predicted):
     return PI
 
 def energy_yield(E, P_ref):
-    """
+    r"""
     Compute energy yield is defined as:
     
     :math:`EY=\dfrac{E}{P_{ref}}`
@@ -248,7 +248,7 @@ def energy_yield(E, P_ref):
     return EY
     
 def clearness_index(H_dn, H_ea):
-    """
+    r"""
     Compute clearness index defined as:
     
     :math:`Kt=\dfrac{H_{dn}}{H_{ea}}`
