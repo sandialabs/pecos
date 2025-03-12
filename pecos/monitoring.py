@@ -876,7 +876,7 @@ class PerformanceMonitoring(object):
                 assert isinstance(metadata[t_timestamp], pd.Series), 'metadata returned by quality_control_func must be of type pd.Series'
 
             np_mask[t] = mask_t.values
-            np_data[~np_mask] = np.NAN
+            np_data[~np_mask] = np.nan
        
             # rebase
             if rebase is not None:

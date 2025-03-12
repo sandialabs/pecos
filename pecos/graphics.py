@@ -399,7 +399,7 @@ def plot_doy_heatmap(data, cmap='nipy_spectral', vmin=None, vmax=None,
                 data.index.minute + \
                 data.index.second/60 + \
                 data.index.microsecond/(60*1000000.0)
-    piv = pd.pivot_table(data,values=col_name,index=['Y'],columns=['X'],fill_value=np.NaN)
+    piv = pd.pivot_table(data,values=col_name,index=['Y'],columns=['X'],fill_value=np.nan)
     
     # Create the heatmap
     plt.figure(figsize = figsize)
