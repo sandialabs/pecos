@@ -157,7 +157,7 @@ def plot_timeseries(data, tfilter=None, test_results_group=None, xaxis_min=None,
             temp = np.append(temp[0],len(tfilter)-1)
             count = 0
             for i in range(len(temp)-1):
-                if tfilter[temp[i]] == 0:
+                if tfilter.iloc[temp[i]] == 0:
                     if count == 0:
                         ax.axvspan(data.index[temp[i]], data.index[temp[i+1]], 
                                    facecolor='k', alpha=0.2, label='Time filter')
