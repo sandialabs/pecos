@@ -94,7 +94,7 @@ def time_integral(data, tfilter=None):
     where 
     :math:`f` is a column of data 
     :math:`dt` is the time step between observations.
-    The integral is computed using the trapezoidal rule from numpy.trapz.
+    The integral is computed using the trapezoidal rule from numpy.trapezoid.
     Results are given in [original data units]*seconds.
     NaN values are set to 0 for integration.
     
@@ -124,7 +124,7 @@ def time_integral(data, tfilter=None):
     
     F = {}
     for col in data.columns:
-        F[col] = float(np.trapz(data.loc[:,col], tdelta))
+        F[col] = float(np.trapezoid(data.loc[:,col], tdelta))
     
     F = pd.Series(F)
         
