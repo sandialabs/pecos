@@ -1,0 +1,7 @@
+.. _whatsnew_100:
+
+Version 1.0.0 (main)
+--------------------------
+
+* Updates to support Numpy2
+

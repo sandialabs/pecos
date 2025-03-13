@@ -1,0 +1,7 @@
+.. _whatsnew_031:
+
+v0.3.1 (October 27, 2023)
+--------------------------
+
+* Relaxed dtype check in tests
+* Fixed import fail due to pytest ModuleNotFoundError

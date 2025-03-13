@@ -1,6 +1,6 @@
 .. _whatsnew_030:
 
-v0.3.0 (main)
+v0.3.0 (October 17, 2023)
 --------------------------
 
 * Bug fix in custom static and streaming quality control tests to use a specific column
