@@ -36,7 +36,7 @@ jobs:
       run: |
         python setup.py bdist_wheel
         ls dist/*
-    - name: Save wheel
+    - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
         name: pecos_${{ matrix.python-version }}_${{ matrix.os }}.whl
@@ -87,7 +87,7 @@ jobs:
         pip install -r requirements.txt
         python -m pip install -e .
     - name: Run Tests
-      run: |
+      run: | 
         coverage erase
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" -m pytest --doctest-modules --doctest-glob="*.rst" pecos
         coverage run --context=${{ matrix.os }}.py${{ matrix.python-version }} --source=pecos --omit="*/tests/*" --append -m pytest --doctest-glob="*.rst" documentation                                                                                                                                                                                                                                       
@@ -96,7 +96,7 @@ jobs:
     - name: Save coverage
       uses: actions/upload-artifact@v4
       with:
-        name: coverage
+        name: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
         path: .coverage.${{ matrix.python-version }}.${{ matrix.os }}
 
   combine_reports:
@@ -117,7 +117,9 @@ jobs:
     - name: Download coverage artifacts from test matrix
       uses: actions/download-artifact@v4
       with:
-        name: coverage
+        pattern: .coverage.*.ubuntu-latest # coverage from other OS cause problems
+    - name: Setup coverage and combine reports
+      run: coverage combine .coverage.*.ubuntu-latest
     - name: Create coverage report
       run: |
         echo "[paths]" > .coveragerc
@@ -142,9 +144,7 @@ jobs:
       with:
         name: coverage-html
         path: htmlcov
-
     - name: Push to coveralls
-      run: |
-        coveralls --service=github
+      run: coveralls --service=github --rcfile=.coveragerc
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
