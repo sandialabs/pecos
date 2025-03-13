@@ -144,7 +144,7 @@ class TestEvaluateString(unittest.TestCase):
 
     @classmethod
     def setUp(self):
-        index = pd.date_range('1/1/2020', periods=72, freq='H')
+        index = pd.date_range('1/1/2020', periods=72, freq='h')
         data = {'A': np.random.rand(72),
                 'B': np.random.rand(72)}
         self.df = pd.DataFrame(data, index=index)
@@ -157,7 +157,7 @@ class TestEvaluateString(unittest.TestCase):
         string_to_eval = "({CLOCK_TIME} > 3*3600) & ({CLOCK_TIME} < 21*3600)"
         x = pecos.utils.evaluate_string(string_to_eval, self.df)
 
-        self.assertEqual(x.sum()[0], 72-4*3-3*3)
+        self.assertEqual(x.sum().iloc[0], 72-4*3-3*3)
 
     def test_evaluate_string_specs(self):
         string_to_eval = "{A}*5"
