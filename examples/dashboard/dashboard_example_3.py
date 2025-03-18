@@ -53,8 +53,8 @@ for location_name in locations:
             metrics.style
             .format("{:.2f}")
             .applymap(color_value) 
-            .highlight_null(null_color='gray')
-            .render()
+            .highlight_null(color='gray')
+            .to_html()
         )
         
         # Store content to be displayed in the dashboard
