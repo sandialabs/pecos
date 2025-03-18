@@ -67,7 +67,7 @@ class TestGraphics(unittest.TestCase):
             os.remove(filename)
             
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
         
@@ -84,7 +84,7 @@ class TestGraphics(unittest.TestCase):
             os.remove(filename)
             
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
         tfilter = pd.Series(data = (df.index < index[3]), index = df.index)
@@ -147,7 +147,7 @@ class TestGraphics(unittest.TestCase):
             os.remove(filename)
             
         periods = 5*24 # 5 days
-        index = pd.date_range('3/1/2016', periods=periods, freq='H')
+        index = pd.date_range('3/1/2016', periods=periods, freq='h')
         data = np.random.rand(periods)
         df = pd.DataFrame(data=data, index=index, columns=['A'])
         
@@ -164,7 +164,7 @@ class TestGraphics(unittest.TestCase):
             os.remove(filename)
             
         periods = 365*12
-        index = pd.date_range('1/1/2016', periods=periods, freq='2H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='2h')
         data = np.random.rand(periods)
         df = pd.DataFrame(data=data, index=index, columns=['A'])
         overlay = pd.DataFrame(index=[1,100,200,300,365], 
@@ -191,7 +191,7 @@ class TestGraphics(unittest.TestCase):
         filename_root = abspath(join(testdir, 'plot_test_results2'))
         pm = pecos.monitoring.PerformanceMonitoring()
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,5,6], [7,8,9], [10,11,12], [13,14,15]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
         tfilter = pd.Series(data = (df.index < index[3]), index = df.index)

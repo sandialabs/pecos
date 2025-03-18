@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 def qci(mask, tfilter=None):
-    """
+    r"""
     Compute the quality control index (QCI) for each column, defined as:
     
     :math:`QCI=\dfrac{\sum_{t\in T}X_{dt}}{|T|}`
@@ -42,7 +42,7 @@ def qci(mask, tfilter=None):
     return qci   
 
 def rmse(data1, data2, tfilter=None):
-    """
+    r"""
     Compute the root mean squared error (RMSE) for each column, defined as:
     
     :math:`RMSE=\sqrt{\dfrac{\sum{(data_1-data_2)^2}}{n}}`
@@ -86,7 +86,7 @@ def rmse(data1, data2, tfilter=None):
     return rmse
     
 def time_integral(data, tfilter=None):
-    """
+    r"""
     Compute the time integral (F) for each column, defined as:
     
     :math:`F=\int{fdt}`
@@ -94,7 +94,7 @@ def time_integral(data, tfilter=None):
     where 
     :math:`f` is a column of data 
     :math:`dt` is the time step between observations.
-    The integral is computed using the trapezoidal rule from numpy.trapz.
+    The integral is computed using the trapezoidal rule from numpy.trapezoid.
     Results are given in [original data units]*seconds.
     NaN values are set to 0 for integration.
     
@@ -124,14 +124,14 @@ def time_integral(data, tfilter=None):
     
     F = {}
     for col in data.columns:
-        F[col] = float(np.trapz(data.loc[:,col], tdelta))
+        F[col] = float(np.trapezoid(data.loc[:,col], tdelta))
     
     F = pd.Series(F)
         
     return F
 
 def time_derivative(data, tfilter=None):
-    """
+    r"""
     Compute the derivative (f') of each column, defined as:
     
     :math:`f'=\dfrac{df}{dt}`
@@ -170,7 +170,7 @@ def time_derivative(data, tfilter=None):
     return f
 
 def probability_of_detection(observed, actual, tfilter=None):
-    """ 
+    r""" 
     Compute probability of detection (PD) for each column, defined as:
         
     :math:`PD=\dfrac{TP}{TP+FN}`
@@ -228,7 +228,7 @@ def probability_of_detection(observed, actual, tfilter=None):
     return PD
 
 def false_alarm_rate(observed, actual, tfilter=None):
-    """ 
+    r""" 
     Compute false alarm rate (FAR) for each column, defined as:
         
     :math:`FAR=\dfrac{TN}{TN+FP}`

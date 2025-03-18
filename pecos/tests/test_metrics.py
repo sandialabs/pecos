@@ -13,7 +13,7 @@ datadir = join(testdir,'data')
 class TestMetrics(unittest.TestCase):
 
     def test_pd_far(self):
-        index = pd.date_range('1/1/2016', periods=4, freq='H')
+        index = pd.date_range('1/1/2016', periods=4, freq='h')
         
         actual = np.array([[True,  False, False], 
                            [False, False, True], 
@@ -40,7 +40,7 @@ class TestMetrics(unittest.TestCase):
 
     def test_integral(self):
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,4,3], [7,6,np.nan], [4,8,4], [1,8.5,6]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
         
@@ -63,7 +63,7 @@ class TestMetrics(unittest.TestCase):
 
     def test_derivative(self):
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data = np.array([[1,2,3], [4,4,3], [7,6,np.nan], [4,8,4], [1,8.5,6]])
         df = pd.DataFrame(data=data, index=index, columns=['A', 'B', 'C'])
     
@@ -96,7 +96,7 @@ class TestMetrics(unittest.TestCase):
     def test_qci_no_test_results(self):
         periods = 5
         np.random.seed(100)
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data=np.sin(np.random.rand(3,1)*np.arange(0,periods,1))
         df = pd.DataFrame(data=data.transpose(), index=index, columns=['A', 'B', 'C'])
         trans = dict(zip(df.columns, [[col] for col in df.columns]))
@@ -116,7 +116,7 @@ class TestMetrics(unittest.TestCase):
     def test_qci_with_test_results(self):
         periods = 5
         np.random.seed(100)
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         data=np.sin(np.random.rand(3,1)*np.arange(0,periods,1))
         df = pd.DataFrame(data=data.transpose(), index=index, columns=['A', 'B', 'C'])
         trans = dict(zip(df.columns, [[col] for col in df.columns]))
@@ -158,7 +158,7 @@ class TestMetrics(unittest.TestCase):
     def test_rmse(self):
         
         periods = 5
-        index = pd.date_range('1/1/2016', periods=periods, freq='H')
+        index = pd.date_range('1/1/2016', periods=periods, freq='h')
         x1 = pd.DataFrame(data=np.array([4, 4, 4.5, 2.7, 6]), index=index, columns=['Power'])
         x2 = pd.DataFrame(data=np.array([5,10,4.5,3,4]), index=index, columns=['Power'])
         

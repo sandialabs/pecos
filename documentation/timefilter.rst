@@ -16,7 +16,7 @@ The following example defines a time filter between 3 AM and 9 PM,
     >>> import numpy as np
     >>> import pecos
     >>> pm = pecos.monitoring.PerformanceMonitoring()
-    >>> index = pd.date_range('1/1/2017', periods=24, freq='H')
+    >>> index = pd.date_range('1/1/2017', periods=24, freq='h')
     >>> data = {'A': np.arange(24)}
     >>> df = pd.DataFrame(data, index=index)
     >>> pm.add_dataframe(df)

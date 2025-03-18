@@ -5,7 +5,10 @@ name: docs
 on:
   push:
     branches: [main]
+  pull_request:
+    branches: [main]
   workflow_dispatch:
+
 jobs:
   build:
     name: Build the documentation with Sphinx
@@ -29,13 +32,14 @@ jobs:
       - name: Build documentation
         run: sphinx-build documentation/ documentation/_build/html
       - name: Upload artifact
-        uses: actions/upload-pages-artifact@v1
+        uses: actions/upload-pages-artifact@v3
         with:
           path: 'documentation/_build/html'
 
   deploy:
     name: Deploy documentation to GitHub Pages
     needs: build
+    if: github.event_name == 'push'
     permissions:
       contents: read
       pages: write      # to deploy to Pages
@@ -49,4 +53,4 @@ jobs:
         uses: actions/configure-pages@v3
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v1
+        uses: actions/deploy-pages@v4
