@@ -87,9 +87,9 @@ Baseline6kW Translation:
   Ref Cell Raw: [RefCell1R_Avg, RefCell2R_Avg]
 
 Composite Signals: 
-- DC Current: "np.sum({DC Current 1},axis=1), np.sum({DC Current 2},axis=1)"
-- DC Power: "np.multiply({DC Current},{DC Voltage})"
-- Inverter Efficiency: "np.divide({AC Power},{DC Power})"
+- DC Current: "np.sum({DC Current 1},axis=1), np.sum({DC Current 2}, axis=1)"
+- DC Power: "np.multiply({DC Current},{DC Voltage}.values)"
+- Inverter Efficiency: "np.divide({AC Power},{DC Power}.values)"
 
 Corrupt Values: [-999]
   
