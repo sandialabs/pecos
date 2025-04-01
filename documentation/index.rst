@@ -32,8 +32,8 @@ Citing Pecos
 --------------
 To cite Pecos, use one of the following references:
 
-* K.A. Klise and J.S. Stein (2016), Performance Monitoring using Pecos, Technical Report SAND2016-3583, Sandia National Laboratories, Albuquerque, NM.
-* K.A. Klise and J.S. Stein (2016), Automated Performance Monitoring for PV Systems using Pecos, 43rd IEEE Photovoltaic Specialists Conference (PVSC), Portland, OR, June 5-10. `pdf <http://www.pvsc-proceedings.org./download.php?year=2016&file=907>`_
+* K.A. Klise and J.S. Stein (2016), Performance Monitoring using Pecos, Technical Report SAND2016-3583, Sandia National Laboratories, Albuquerque, NM. :cite:p:`klise16a`
+* K.A. Klise and J.S. Stein (2016), Automated Performance Monitoring for PV Systems using Pecos, 43rd IEEE Photovoltaic Specialists Conference (PVSC), Portland, OR, June 5-10. :cite:p:`klise16b` `pdf <http://www.pvsc-proceedings.org./download.php?year=2016&file=907>`_
 
 Contents
 ------------

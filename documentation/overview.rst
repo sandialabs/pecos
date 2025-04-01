@@ -9,7 +9,7 @@ and generate reports which include performance metrics, test results, and graphi
 The software can be customized for specific applications. 
 Some high-level features include:
 
-* Pecos uses Pandas DataFrames [Mcki13]_ to store and analyze time series data.  This dependency 
+* Pecos uses Pandas DataFrames :cite:p:`pandas` to store and analyze time series data.  This dependency 
   facilitates a wide range of analysis options and date-time functionality.
 
 * Data column names can be easily reassigned to common names through the use of a
