@@ -7,7 +7,7 @@ Translation:
 
 Composite Signals: 
 - Wave Model: "np.sin({Multiplier}*{ELAPSED_TIME}/86400)"
-- Wave Error: "np.abs(np.subtract({Wave}, {Wave Model}))"
+- Wave Error: "np.abs(np.subtract({Wave}, {Wave Model}.values))"
 
 Time Filter: "({CLOCK_TIME} > 3*3600) & ({CLOCK_TIME} < 21*3600)"
 

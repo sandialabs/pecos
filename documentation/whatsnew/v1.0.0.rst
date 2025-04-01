@@ -3,5 +3,6 @@
 Version 1.0.0 (main)
 --------------------------
 
-* Updates to support Numpy2
-
+* Updates to support Numpy2 and Pandas
+* Minor updates to examples, including a test to ensure examples run
+* Minor updates to documentation, including the use of bibtex

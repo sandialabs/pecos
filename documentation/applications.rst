@@ -13,12 +13,12 @@ For PV systems, the translation dictionary can be used to group data
 according to the system architecture, which can include multiple strings and modules.
 The time filter can be defined based on sun position and system location.
 The data objects used in Pecos are compatible with `PVLIB <http://pvlib-python.readthedocs.io/>`_, which can be used to model PV 
-systems [SHFH16]_.
+systems :cite:p:`pvlib`.
 Pecos also includes functions to compute PV specific metrics (i.e. insolation, 
 performance ratio, clearness index) in the :class:`~pecos.pv` module.
 The International Electrotechnical Commission (IEC) has developed guidance to measure 
 and analyze energy production from PV systems. 
-Klise et al. [KlSC17]_ describe an application of IEC 61724-3, using 
+Klise et al. :cite:p:`klise17` describe an application of IEC 61724-3, using 
 Pecos and PVLIB.
 Pecos includes a PV system example in the `examples/pv <https://github.com/sandialabs/pecos/tree/main/examples/pv>`_ directory.  
 
@@ -34,4 +34,9 @@ Fossil energy systems
 In partnership with National Energy Technology Laboratory (NETL), Pecos was extended to demonstrate real-time monitoring of coal-fired power plants in support of the Department of Energy's `Institute for the Design of Advanced Energy Systems (IDAES) <https://idaes.org/>`_.
 As part of this demonstration, streaming algorithms were added to Pecos to facilitate near real-time analysis using continuous data streams. 
 
+Water treatment systems
+-----------------------
+
+As part of a Water Research Foundation Project, Pecson et al. :cite:p:`wrf24` used Pecos to develop a real-time
+event detection system for direct potable reuse at the San Diego North City Pure Water Demonstration Facility.
 

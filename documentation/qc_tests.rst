@@ -342,7 +342,7 @@ Custom streaming analysis can be run using the following example.
 The custom function below, ``nearest_neighbor``, determines if the current data point is within 3 standard 
 deviations of data in a 10 minute history window.  
 In this case, metadata returns the distance from each column in the current data point to its nearest neighbor in the history.
-This is similar to the multivariate nearest neighbor algorithm used in CANARY [HMKC07]_.
+This is similar to the multivariate nearest neighbor algorithm used in CANARY :cite:p:`canary`.
 
 .. doctest::
     :hide:
