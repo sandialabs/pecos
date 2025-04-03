@@ -1,8 +1,9 @@
 .. _whatsnew_100:
 
-Version 1.0.0 (main)
+Version 1.0.0 (April 3, 2025)
 --------------------------
 
-* Updates to support Numpy2 and Pandas
-* Minor updates to examples, including a test to ensure examples run
-* Minor updates to documentation, including the use of bibtex
+* Added pyyaml to requirements by @BernatNicolau in https://github.com/sandialabs/pecos/pull/81
+* Updated code to support changes in Pandas, Numpy, and github actions by @kaklise in https://github.com/sandialabs/pecos/pull/84
+* Updated examples to support changes in Pandas and Numpy by @kaklise in https://github.com/sandialabs/pecos/pull/85
+* Updated documentation and simple example config by @kaklise in https://github.com/sandialabs/pecos/pull/86
